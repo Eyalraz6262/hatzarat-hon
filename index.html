@@ -1566,4 +1566,11 @@ async function sendEmail(data){
 function trunc(s,n){return s.length>n?s.slice(0,n-2)+'…':s;}
 function esc(s){return s.replace(/"/g,'&quot;');}
 function toast(msg,type='nfo'){
-  const c=d
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className=`toast t-${type}`;t.textContent=msg;
+  c.appendChild(t);setTimeout(()=>t.remove(),3800);
+}
+</script>
+</body>
+</html>
