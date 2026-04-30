@@ -1737,24 +1737,26 @@ function collectFull(){
 async function sendMakeWebhook(data){
   const WEBHOOK='https://hook.eu2.make.com/bwu1vr3p2w9ekm3k15tiovu7x55uql8w';
   const c=data.client;
+  const clientName=[c.last,c.first].filter(Boolean).join(' ');
   const filesCount=Object.values(data.sections).reduce((n,s)=>n+(s.files?.length||0),0);
   const sectionLines=Object.values(data.sections)
     .filter(s=>s.notes||s.files?.length)
-    .map(s=>`• ${s.label}: ${s.notes||''} ${s.files?.length?'('+s.files.length+' קבצים)':''}`)
+    .map(s=>`• ${s.label}: ${s.notes||''} ${s.files?.length?'('+s.files.length+' קבצים)':''}`.trim())
     .join('\n');
+  const message=[
+    '📋 הצהרת הון חדשה התקבלה!',
+    `👤 לקוח: ${clientName}`,
+    `🪪 ת.ז.: ${c.id||'—'}`,
+    `📅 שנה: ${c.year||'—'}`,
+    `📎 קבצים: ${filesCount}`,
+    `🕐 ${data.submitted}`,
+    sectionLines?('\n'+sectionLines):'',
+  ].filter(Boolean).join('\n');
   try{
     await fetch(WEBHOOK,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        client_name:[c.last,c.first].filter(Boolean).join(' '),
-        client_id:c.id||'',
-        client_phone:c.phone||'',
-        year:c.year||'',
-        files_count:filesCount,
-        submitted:data.submitted,
-        sections_summary:sectionLines||'אין הערות',
-      })
+      body:JSON.stringify({message})
     });
   }catch(e){console.warn('Webhook error',e);}
 }
