@@ -726,6 +726,7 @@ input[type=file]{display:none;}
   <div class="big-icon">✅</div>
   <h2>הטופס נשלח בהצלחה!</h2>
   <p>המסמכים שלך התקבלו ונשמרו אצלנו.<br/>תודה רבה!<br/><br/>משרד רואה החשבון אייל רז ושות׳</p>
+  <a id="client-copy-link" href="#" download style="display:none;margin-top:18px;display:inline-flex;align-items:center;gap:8px;background:var(--gold-light);border:1px solid var(--gold-border);color:var(--gold);border-radius:10px;padding:11px 22px;font-size:.9rem;font-weight:700;text-decoration:none;cursor:pointer;">📄 הורד עותק לעצמך</a>
 </div>
 
 <div id="toasts"></div>
@@ -1474,14 +1475,21 @@ async function clientSubmit(){
     });
     if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבצים...','nfo');}
     await Promise.all(fileJobs);
-    // Save readable HTML report
-    await uploadJson(generateHtmlReport(summary),`סיכום_${last} ${first}_${year}.html`);
+    // Generate HTML report
+    const htmlReport=generateHtmlReport(summary);
+    await uploadJson(htmlReport,`סיכום_${last} ${first}_${year}.html`);
     // Send email if configured
     await sendEmail(summary);
-    // Show success
+    // Show success + download link for client copy
     document.getElementById('page-wrap').style.display='none';
     document.querySelector('.hero').style.display='none';
     document.getElementById('success').style.display='block';
+    const blob=new Blob([htmlReport],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const link=document.getElementById('client-copy-link');
+    link.href=url;
+    link.download=`הצהרת_הון_${last}_${year}.html`;
+    link.style.display='inline-flex';
     toast('✅ נשלח בהצלחה!','ok');
   }catch(e){toast('❌ שגיאה: '+e.message,'er');}
 }
@@ -1545,21 +1553,7 @@ function generateHtmlReport(d){
 <div class="page">
   <div class="top-bar">
     <div>
-      <div class="firm">רז <span class="gold">&</span> שות׳</div>
-      <div class="subtitle">רואי חשבון</div>
-    </div>
-    <div style="text-align:left;font-size:.8rem;opacity:.7;">הופק: ${d.submitted}</div>
-  </div>
-  <div class="doc-title">
-    <h1>📋 הצהרת הון — טופס 1219</h1>
-    <div class="meta">שנת הצהרה: ${c.year}</div>
-  </div>
-  <div class="client-box">
-    <div class="section-title">פרטי הלקוח</div>
-    <div class="client-grid">
-      <div class="ci"><label>שם מלא</label><div class="val">${clientName}</div></div>
-      <div class="ci"><label>תעודת זהות</label><div class="val">${c.id||'—'}</div></div>
-      <div class="ci"><label>טלפון</label><div class="val">${c.קבצים</div>
+      <div class="firm">רז <span class="gold">&</קבצים</div>
   ${rows}
   <div class="footer">סיכום זה הופק אוטומטית מטופס הצהרת הון דיגיטלי &bull; רז &amp; שות׳ רואי חשבון</div>
 </div>
