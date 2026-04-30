@@ -1561,7 +1561,109 @@ async function clientSubmit(){
         );
       });
     });
-    if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבקבצים</div>
+    if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבצים...','nfo');}
+    await Promise.all(fileJobs);
+    // Generate HTML report
+    const htmlReport=generateHtmlReport(summary);
+    await uploadJson(htmlReport,`סיכום_${last} ${first}_${year}.html`);
+    // Send Make webhook (WhatsApp notification)
+    await sendMakeWebhook(summary);
+    // Send email if configured
+    await sendEmail(summary);
+    // Show success + download link for client copy
+    document.getElementById('page-wrap').style.display='none';
+    document.querySelector('.hero').style.display='none';
+    document.getElementById('success').style.display='block';
+    const blob=new Blob([htmlReport],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const link=document.getElementById('client-copy-link');
+    link.href=url;
+    link.download=`הצהרת_הון_${last}_${year}.html`;
+    link.style.display='inline-flex';
+    toast('✅ נשלח בהצלחה!','ok');
+  }catch(e){toast('❌ שגיאה: '+e.message,'er');}
+}
+
+function generateHtmlReport(d){
+  const c=d.client;
+  const clientName=[c.last,c.first].filter(Boolean).join(' ')||'לקוח';
+  const spouseName=[c.sp_last,c.sp_first].filter(Boolean).join(' ');
+  let rows='';
+  Object.entries(d.sections).forEach(([r,s])=>{
+    const hasNotes=s.notes&&s.notes.trim();
+    const hasFiles=s.files&&s.files.length>0;
+    if(!hasNotes&&!hasFiles)return;
+    const filesHtml=hasFiles?`<div class="files-label">📎 קבצים מצורפים:</div><ul class="files-list">${s.files.map(f=>`<li>${f}</li>`).join('')}</ul>`:'';
+    const notesHtml=hasNotes?`<div class="notes">${s.notes.replace(/\n/g,'<br/>')}</div>`:'';
+    rows+=`<div class="row-card">
+  <div class="row-hdr"><span class="row-num">שורה ${r}</span><span class="row-label">${s.label}</span></div>
+  ${notesHtml}${filesHtml}
+</div>`;
+  });
+  if(!rows)rows='<p class="empty-msg">הלקוח לא הוסיף הערות או קבצים</p>';
+  return`<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>הצהרת הון — ${clientName} — ${c.year}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Assistant',Arial,sans-serif;background:#f0edf8;color:#1a1a2e;font-size:15px;padding:30px 16px 60px;}
+  .page{max-width:780px;margin:0 auto;}
+  .top-bar{background:#1a2456;color:#fff;border-radius:12px 12px 0 0;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .top-bar .firm{font-size:1.4rem;font-weight:900;letter-spacing:-0.5px;}
+  .top-bar .firm .gold{color:#c8860a;}
+  .top-bar .subtitle{font-size:.8rem;opacity:.7;}
+  .doc-title{background:#1c2035;color:#fff;padding:16px 28px;border-top:1px solid rgba(255,255,255,.1);}
+  .doc-title h1{font-size:1.3rem;font-weight:800;}
+  .doc-title .meta{font-size:.8rem;color:rgba(255,255,255,.55);margin-top:4px;}
+  .client-box{background:#fff;border-radius:0 0 12px 12px;padding:20px 28px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.1);}
+  .client-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:8px;}
+  .ci label{font-size:.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px;}
+  .ci .val{font-size:1rem;font-weight:700;color:#1a1a2e;margin-top:2px;}
+  .section-title{font-size:.85rem;font-weight:800;color:#c8860a;text-transform:uppercase;letter-spacing:.5px;margin:22px 0 10px;}
+  .row-card{background:#fff;border-radius:10px;padding:16px 20px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.07);border-right:4px solid #c8860a;}
+  .row-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .row-num{background:#1a2456;color:#fff;border-radius:6px;padding:3px 10px;font-size:.78rem;font-weight:800;}
+  .row-label{font-size:1rem;font-weight:700;color:#1a2456;}
+  .notes{background:#f8f7ff;border-radius:8px;padding:10px 14px;font-size:.9rem;line-height:1.65;color:#333;white-space:pre-wrap;margin-bottom:8px;}
+  .files-label{font-size:.78rem;font-weight:700;color:#888;margin-bottom:5px;}
+  .files-list{list-style:none;padding:0;}
+  .files-list li{background:#eef2ff;border-radius:6px;padding:5px 12px;font-size:.85rem;margin-bottom:4px;color:#1a2456;}
+  .files-list li::before{content:'📄 ';}
+  .empty-msg{text-align:center;color:#aaa;padding:30px;font-style:italic;}
+  .footer{text-align:center;margin-top:30px;font-size:.75rem;color:#aaa;}
+  .divider{height:1px;background:#e5e7eb;margin:14px 0;}
+  @media print{body{background:#fff;padding:0;} .page{max-width:100%;} .top-bar,.doc-title{border-radius:0;}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar">
+    <div>
+      <div class="firm">רז <span class="gold">&</span> שות׳</div>
+      <div class="subtitle">רואי חשבון</div>
+    </div>
+    <div style="text-align:left;font-size:.8rem;opacity:.7;">הופק: ${d.submitted}</div>
+  </div>
+  <div class="doc-title">
+    <h1>📋 הצהרת הון — טופס 1219</h1>
+    <div class="meta">שנת הצהרה: ${c.year}</div>
+  </div>
+  <div class="client-box">
+    <div class="section-title">פרטי הלקוח</div>
+    <div class="client-grid">
+      <div class="ci"><label>שם מלא</label><div class="val">${clientName}</div></div>
+      <div class="ci"><label>תעודת זהות</label><div class="val">${c.id||'—'}</div></div>
+      <div class="ci"><label>טלפון</label><div class="val">${c.phone||'—'}</div></div>
+      <div class="ci"><label>שנת הצהרה</label><div class="val">${c.year||'—'}</div></div>
+      ${spouseName?`<div class="ci"><label>שם בן/בת זוג</label><div class="val">${spouseName}</div></div>`:''}
+      ${c.sp_id?`<div class="ci"><label>ת.ז. בן/בת זוג</label><div class="val">${c.sp_id}</div></div>`:''}
+    </div>
+  </div>
+  <div class="section-title">סיכום שורות — הערות וקבצים</div>
   ${rows}
   <div class="footer">סיכום זה הופק אוטומטית מטופס הצהרת הון דיגיטלי &bull; רז &amp; שות׳ רואי חשבון</div>
 </div>
