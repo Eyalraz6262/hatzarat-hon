@@ -1561,8 +1561,7 @@ async function clientSubmit(){
       });
     });
     if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבצים...','nfo');}
-    awaiצים...','nfo');}
-    await Promise.all(fileJobs);
+        await Promise.all(fileJobs);
     const htmlReport=generateHtmlReport(summary);
     await uploadJson(htmlReport,`סיכום_${last} ${first}_${year}.html`);
     await sendMakeWebhook(summary);
