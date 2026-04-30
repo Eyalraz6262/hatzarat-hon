@@ -385,9 +385,9 @@ input[type=file]{display:none;}
 <div class="settings-card" id="settings-card">
   <div class="card-hdr">🔐 הגדרות רו"ח</div>
   <div class="sg">
-    <div class="f full">
-      <label>Dropbox Access Token</label>
-      <input type="password" id="db-token" placeholder="הכנס Access Token..." oninput="onTok()"/>
+    <div class="f full" style="flex-direction:row;align-items:center;gap:12px;">
+      <button class="btn btn-pro btn-sm" onclick="connectDropbox()" style="white-space:nowrap;">🔗 חבר Dropbox</button>
+      <span id="db-badge" class="sbadge s-no" style="margin:0;"><span class="dot"></span>לא מחובר</span>
     </div>
     <div class="f">
       <label>תיקיית שמירה ב-Dropbox</label>
@@ -415,10 +415,10 @@ input[type=file]{display:none;}
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:9px;margin-top:11px;flex-wrap:wrap;">
-    <button class="btn btn-pro btn-sm" onclick="testDB()">🔌 בדוק Dropbox</button>
+    <button class="btn btn-pro btn-sm" onclick="testDBConn()">🔌 בדוק חיבור</button>
     <button class="btn btn-pro btn-sm" onclick="loadClient()">📥 טען נתוני לקוח</button>
     <button class="btn btn-ok btn-sm" onclick="saveSettings()">💾 שמור הגדרות</button>
-    <span id="db-badge" class="sbadge s-no"><span class="dot"></span>לא מחובר</span>
+    <span id="db-msg" style="font-size:.76rem;color:var(--muted);"></span>
     <span id="db-msg" style="font-size:.76rem;color:var(--muted);"></span>
   </div>
   <div class="email-note">
@@ -761,7 +761,7 @@ const PRO_FIELDS={
 // ═══════════════════════════════════════════════════
 let isProMode=false;
 const pendingFiles={}; // row -> [{file, id}]
-let dbToken='sl.u.AGfke8R_59OY4kPOhsQLgnUlthaR-bcFaQitIyOA1Ap_Y9UFmUIThwfekPkcTepiRqrhI72uyPp8uvLC-mkVy0rc3QPiS5pWsscJZqD7az1WOH2f_deH1D8RD7_YkoFul9v48oxP2EbcJKyN47EuU8it5C57bkz7BXGxCf7eSXLaXZi3ch--xRk8tvzgVFivaiEpAyuNaUrGySybiH6x9BRtryJXCsjbzTfKkIFeXGWye7wReetCqxgHk5IlaSHThh5ML_pld7FoSJXuXcON4hqxM2yMEuEXoAPLx3Xfb-dSZ1hXk11cAsBVKZa75sDqJqqhL8gq6FaNnuojhdYeIIWjqHrVWAZFgkiOJpSiJyg04Q528odRJfZkT3GXWlw3uYgUsutUUNJzJwug8rrixTF-IXu053TnepbWTDtpP4YMqRI_gGz183E-iPd1D03iOU0J2Wh60i7EySK7-Pjf2BFG712EYwl_IxuXE5x8uheqpsLY2kCBGUvZCS7TWk3TRrRom5AHtd-329j7rQCMXgV6i383EHjfhdBeVForCa4kt3cjb_Py4owJOO1OjrZySWf0iHZGSInQaw2KTExtV8h66fS52x5xQiWfgdKxWjgLQwpYUV-pywhF8NHrKtZgjfBIz3k7WzZi0bs15LKPzesCT2a6HjWRVkBVNamHADmmJibQDWIJeNojqfXTa-_GCVUntk__160EeCpOkteAaM7_5cWWMYwg-f3h0hXjyoT0xCvfwRpi9FUJrtQ-5hcp1YUV11YBKM2F0fuae0byRXljJbooFpyz1lohDo0xSd_i3sncXWbR-Pkq5xVh1_wissigbsQHi2wocxm5cKhKnwJuqTN1ZsKy7qjhdGYh1htXINPfoAIO54pFpQ7JF0ol7DCunZZWL1v3dBSOOHKbMPffjMcqYgzHLlllvlJjIePITzC2exBSV4EUM3GNmUHaky2UDVDP2R0P3ChgT3Dhy2sM4WA_jAvXPy2eL1fTJX8DGy2ODUzb0SPG7SLM1TbiYuMXMzW1PgkybIohtN3vIfXU3MK1PxPd-wzth8SyK6GXubQV0UzECnE6MAg4UVAFbR1ywOnhRH0fl7dT5A6JK18_ur7lGHNJXNk0hIfPekeoCXBrEggCk-33VYdcjLKRQTdtThHJnR-26PONWEl9rJ-PSYfrjPdlXxQOLYHxCd5eH9pG4zTo_U27sw3vW19fyjZrB16aSQ3qmYCVoU1j6FUSn5AWpxLZWtX2rG9QB6PjGzIDVDiRNgiWWfEFFreZl5DIl2Y8OMVYdeO9oYVXKKcU-4YNXHHZSUsaEIu1p8huMg';
+let dbToken=localStorage.getItem('db_access_token')||'sl.u.AGfke8R_59OY4kPOhsQLgnUlthaR-bcFaQitIyOA1Ap_Y9UFmUIThwfekPkcTepiRqrhI72uyPp8uvLC-mkVy0rc3QPiS5pWsscJZqD7az1WOH2f_deH1D8RD7_YkoFul9v48oxP2EbcJKyN47EuU8it5C57bkz7BXGxCf7eSXLaXZi3ch--xRk8tvzgVFivaiEpAyuNaUrGySybiH6x9BRtryJXCsjbzTfKkIFeXGWye7wReetCqxgHk5IlaSHThh5ML_pld7FoSJXuXcON4hqxM2yMEuEXoAPLx3Xfb-dSZ1hXk11cAsBVKZa75sDqJqqhL8gq6FaNnuojhdYeIIWjqHrVWAZFgkiOJpSiJyg04Q528odRJfZkT3GXWlw3uYgUsutUUNJzJwug8rrixTF-IXu053TnepbWTDtpP4YMqRI_gGz183E-iPd1D03iOU0J2Wh60i7EySK7-Pjf2BFG712EYwl_IxuXE5x8uheqpsLY2kCBGUvZCS7TWk3TRrRom5AHtd-329j7rQCMXgV6i383EHjfhdBeVForCa4kt3cjb_Py4owJOO1OjrZySWf0iHZGSInQaw2KTExtV8h66fS52x5xQiWfgdKxWjgLQwpYUV-pywhF8NHrKtZgjfBIz3k7WzZi0bs15LKPzesCT2a6HjWRVkBVNamHADmmJibQDWIJeNojqfXTa-_GCVUntk__160EeCpOkteAaM7_5cWWMYwg-f3h0hXjyoT0xCvfwRpi9FUJrtQ-5hcp1YUV11YBKM2F0fuae0byRXljJbooFpyz1lohDo0xSd_i3sncXWbR-Pkq5xVh1_wissigbsQHi2wocxm5cKhKnwJuqTN1ZsKy7qjhdGYh1htXINPfoAIO54pFpQ7JF0ol7DCunZZWL1v3dBSOOHKbMPffjMcqYgzHLlllvlJjIePITzC2exBSV4EUM3GNmUHaky2UDVDP2R0P3ChgT3Dhy2sM4WA_jAvXPy2eL1fTJX8DGy2ODUzb0SPG7SLM1TbiYuMXMzW1PgkybIohtN3vIfXU3MK1PxPd-wzth8SyK6GXubQV0UzECnE6MAg4UVAFbR1ywOnhRH0fl7dT5A6JK18_ur7lGHNJXNk0hIfPekeoCXBrEggCk-33VYdcjLKRQTdtThHJnR-26PONWEl9rJ-PSYfrjPdlXxQOLYHxCd5eH9pG4zTo_U27sw3vW19fyjZrB16aSQ3qmYCVoU1j6FUSn5AWpxLZWtX2rG9QB6PjGzIDVDiRNgiWWfEFFreZl5DIl2Y8OMVYdeO9oYVXKKcU-4YNXHHZSUsaEIu1p8huMg';
 const done=new Set();
 let proRowCtrs={};
 ROWS.forEach(r=>proRowCtrs[r]=0);
@@ -851,7 +851,6 @@ function toggleMode(){
 // ═══════════════════════════════════════════════════
 function saveSettings(){
   const s={
-    token:document.getElementById('db-token').value,
     folder:document.getElementById('db-folder').value,
     email:document.getElementById('accountant-email').value,
     ejsService:document.getElementById('ejs-service').value,
@@ -864,16 +863,95 @@ function saveSettings(){
 function loadSettings(){
   try{
     const s=JSON.parse(localStorage.getItem('hatzarat_settings')||'{}');
-    if(s.token){document.getElementById('db-token').value=s.token;dbToken=s.token;}
     if(s.folder)document.getElementById('db-folder').value=s.folder;
     if(s.email)document.getElementById('accountant-email').value=s.email;
     if(s.ejsService)document.getElementById('ejs-service').value=s.ejsService;
     if(s.ejsTemplate)document.getElementById('ejs-template').value=s.ejsTemplate;
     if(s.ejsKey)document.getElementById('ejs-key').value=s.ejsKey;
-    if(s.token)setBadge('chk','טוקן נטען');
+    // Load OAuth token
+    dbToken=localStorage.getItem('db_access_token')||'';
+    if(dbToken){
+      const exp=parseInt(localStorage.getItem('db_token_expiry')||'0');
+      if(Date.now()<exp){setBadge('ok','✓ מחובר');}
+      else{setBadge('chk','מרענן...');refreshDropboxToken();}
+    }
   }catch(e){}
 }
-function onTok(){dbToken=document.getElementById('db-token').value.trim();}
+function onTok(){}
+
+// ═══════════════════════════════════════════════════
+// DROPBOX OAUTH (PKCE — ללא פקיעת תוקף)
+// ═══════════════════════════════════════════════════
+const DB_APP_KEY='s01tkz2jfsqag41';
+const DB_REDIRECT='https://eyalraz6262.github.io/hatzarat-hon';
+
+function _b64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
+function _rand(){const a=new Uint8Array(64);crypto.getRandomValues(a);return _b64url(a);}
+async function _challenge(v){return _b64url(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));}
+
+async function connectDropbox(){
+  const verifier=_rand();
+  const challenge=await _challenge(verifier);
+  localStorage.setItem('db_pkce_verifier',verifier);
+  const p=new URLSearchParams({client_id:DB_APP_KEY,response_type:'code',redirect_uri:DB_REDIRECT,code_challenge:challenge,code_challenge_method:'S256',token_access_type:'offline'});
+  window.location.href='https://www.dropbox.com/oauth2/authorize?'+p;
+}
+
+async function handleOAuthCallback(){
+  const code=new URLSearchParams(window.location.search).get('code');
+  if(!code)return;
+  const verifier=localStorage.getItem('db_pkce_verifier');
+  if(!verifier)return;
+  setBadge('chk','מתחבר...');
+  try{
+    const r=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,grant_type:'authorization_code',code_verifier:verifier,client_id:DB_APP_KEY,redirect_uri:DB_REDIRECT})});
+    const d=await r.json();
+    if(d.access_token){
+      dbToken=d.access_token;
+      localStorage.setItem('db_access_token',d.access_token);
+      localStorage.setItem('db_refresh_token',d.refresh_token||'');
+      localStorage.setItem('db_token_expiry',Date.now()+(((d.expires_in||14400)-300)*1000));
+      setBadge('ok','✓ מחובר בהצלחה!');
+      toast('✅ Dropbox מחובר לצמיתות!','ok');
+    }else{setBadge('no','שגיאה: '+d.error_description);toast('❌ שגיאה בחיבור Dropbox','er');}
+  }catch(e){setBadge('no','שגיאת רשת');}
+  localStorage.removeItem('db_pkce_verifier');
+  window.history.replaceState({},'',DB_REDIRECT);
+}
+
+async function refreshDropboxToken(){
+  const rt=localStorage.getItem('db_refresh_token');
+  if(!rt)return false;
+  try{
+    const r=await fetch('https://api.dropboxapi.com/oauth2/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:rt,client_id:DB_APP_KEY})});
+    const d=await r.json();
+    if(d.access_token){
+      dbToken=d.access_token;
+      localStorage.setItem('db_access_token',d.access_token);
+      localStorage.setItem('db_token_expiry',Date.now()+(((d.expires_in||14400)-300)*1000));
+      setBadge('ok','✓ מחובר');
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+async function ensureToken(){
+  const exp=parseInt(localStorage.getItem('db_token_expiry')||'0');
+  if(Date.now()>exp){await refreshDropboxToken();}
+  if(!dbToken)dbToken=localStorage.getItem('db_access_token')||'';
+}
+
+async function testDBConn(){
+  await ensureToken();
+  if(!dbToken){toast('לא מחובר — לחץ חבר Dropbox','er');return;}
+  setBadge('chk','בודק...');
+  try{
+    const r=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{method:'POST',headers:{Authorization:'Bearer '+dbToken}});
+    if(r.ok){const d=await r.json();setBadge('ok','✓ '+(d.name?.display_name||'מחובר'));toast('✅ מחובר לדרופבוקס!','ok');}
+    else{setBadge('no','שגיאה');toast('❌ בעיה בחיבור','er');}
+  }catch(e){setBadge('no','שגיאת רשת');}
+}
 
 // ═══════════════════════════════════════════════════
 // TOGGLE SECTION
@@ -1298,6 +1376,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   tog(10);tog(30);tog(130);
   loadSettings();
   readUrlParams();
+  handleOAuthCallback();
 });
 function onFiles(r,inp){procFiles(r,Array.from(inp.files));inp.value='';}
 function procFiles(r,files){
@@ -1348,6 +1427,7 @@ async function testDB(){
   }catch(e){setBadge('no','שגיאת רשת');toast('❌ שגיאת רשת','er');}
 }
 async function uploadDB(file,sub){
+  await ensureToken();
   const client=clientFolder();
   const base=document.getElementById('db-folder').value.trim()||'/הצהרת הון - לקוחות';
   const path=`${base}/${client}/${sub}/${file.name}`;
@@ -1361,6 +1441,7 @@ async function uploadDB(file,sub){
   return res.json();
 }
 async function uploadJson(json,name){
+  await ensureToken();
   if(!dbToken)return;
   const client=clientFolder();
   const base=(document.getElementById('db-folder')?.value||'').trim()||'/הצהרת הון - לקוחות';
@@ -1480,77 +1561,7 @@ async function clientSubmit(){
         );
       });
     });
-    if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבצים...','nfo');}
-    await Promise.all(fileJobs);
-    // Generate HTML report
-    const htmlReport=generateHtmlReport(summary);
-    await uploadJson(htmlReport,`סיכום_${last} ${first}_${year}.html`);
-    // Send Make webhook (WhatsApp notification)
-    await sendMakeWebhook(summary);
-    // Send email if configured
-    await sendEmail(summary);
-    // Show success + download link for client copy
-    document.getElementById('page-wrap').style.display='none';
-    document.querySelector('.hero').style.display='none';
-    document.getElementById('success').style.display='block';
-    const blob=new Blob([htmlReport],{type:'text/html;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    const link=document.getElementById('client-copy-link');
-    link.href=url;
-    link.download=`הצהרת_הון_${last}_${year}.html`;
-    link.style.display='inline-flex';
-    toast('✅ נשלח בהצלחה!','ok');
-  }catch(e){toast('❌ שגיאה: '+e.message,'er');}
-}
-
-function generateHtmlReport(d){
-  const c=d.client;
-  const clientName=[c.last,c.first].filter(Boolean).join(' ')||'לקוח';
-  const spouseName=[c.sp_last,c.sp_first].filter(Boolean).join(' ');
-  let rows='';
-  Object.entries(d.sections).forEach(([r,s])=>{
-    const hasNotes=s.notes&&s.notes.trim();
-    const hasFiles=s.files&&s.files.length>0;
-    if(!hasNotes&&!hasFiles)return;
-    const filesHtml=hasFiles?`<div class="files-label">📎 קבצים מצורפים:</div><ul class="files-list">${s.files.map(f=>`<li>${f}</li>`).join('')}</ul>`:'';
-    const notesHtml=hasNotes?`<div class="notes">${s.notes.replace(/\n/g,'<br/>')}</div>`:'';
-    rows+=`<div class="row-card">
-  <div class="row-hdr"><span class="row-num">שורה ${r}</span><span class="row-label">${s.label}</span></div>
-  ${notesHtml}${filesHtml}
-</div>`;
-  });
-  if(!rows)rows='<p class="empty-msg">הלקוח לא הוסיף הערות או קבצים</p>';
-  return`<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>הצהרת הון — ${clientName} — ${c.year}</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Assistant',Arial,sans-serif;background:#f0edf8;color:#1a1a2e;font-size:15px;padding:30px 16px 60px;}
-  .page{max-width:780px;margin:0 auto;}
-  .top-bar{background:#1a2456;color:#fff;border-radius:12px 12px 0 0;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;}
-  .top-bar .firm{font-size:1.4rem;font-weight:900;letter-spacing:-0.5px;}
-  .top-bar .firm .gold{color:#c8860a;}
-  .top-bar .subtitle{font-size:.8rem;opacity:.7;}
-  .doc-title{background:#1c2035;color:#fff;padding:16px 28px;border-top:1px solid rgba(255,255,255,.1);}
-  .doc-title h1{font-size:1.3rem;font-weight:800;}
-  .doc-title .meta{font-size:.8rem;color:rgba(255,255,255,.55);margin-top:4px;}
-  .client-box{background:#fff;border-radius:0 0 12px 12px;padding:20px 28px;margin-bottom:20px;box-shadow:0 4px 20px rgba(0,0,0,.1);}
-  .client-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-top:8px;}
-  .ci label{font-size:.72rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.3px;}
-  .ci .val{font-size:1rem;font-weight:700;color:#1a1a2e;margin-top:2px;}
-  .section-title{font-size:.85rem;font-weight:800;color:#c8860a;text-transform:uppercase;letter-spacing:.5px;margin:22px 0 10px;}
-  .row-card{background:#fff;border-radius:10px;padding:16px 20px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,.07);border-right:4px solid #c8860a;}
-  .row-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .row-num{background:#1a2456;color:#fff;border-radius:6px;padding:3px 10px;font-size:.78rem;font-weight:800;}
-  .row-label{font-size:1rem;font-weight:700;color:#1a2456;}
-  .notes{background:#f8f7ff;border-radius:8px;padding:10px 14px;font-size:.9rem;line-height:1.65;color:#333;white-space:pre-wrap;margin-bottom:8px;}
-  .files-label{font-size:.78rem;font-weight:700;color:#888;margin-bottom:5px;}
-  .files-list{list-style:none;padding:0;}
-  .files-list li{background:#eef2ff;bקבצים</div>
+    if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבקבצים</div>
   ${rows}
   <div class="footer">סיכום זה הופק אוטומטית מטופס הצהרת הון דיגיטלי &bull; רז &amp; שות׳ רואי חשבון</div>
 </div>
