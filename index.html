@@ -1321,6 +1321,9 @@ function rmFile(id,r){const el=document.getElementById(id);if(el)el.remove();mar
 // ═══════════════════════════════════════════════════
 // DROPBOX
 // ═══════════════════════════════════════════════════
+function dbArg(obj){
+  return JSON.stringify(obj).replace(/[-￿]/g,c=>'\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4));
+}
 function setBadge(type,txt){
   const b=document.getElementById('db-badge');
   b.className='sbadge '+(type==='ok'?'s-ok':type==='chk'?'s-chk':'s-no');
@@ -1343,7 +1346,7 @@ async function uploadDB(file,sub){
   const buf=await file.arrayBuffer();
   const res=await fetch('https://content.dropboxapi.com/2/files/upload',{
     method:'POST',
-    headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':JSON.stringify({path,mode:'add',autorename:true}),'Content-Type':'application/octet-stream'},
+    headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':dbArg({path,mode:'add',autorename:true}),'Content-Type':'application/octet-stream'},
     body:buf
   });
   if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error_summary||res.statusText);}
@@ -1356,7 +1359,7 @@ async function uploadJson(json,name){
   const path=`${base}/${client}/${name}`;
   await fetch('https://content.dropboxapi.com/2/files/upload',{
     method:'POST',
-    headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':JSON.stringify({path,mode:'overwrite'}),'Content-Type':'application/octet-stream'},
+    headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':dbArg({path,mode:'overwrite'}),'Content-Type':'application/octet-stream'},
     body:new Blob([json],{type:'application/json'})
   });
 }
@@ -1379,7 +1382,7 @@ async function loadClient(){
     if(jsonFile){
       const dl=await fetch('https://content.dropboxapi.com/2/files/download',{
         method:'POST',
-        headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':JSON.stringify({path:jsonFile.path_lower})}
+        headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':dbArg({path:jsonFile.path_lower})}
       });
       const data=await dl.json();
       populateFromJson(data,clientName,base);
@@ -1564,9 +1567,4 @@ function esc(s){return s.replace(/"/g,'&quot;');}
 function toast(msg,type='nfo'){
   const c=document.getElementById('toasts');
   const t=document.createElement('div');
-  t.className=`toast t-${type}`;t.textContent=msg;
-  c.appendChild(t);setTimeout(()=>t.remove(),3800);
-}
-</script>
-</body>
-</html>
+  t.className=`toast t-${ty
