@@ -1307,9 +1307,16 @@ function procFiles(r,files){
     const id='f'+Date.now()+Math.random().toString(36).slice(2,7);
     const el=document.createElement('div');
     el.className='fi';el.id=id;
-    el.innerHTML=`<span>📄</span><span class="fn" title="${esc(file.name)}">${trunc(file.name,42)}</span><span class="fs" id="st-${id}" style="color:var(--muted)">ישמר בשליחה</span><button class="rm" onclick="rmFile('${id}',${r})">✕</button>`;
+    el.innerHTML=`<span>📄</span><span class="fn" title="${esc(file.name)}">${trunc(file.name,42)}</span><span class="fs up" id="st-${id}">⏳</span><button class="rm" onclick="rmFile('${id}',${r})">✕</button>`;
     fl.appendChild(el);
     pendingFiles[r].push({file,id});
+    if(dbToken){
+      uploadDB(file,'שורה '+r)
+        .then(()=>{const e=document.getElementById('st-'+id);if(e){e.className='fs ok';e.textContent='✅ הועלה';}})
+        .catch(err=>{const e=document.getElementById('st-'+id);if(e){e.className='fs er';e.textContent='❌';e.title=err.message;}toast('❌ שגיאה בהעלאת '+file.name,'er');});
+    } else {
+      const e=document.getElementById('st-'+id);if(e){e.className='fs';e.style.color='var(--muted)';e.textContent='ישמר בשליחה';}
+    }
     markDone(r);
   });
 }
@@ -1543,17 +1550,7 @@ function generateHtmlReport(d){
   .notes{background:#f8f7ff;border-radius:8px;padding:10px 14px;font-size:.9rem;line-height:1.65;color:#333;white-space:pre-wrap;margin-bottom:8px;}
   .files-label{font-size:.78rem;font-weight:700;color:#888;margin-bottom:5px;}
   .files-list{list-style:none;padding:0;}
-  .files-list li{background:#eef2ff;border-radius:6px;padding:5px 12px;font-size:.85rem;margin-bottom:4px;color:#1a2456;}
-  .files-list li::before{content:'📄 ';}
-  .empty-msg{text-align:center;color:#aaa;padding:30px;font-style:italic;}
-  .footer{text-align:center;margin-top:30px;font-size:.75rem;color:#aaa;}
-  .divider{height:1px;background:#e5e7eb;margin:14px 0;}
-  @media print{body{background:#fff;padding:0;} .page{max-width:100%;} .top-bar,.doc-title{border-radius:0;}}
-</style>
-</head>
-<body>
-<div class="page">
-קבצים</div>
+  .files-list li{background:#eef2ff;border-radקבצים</div>
   ${rows}
   <div class="footer">סיכום זה הופק אוטומטית מטופס הצהרת הון דיגיטלי &bull; רז &amp; שות׳ רואי חשבון</div>
 </div>
