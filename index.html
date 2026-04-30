@@ -759,6 +759,7 @@ const PRO_FIELDS={
 // STATE
 // ═══════════════════════════════════════════════════
 let isProMode=false;
+const pendingFiles={}; // row -> [{file, id}]
 let dbToken='sl.u.AGfke8R_59OY4kPOhsQLgnUlthaR-bcFaQitIyOA1Ap_Y9UFmUIThwfekPkcTepiRqrhI72uyPp8uvLC-mkVy0rc3QPiS5pWsscJZqD7az1WOH2f_deH1D8RD7_YkoFul9v48oxP2EbcJKyN47EuU8it5C57bkz7BXGxCf7eSXLaXZi3ch--xRk8tvzgVFivaiEpAyuNaUrGySybiH6x9BRtryJXCsjbzTfKkIFeXGWye7wReetCqxgHk5IlaSHThh5ML_pld7FoSJXuXcON4hqxM2yMEuEXoAPLx3Xfb-dSZ1hXk11cAsBVKZa75sDqJqqhL8gq6FaNnuojhdYeIIWjqHrVWAZFgkiOJpSiJyg04Q528odRJfZkT3GXWlw3uYgUsutUUNJzJwug8rrixTF-IXu053TnepbWTDtpP4YMqRI_gGz183E-iPd1D03iOU0J2Wh60i7EySK7-Pjf2BFG712EYwl_IxuXE5x8uheqpsLY2kCBGUvZCS7TWk3TRrRom5AHtd-329j7rQCMXgV6i383EHjfhdBeVForCa4kt3cjb_Py4owJOO1OjrZySWf0iHZGSInQaw2KTExtV8h66fS52x5xQiWfgdKxWjgLQwpYUV-pywhF8NHrKtZgjfBIz3k7WzZi0bs15LKPzesCT2a6HjWRVkBVNamHADmmJibQDWIJeNojqfXTa-_GCVUntk__160EeCpOkteAaM7_5cWWMYwg-f3h0hXjyoT0xCvfwRpi9FUJrtQ-5hcp1YUV11YBKM2F0fuae0byRXljJbooFpyz1lohDo0xSd_i3sncXWbR-Pkq5xVh1_wissigbsQHi2wocxm5cKhKnwJuqTN1ZsKy7qjhdGYh1htXINPfoAIO54pFpQ7JF0ol7DCunZZWL1v3dBSOOHKbMPffjMcqYgzHLlllvlJjIePITzC2exBSV4EUM3GNmUHaky2UDVDP2R0P3ChgT3Dhy2sM4WA_jAvXPy2eL1fTJX8DGy2ODUzb0SPG7SLM1TbiYuMXMzW1PgkybIohtN3vIfXU3MK1PxPd-wzth8SyK6GXubQV0UzECnE6MAg4UVAFbR1ywOnhRH0fl7dT5A6JK18_ur7lGHNJXNk0hIfPekeoCXBrEggCk-33VYdcjLKRQTdtThHJnR-26PONWEl9rJ-PSYfrjPdlXxQOLYHxCd5eH9pG4zTo_U27sw3vW19fyjZrB16aSQ3qmYCVoU1j6FUSn5AWpxLZWtX2rG9QB6PjGzIDVDiRNgiWWfEFFreZl5DIl2Y8OMVYdeO9oYVXKKcU-4YNXHHZSUsaEIu1p8huMg';
 const done=new Set();
 let proRowCtrs={};
@@ -1300,23 +1301,22 @@ document.addEventListener('DOMContentLoaded',()=>{
 function onFiles(r,inp){procFiles(r,Array.from(inp.files));inp.value='';}
 function procFiles(r,files){
   const fl=document.getElementById('fl-'+r);
+  if(!pendingFiles[r])pendingFiles[r]=[];
   files.forEach(file=>{
     const id='f'+Date.now()+Math.random().toString(36).slice(2,7);
     const el=document.createElement('div');
     el.className='fi';el.id=id;
-    el.innerHTML=`<span>📄</span><span class="fn" title="${esc(file.name)}">${trunc(file.name,42)}</span><span class="fs up" id="st-${id}">⏳</span><button class="rm" onclick="rmFile('${id}',${r})">✕</button>`;
+    el.innerHTML=`<span>📄</span><span class="fn" title="${esc(file.name)}">${trunc(file.name,42)}</span><span class="fs" id="st-${id}" style="color:var(--muted)">ישמר בשליחה</span><button class="rm" onclick="rmFile('${id}',${r})">✕</button>`;
     fl.appendChild(el);
-    if(dbToken){
-      uploadDB(file,'שורה '+r)
-        .then(()=>{const e=document.getElementById('st-'+id);if(e){e.className='fs ok';e.textContent='✅ הועלה';}})
-        .catch(err=>{const e=document.getElementById('st-'+id);if(e){e.className='fs er';e.textContent='❌';e.title=err.message;}toast('❌ '+file.name,'er');});
-    } else {
-      const e=document.getElementById('st-'+id);if(e){e.className='fs';e.style.color='var(--muted)';e.textContent='ישמר בשליחה';}
-    }
+    pendingFiles[r].push({file,id});
     markDone(r);
   });
 }
-function rmFile(id,r){const el=document.getElementById(id);if(el)el.remove();markDone(r);}
+function rmFile(id,r){
+  const el=document.getElementById(id);if(el)el.remove();
+  if(pendingFiles[r])pendingFiles[r]=pendingFiles[r].filter(x=>x.id!==id);
+  markDone(r);
+}
 
 // ═══════════════════════════════════════════════════
 // DROPBOX
@@ -1461,6 +1461,19 @@ async function clientSubmit(){
   const summary=collectSummary();
   const year=document.getElementById('c-year').value||new Date().getFullYear();
   try{
+    // Upload all pending files first
+    const fileJobs=[];
+    Object.entries(pendingFiles).forEach(([r,arr])=>{
+      arr.forEach(({file,id})=>{
+        fileJobs.push(
+          uploadDB(file,'שורה '+r)
+            .then(()=>{const e=document.getElementById('st-'+id);if(e){e.style.color='var(--ok)';e.textContent='✅ הועלה';}})
+            .catch(err=>{const e=document.getElementById('st-'+id);if(e){e.style.color='var(--err)';e.textContent='❌';}console.warn('file upload error',err);})
+        );
+      });
+    });
+    if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבצים...','nfo');}
+    await Promise.all(fileJobs);
     // Save readable HTML report
     await uploadJson(generateHtmlReport(summary),`סיכום_${last} ${first}_${year}.html`);
     // Send email if configured
@@ -1547,12 +1560,7 @@ function generateHtmlReport(d){
       <div class="ci"><label>שם מלא</label><div class="val">${clientName}</div></div>
       <div class="ci"><label>תעודת זהות</label><div class="val">${c.id||'—'}</div></div>
       <div class="ci"><label>טלפון</label><div class="val">${c.phone||'—'}</div></div>
-      <div class="ci"><label>שנת הצהרה</label><div class="val">${c.year||'—'}</div></div>
-      ${spouseName?`<div class="ci"><label>שם בן/בת זוג</label><div class="val">${spouseName}</div></div>`:''}
-      ${c.sp_id?`<div class="ci"><label>ת.ז. בן/בת זוג</label><div class="val">${c.sp_id}</div></div>`:''}
-    </div>
-  </div>
-  <div class="section-title">סיכום שורות — הערות וקבצים</div>
+      <div claקבצים</div>
   ${rows}
   <div class="footer">סיכום זה הופק אוטומטית מטופס הצהרת הון דיגיטלי &bull; רז &amp; שות׳ רואי חשבון</div>
 </div>
