@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>הצהרת הון — טופס 1219</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap');
+:root{
+  --gold:#c8860a;--gold2:#e8a020;--gold-light:rgba(200,134,10,.12);--gold-border:rgba(200,134,10,.3);
+  /* Page */
+  --bg:#ddd5ec;
+  /* Dark card (sections) */
+  --dk:#1c2035;--dk2:#242845;--dk-border:rgba(255,255,255,.10);--dk-border2:rgba(255,255,255,.06);
+  /* Input inside dark card */
+  --inp:#e8e9ee;--inp-txt:#1c1c2e;
+  /* Light elements */
+  --wh:#fff;--muted:rgba(255,255,255,.55);--muted2:rgba(255,255,255,.35);
+  /* Status */
+  --ok:#22c55e;--ok-bg:rgba(34,197,94,.15);--ok-border:rgba(34,197,94,.35);
+  --warn:#f59e0b;--warn-bg:rgba(245,158,11,.15);
+  --err:#ef4444;--err-bg:rgba(239,68,68,.15);
+  --sh:0 4px 24px rgba(0,0,0,.22);--sh2:0 8px 40px rgba(0,0,0,.3);--r:12px;
+  /* aliases */
+  --pro:var(--gold);--pro2:var(--gold2);--pro-bg:var(--gold-light);
+  --pri:var(--gold);--pri2:var(--gold2);--acc:var(--gold-light);
+  --gb:var(--dk-border);--txt:var(--wh);
+  --card:var(--dk);--card2:var(--dk2);--border:var(--dk-border);--border2:var(--dk-border2);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Assistant',Arial,sans-serif;background:var(--bg);color:var(--wh);min-height:100vh;font-size:15px;}
+
+/* ── LOGO BOX (top center, white) ── */
+.hero{padding:0;background:transparent;}
+.logo-box{
+  background:var(--wh);
+  max-width:794px;margin:0 auto;
+  border-radius:0 0 16px 16px;
+  padding:18px 40px 16px;
+  text-align:center;
+  box-shadow:0 4px 20px rgba(0,0,0,.18);
+}
+.logo-raz{font-size:2rem;font-weight:900;color:#1a2456;letter-spacing:-1px;line-height:1;}
+.logo-raz .amp{color:var(--gold);font-size:1.5rem;}
+.logo-raz .co{font-size:1.4rem;}
+.logo-heb{font-size:.78rem;color:#1a2456;font-weight:700;letter-spacing:.5px;margin-top:2px;}
+.logo-sub-en{font-size:.58rem;color:#888;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+
+/* WhatsApp floating */
+.wa-float{
+  position:fixed;bottom:22px;right:22px;z-index:999;
+  width:48px;height:48px;background:#25D366;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+  text-decoration:none;box-shadow:0 4px 14px rgba(37,211,102,.4);
+  transition:transform .15s,box-shadow .15s;
+}
+.wa-float:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(37,211,102,.55);}
+
+/* ── WRAP (A4 width = 794px) ── */
+.wrap{max-width:794px;margin:0 auto;padding:22px 14px 80px;}
+
+/* ── DARK PAGE HEADER ── */
+.page-hdr{
+  background:var(--dk);border-radius:var(--r);
+  padding:22px 26px 18px;margin-bottom:14px;
+  box-shadow:var(--sh);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.page-hdr-title{text-align:right;}
+.page-hdr-title h1{font-size:1.55rem;font-weight:800;color:var(--wh);line-height:1.2;}
+.page-hdr-title p{font-size:.82rem;color:var(--gold);font-weight:700;margin-top:3px;}
+.mode-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.2);
+  border-radius:20px;padding:6px 16px;font-size:.8rem;font-weight:700;
+  cursor:pointer;transition:all .2s;color:var(--wh);white-space:nowrap;
+}
+.mode-pill:hover{background:rgba(255,255,255,.18);}
+.mode-pill.pro-mode{background:var(--gold-light);border-color:var(--gold-border);color:var(--gold);}
+
+/* ── CARD BASE (dark) ── */
+.card{background:var(--dk);border-radius:var(--r);box-shadow:var(--sh);padding:18px 22px;margin-bottom:12px;border:1px solid var(--dk-border);}
+.card-hdr{font-size:.93rem;font-weight:700;color:var(--gold);margin-bottom:13px;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--dk-border);padding-bottom:9px;}
+
+/* ── SETTINGS CARD ── */
+.settings-card{border:1px solid var(--gold-border);border-radius:var(--r);background:var(--dk);padding:16px 20px;margin-bottom:12px;display:none;box-shadow:var(--sh);}
+.settings-card.show{display:block;}
+.settings-card .card-hdr{color:var(--gold);border-color:var(--gold-border);}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.sg .full{grid-column:1/-1;}
+
+/* ── FIELDS (inside dark card) ── */
+.f{display:flex;flex-direction:column;gap:4px;}
+.f label{font-size:.76rem;font-weight:700;color:var(--muted);letter-spacing:.2px;}
+.f input,.f select,.f textarea{
+  padding:9px 12px;border:1px solid rgba(255,255,255,.15);border-radius:8px;
+  font-size:.86rem;font-family:'Assistant',Arial,sans-serif;
+  background:var(--inp);color:var(--inp-txt);
+  transition:border-color .2s,box-shadow .2s;
+}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,134,10,.18);}
+.f textarea{resize:vertical;min-height:65px;line-height:1.6;}
+.f select option{background:var(--dk);color:var(--wh);}
+
+/* ── CLIENT GRID ── */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:500px){.cg,.sg{grid-template-columns:1fr;}}
+
+/* ── FIELD ROW (horizontal label+input) ── */
+.frow{
+  display:flex;align-items:center;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--dk-border);
+  border-radius:9px;padding:13px 18px;margin-bottom:9px;gap:16px;
+}
+.frow label{
+  color:var(--wh);font-weight:700;font-size:.88rem;
+  min-width:140px;text-align:right;flex-shrink:0;
+}
+.frow label .req{color:var(--err);}
+.frow input,.frow select{
+  flex:1;background:var(--inp);color:var(--inp-txt);
+  border:none;border-radius:7px;padding:10px 14px;
+  font-size:.88rem;font-family:'Assistant',Arial,sans-serif;text-align:right;
+  transition:box-shadow .2s;
+}
+.frow input:focus,.frow select:focus{outline:none;box-shadow:0 0 0 2px var(--gold);}
+
+/* ── INTRO ── */
+.intro-card{background:var(--dk);border-radius:var(--r);box-shadow:var(--sh);padding:16px 20px;margin-bottom:12px;border-right:3px solid var(--gold);border:1px solid var(--dk-border);border-right:3px solid var(--gold);}
+.intro-card h2{color:var(--gold);font-size:.95rem;font-weight:700;margin-bottom:8px;}
+.intro-card p{color:var(--muted);}
+.steps{display:flex;flex-direction:column;gap:5px;margin-top:7px;}
+.step{display:flex;align-items:flex-start;gap:8px;font-size:.83rem;color:rgba(255,255,255,.8);}
+.step .num{background:var(--gold);color:#111;width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;flex-shrink:0;margin-top:1px;}
+
+/* ── PROGRESS ── */
+.prog-card{background:var(--dk);border-radius:var(--r);box-shadow:var(--sh);padding:11px 18px;margin-bottom:12px;border:1px solid var(--dk-border);}
+.prog-card h3{font-size:.78rem;color:var(--muted);margin-bottom:5px;}
+.prog-track{height:6px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:4px;transition:width .4s;}
+.prog-lbl{display:flex;justify-content:space-between;margin-top:4px;font-size:.72rem;color:var(--muted);}
+
+/* ── SECTION (dark card style) ── */
+.sec{background:var(--dk);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:9px;overflow:hidden;border:1px solid var(--dk-border);transition:border-color .2s,box-shadow .2s;}
+.sec.has-data{border-color:var(--gold-border);box-shadow:0 4px 18px rgba(200,134,10,.15);}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer;user-select:none;background:var(--dk2);transition:background .15s;}
+.sec-hdr:hover,.sec-hdr.open{background:#2c3158;}
+.sec-left{display:flex;align-items:center;gap:10px;}
+.sec-icon{width:36px;height:36px;background:rgba(200,134,10,.15);border:1px solid var(--gold-border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+.sec-lbl{font-weight:700;color:var(--wh);font-size:.92rem;line-height:1.3;}
+.sec-sub{font-size:.72rem;font-weight:400;color:var(--muted);margin-top:1px;}
+.row-tag{background:rgba(200,134,10,.15);color:var(--gold);font-size:.67rem;font-weight:700;padding:2px 9px;border-radius:10px;border:1px solid var(--gold-border);white-space:nowrap;}
+.chk{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:all .2s;flex-shrink:0;}
+.chk.done{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-border);}
+.chv{font-size:.8rem;color:var(--muted);transition:transform .2s;}
+.chv.open{transform:rotate(180deg);}
+.sec-body{display:none;padding:16px 18px;border-top:1px solid var(--dk-border);}
+.sec-body.open{display:block;}
+
+/* ── DOCS BOX ── */
+.docs-box{background:rgba(200,134,10,.08);border:1px solid var(--gold-border);border-radius:8px;padding:10px 14px;margin-bottom:13px;}
+.docs-box h4{font-size:.77rem;font-weight:700;color:var(--gold);margin-bottom:6px;}
+.docs-box ul{list-style:none;display:flex;flex-direction:column;gap:3px;}
+.docs-box li{font-size:.79rem;color:var(--muted);display:flex;gap:5px;}
+.docs-box li::before{content:'📄';font-size:.72rem;flex-shrink:0;margin-top:1px;}
+
+/* ── CLIENT NOTE ── */
+.note-wrap{margin-bottom:12px;}
+.note-wrap label{display:block;font-size:.8rem;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:4px;}
+.note-wrap textarea{width:100%;padding:9px 12px;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:.86rem;font-family:'Assistant',Arial,sans-serif;resize:vertical;min-height:70px;background:var(--inp);color:var(--inp-txt);line-height:1.6;transition:border-color .2s;}
+.note-wrap textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,134,10,.18);}
+.note-wrap textarea::placeholder{color:#aab;font-style:italic;}
+
+/* ── CLIENT NOTE READONLY ── */
+.client-note-ro{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:7px;padding:9px 12px;font-size:.84rem;color:rgba(255,255,255,.85);line-height:1.6;margin-bottom:12px;min-height:38px;}
+.client-note-ro .lbl{font-size:.72rem;font-weight:700;color:var(--gold);margin-bottom:4px;}
+
+/* ── DROPBOX LINK ── */
+.db-link-btn{display:inline-flex;align-items:center;gap:5px;font-size:.78rem;color:var(--gold);font-weight:700;text-decoration:none;background:var(--gold-light);border:1px solid var(--gold-border);border-radius:6px;padding:4px 10px;margin-bottom:11px;transition:background .15s;}
+.db-link-btn:hover{background:rgba(200,134,10,.22);}
+
+/* ── PRO FIELDS ── */
+.pro-section{display:none;}
+.pro-section.show{display:block;}
+.pro-fields-wrap{background:rgba(255,255,255,.04);border:1px solid var(--gold-border);border-radius:9px;padding:13px 15px;margin-bottom:10px;}
+.pro-fields-wrap h4{font-size:.77rem;font-weight:700;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.pg{display:grid;gap:9px;}
+.pg2{grid-template-columns:1fr 1fr;}
+.pg3{grid-template-columns:1fr 1fr 1fr;}
+.pg4{grid-template-columns:1fr 1fr 1fr 1fr;}
+@media(max-width:580px){.pg2,.pg3,.pg4{grid-template-columns:1fr 1fr;}}
+@media(max-width:380px){.pg2,.pg3,.pg4{grid-template-columns:1fr;}}
+
+/* ── PRO ITEM ROW ── */
+.pro-item{background:rgba(255,255,255,.05);border:1px solid var(--dk-border);border-radius:8px;padding:11px 12px;position:relative;margin-bottom:8px;}
+.pro-item-num{position:absolute;top:9px;right:9px;background:var(--gold);color:#111;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;}
+.pro-item-grid{padding-right:24px;}
+.add-pro-row{width:100%;margin-top:9px;padding:8px;border:1.5px dashed var(--gold-border);border-radius:8px;background:transparent;color:var(--gold);font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Assistant',Arial,sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
+.add-pro-row:hover{background:var(--gold-light);}
+.rm-pro{position:absolute;bottom:8px;left:10px;background:none;border:none;color:var(--err);cursor:pointer;font-size:.75rem;padding:2px 6px;border-radius:4px;opacity:.7;}
+.rm-pro:hover{background:var(--err-bg);opacity:1;}
+
+/* ── TOTALS ── */
+.total-bar{display:flex;align-items:center;justify-content:space-between;border-radius:9px;padding:13px 20px;margin:8px 0;font-weight:700;}
+.tb-assets{background:var(--gold);color:#111;}
+.tb-liab{background:rgba(239,68,68,.25);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
+.tb-net{background:rgba(34,197,94,.18);color:var(--ok);border:1px solid rgba(34,197,94,.3);}
+.tb-label{font-size:.86rem;}
+.tb-val{font-size:1rem;}
+
+/* ── UPLOAD ── */
+.upload-zone{border:1.5px dashed rgba(255,255,255,.2);border-radius:9px;padding:12px 15px;background:rgba(255,255,255,.04);transition:all .2s;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:var(--gold-light);}
+.uz-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.ul-btn{cursor:pointer;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:var(--gold);color:#111;border-radius:7px;font-size:.8rem;font-weight:700;transition:all .15s;white-space:nowrap;}
+.ul-btn:hover{background:var(--gold2);}
+.uz-hint{font-size:.76rem;color:var(--muted);}
+input[type=file]{display:none;}
+.file-list{margin-top:8px;display:flex;flex-direction:column;gap:4px;}
+.fi{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:1px solid var(--dk-border);border-radius:6px;padding:4px 10px;font-size:.79rem;}
+.fi .fn{flex:1;color:var(--gold);font-weight:600;word-break:break-all;}
+.fi .fs{font-size:.7rem;flex-shrink:0;}
+.fs.up{color:var(--warn);}
+.fs.ok{color:var(--ok);}
+.fs.er{color:var(--err);}
+.fi .rm{cursor:pointer;color:var(--err);background:none;border:none;font-size:.95rem;padding:0 3px;line-height:1;}
+
+/* ── DIVIDER ── */
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0 12px;}
+.divider span{font-size:.8rem;font-weight:700;color:var(--gold);white-space:nowrap;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--dk-border);}
+
+/* ── BTNS ── */
+.btn{padding:9px 20px;border:none;border-radius:8px;cursor:pointer;font-size:.87rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;font-family:'Assistant',Arial,sans-serif;transition:all .15s;}
+.btn-pri{background:var(--gold);color:#111;}
+.btn-pri:hover{background:var(--gold2);}
+.btn-pro{background:var(--gold);color:#111;}
+.btn-pro:hover{background:var(--gold2);}
+.btn-ok{background:#16a34a;color:var(--wh);}
+.btn-ok:hover{background:#15803d;}
+.btn-outline{background:var(--inp);border:none;color:var(--inp-txt);font-weight:700;}
+.btn-outline:hover{background:#d0d2dc;}
+.btn-blue{background:#2563eb;color:var(--wh);}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-sm{padding:5px 12px;font-size:.76rem;}
+.btn-big{padding:13px 36px;font-size:1rem;border-radius:9px;font-weight:800;}
+
+/* ── ACTION AREA ── */
+.action-area{background:var(--dk);border-radius:var(--r);box-shadow:var(--sh);padding:20px 22px;margin-top:14px;text-align:center;border:1px solid var(--dk-border);border-top:3px solid var(--gold);}
+.action-area.pro-area{border-top-color:var(--gold);}
+.action-area h3{font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:5px;}
+.action-area p{font-size:.82rem;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+.act-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+/* ── STATUS BADGE ── */
+.sbadge{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;padding:2px 9px;border-radius:20px;font-weight:700;}
+.s-ok{background:var(--ok-bg);color:var(--ok);}
+.s-no{background:var(--err-bg);color:var(--err);}
+.s-chk{background:var(--warn-bg);color:var(--warn);}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+/* ── PRO GUIDE BANNER ── */
+.pro-guide{background:var(--gold-light);border:1px solid var(--gold-border);border-radius:var(--r);padding:12px 16px;margin-bottom:12px;display:none;}
+.pro-guide.show{display:block;}
+.pro-guide-title{font-size:.85rem;font-weight:800;color:var(--gold);margin-bottom:7px;}
+.pro-guide-zones{display:flex;gap:12px;flex-wrap:wrap;}
+.pz{display:flex;align-items:center;gap:6px;font-size:.76rem;color:rgba(255,255,255,.85);}
+.pz-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.pz-dot.blue{background:#60a5fa;}
+.pz-dot.yellow{background:var(--gold);}
+.pz-dot.green{background:var(--ok);}
+
+/* ── SUCCESS ── */
+#success{display:none;max-width:460px;margin:70px auto;background:var(--dk);border-radius:16px;box-shadow:var(--sh2);padding:36px 28px;text-align:center;border:1px solid var(--gold-border);}
+#success .big-icon{font-size:3.5rem;margin-bottom:10px;}
+#success h2{color:var(--gold);font-size:1.25rem;font-weight:800;margin-bottom:8px;}
+#success p{font-size:.88rem;color:var(--muted);line-height:1.7;}
+
+/* ── TOAST ── */
+#toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;}
+.toast{padding:9px 20px;border-radius:8px;font-size:.84rem;font-weight:700;opacity:0;animation:fio 3.5s forwards;pointer-events:none;white-space:nowrap;}
+.t-ok{background:#16a34a;color:var(--wh);}
+.t-er{background:#dc2626;color:var(--wh);}
+.t-nfo{background:var(--gold);color:#111;}
+.t-pro{background:var(--gold);color:#111;}
+@keyframes fio{0%{opacity:0;transform:translateY(16px);}12%{opacity:1;transform:translateY(0);}75%{opacity:1;}100%{opacity:0;}}
+
+/* ── EMAIL CONFIG ── */
+.email-note{font-size:.75rem;color:var(--muted);margin-top:7px;}
+.email-note a{color:var(--gold);}
+.email-note code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-size:.72rem;color:var(--gold2);}
+
+/* zone helpers */
+.zone-lbl,.upload-zone-wrap,.sec-zone{display:contents;}
+
+/* ── PRO TABLE (like form 1219) ── */
+.pro-tbl{
+  width:100%;border-collapse:collapse;
+  font-size:.78rem;margin-bottom:8px;
+  direction:rtl;
+}
+.pro-tbl thead tr{background:var(--gold);color:#111;}
+.pro-tbl thead th{
+  padding:7px 8px;font-weight:800;font-size:.74rem;
+  border:1px solid rgba(0,0,0,.15);
+  white-space:nowrap;text-align:center;
+}
+.pro-tbl tbody tr{background:rgba(255,255,255,.05);transition:background .1s;}
+.pro-tbl tbody tr:nth-child(even){background:rgba(255,255,255,.09);}
+.pro-tbl tbody tr:hover{background:rgba(200,134,10,.08);}
+.pro-tbl td{
+  padding:4px 5px;border:1px solid var(--dk-border);
+  vertical-align:middle;
+}
+.pro-tbl td.row-num{
+  text-align:center;font-weight:800;color:var(--gold);
+  font-size:.72rem;width:28px;
+}
+.pro-tbl td input,.pro-tbl td select{
+  width:100%;min-width:60px;
+  background:var(--inp);color:var(--inp-txt);
+  border:none;border-radius:4px;
+  padding:5px 7px;font-size:.78rem;
+  font-family:'Assistant',Arial,sans-serif;
+  text-align:right;
+}
+.pro-tbl td input:focus,.pro-tbl td select:focus{
+  outline:none;box-shadow:0 0 0 2px var(--gold);
+}
+.pro-tbl td input[type=date]{min-width:110px;}
+.rm-pro-row{
+  background:none;border:none;cursor:pointer;
+  color:var(--err);font-size:.85rem;padding:2px 5px;
+  border-radius:4px;opacity:.7;transition:opacity .15s;
+}
+.rm-pro-row:hover{opacity:1;background:var(--err-bg);}
+
+/* hide old pro-item styles when table is used */
+.pro-item{display:none;}
+
+/* PRINT */
+@media print{
+  .hero,.wa-float,.settings-card,.ul-btn,.rm,.rm-pro,
+  .add-pro-row,.action-area,.prog-card{display:none!important;}
+  .sec-body{display:block!important;}
+  body{background:#fff;color:#000;}
+  .sec,.card,.pro-item{background:#fff!important;border-color:#ddd!important;}
+  .sec-lbl,.sec-sub,.f label,.note-wrap label{color:#000!important;}
+  .f input,.f select,.f textarea,.note-wrap textarea{background:#f5f5f5!important;color:#000!important;border-color:#ccc!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGO BOX -->
+<div class="hero">
+  <div class="logo-box">
+    <div class="logo-raz">RAZ<span class="amp"> &</span><span class="co"> CO</span></div>
+    <div class="logo-heb">אייל רז ושות׳ · רואי חשבון</div>
+    <div class="logo-sub-en">ACCOUNTING · TAX &amp; BEYOND · SINCE 2005</div>
+  </div>
+</div>
+
+<!-- WhatsApp floating -->
+<a class="wa-float" href="https://wa.me/972" target="_blank">💬</a>
+
+<div class="wrap" id="page-wrap">
+
+<!-- PAGE HEADER -->
+<div class="page-hdr">
+  <div class="page-hdr-title">
+    <h1>הצהרת הון — טופס 1219</h1>
+    <p>דין וחשבון על רכוש והתחייבויות — חלק א׳</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <button class="btn btn-blue pro-section" id="print-btn" onclick="printForm()" style="gap:6px;padding:7px 16px;font-size:.84rem;">🖨️ הדפס טופס 1219</button>
+    <span class="mode-pill" id="mode-toggle" onclick="toggleMode()">
+      <span id="mode-icon">⚙️</span> <span id="mode-lbl">כניסת רו"ח</span>
+    </span>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS (רו"ח) ═══ -->
+<div class="settings-card" id="settings-card">
+  <div class="card-hdr">🔐 הגדרות רו"ח</div>
+  <div class="sg">
+    <div class="f full">
+      <label>Dropbox Access Token</label>
+      <input type="password" id="db-token" placeholder="הכנס Access Token..." oninput="onTok()"/>
+    </div>
+    <div class="f">
+      <label>תיקיית שמירה ב-Dropbox</label>
+      <input type="text" id="db-folder" value="/הצהרת הון - לקוחות"/>
+    </div>
+    <div class="f">
+      <label>שם לקוח לטעינה</label>
+      <input type="text" id="db-load-client" placeholder="שם כפי שנשמר בדרופבוקס"/>
+    </div>
+    <div class="f">
+      <label>מייל לקבלת התראות</label>
+      <input type="email" id="accountant-email" placeholder="רו@חשבון.co.il"/>
+    </div>
+    <div class="f">
+      <label>EmailJS Service ID</label>
+      <input type="text" id="ejs-service" placeholder="service_xxxxxxx"/>
+    </div>
+    <div class="f">
+      <label>EmailJS Template ID</label>
+      <input type="text" id="ejs-template" placeholder="template_xxxxxxx"/>
+    </div>
+    <div class="f">
+      <label>EmailJS Public Key</label>
+      <input type="text" id="ejs-key" placeholder="מפתח ציבורי"/>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;margin-top:11px;flex-wrap:wrap;">
+    <button class="btn btn-pro btn-sm" onclick="testDB()">🔌 בדוק Dropbox</button>
+    <button class="btn btn-pro btn-sm" onclick="loadClient()">📥 טען נתוני לקוח</button>
+    <button class="btn btn-ok btn-sm" onclick="saveSettings()">💾 שמור הגדרות</button>
+    <span id="db-badge" class="sbadge s-no"><span class="dot"></span>לא מחובר</span>
+    <span id="db-msg" style="font-size:.76rem;color:var(--muted);"></span>
+  </div>
+  <div class="email-note">
+    📧 להפעלת שליחת מייל: הירשם ב-<a href="https://www.emailjs.com" target="_blank">emailjs.com</a> (חינם עד 200 מייל/חודש) וצור template עם המשתנים: <code>client_name</code>, <code>client_id</code>, <code>summary</code><br/>
+    📦 Dropbox: <a href="https://www.dropbox.com/developers/apps" target="_blank">dropbox.com/developers/apps</a> → Full Dropbox → Generate token
+  </div>
+</div>
+
+<!-- CLIENT WELCOME BANNER (shown when URL params present) -->
+<div id="client-welcome" style="display:none;background:linear-gradient(135deg,#1c2035,#2c3158);border:1px solid var(--gold-border);border-radius:var(--r);padding:14px 20px;margin-bottom:12px;color:var(--wh);font-size:.92rem;font-weight:600;text-align:right;"></div>
+
+<!-- LINK GENERATOR (pro mode only) -->
+<div class="settings-card pro-section" id="link-gen-card" style="display:none;">
+  <div class="card-hdr">🔗 יצירת קישור אישי ללקוח</div>
+  <div class="sg">
+    <div class="f"><label>שם הלקוח *</label><input type="text" id="gen-name" placeholder="ישראל ישראלי"/></div>
+    <div class="f"><label>מספר זהות</label><input type="text" id="gen-id" placeholder="123456789"/></div>
+    <div class="f"><label>שנת הצהרה</label><input type="number" id="gen-year" placeholder="2024"/></div>
+    <div class="f"><label>שם בן/בת הזוג</label><input type="text" id="gen-sp" placeholder="שרה ישראלי"/></div>
+    <div class="f"><label>ת.ז. בן/בת הזוג</label><input type="text" id="gen-spid" placeholder="987654321"/></div>
+  </div>
+  <button class="btn btn-blue btn-sm" style="margin-top:10px;" onclick="generateClientLink()">✨ צור קישור אישי</button>
+  <div id="gen-result-wrap" style="display:none;margin-top:10px;">
+    <label style="font-size:.76rem;font-weight:700;color:var(--gold);display:block;margin-bottom:4px;">📋 העתק את הקישור ושלח ללקוח:</label>
+    <div style="display:flex;gap:8px;">
+      <input id="gen-result" type="text" readonly style="flex:1;background:var(--inp);color:var(--inp-txt);border:none;border-radius:7px;padding:8px 12px;font-size:.8rem;direction:ltr;" onclick="this.select()"/>
+      <button class="btn btn-pro btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('gen-result').value);toast('📋 הועתק!','ok')">העתק</button>
+    </div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:5px;">הלקוח יפתח את הקישור ויראה את שמו ופרטיו מולאים מראש</div>
+  </div>
+</div>
+
+<!-- PRO GUIDE BANNER -->
+<div class="pro-guide" id="pro-guide">
+  <div class="pro-guide-title">📋 מצב רו"ח — כל סעיף מכיל שלושה אזורים:</div>
+  <div class="pro-guide-zones">
+    <div class="pz"><div class="pz-dot blue"></div>הערות הלקוח (לקריאה בלבד)</div>
+    <div class="pz"><div class="pz-dot yellow"></div>העלאת מסמכים + קישור Dropbox</div>
+    <div class="pz"><div class="pz-dot green"></div>שדות מילוי רו"ח לפי טופס 1219</div>
+  </div>
+</div>
+
+<!-- ═══ CLIENT MODE ═══ -->
+<div id="client-mode">
+
+  <div class="intro-card" style="margin-top:4px;">
+    <h2>שלום! 👋 ברוכים הבאים לטופס הצהרת ההון</h2>
+    <p style="font-size:.84rem;color:var(--muted);line-height:1.6;">אנא עברו על כל סעיף, צרפו את המסמכים המתאימים והוסיפו הערות לפי הצורך.</p>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><span>עברו על כל סעיף וסמנו אם רלוונטי</span></div>
+      <div class="step"><div class="num">2</div><span>צרפו את המסמכים הנדרשים לכל סעיף</span></div>
+      <div class="step"><div class="num">3</div><span>הוסיפו הערות / הבהרות לפי הצורך</span></div>
+      <div class="step"><div class="num">4</div><span>לחצו "שלח למשרד" — הכל יגיע ישירות לרואה החשבון</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">👤 פרטים אישיים</div>
+    <div class="frow"><label>שם מלא <span class="req">*</span></label><input type="text" id="c-last" placeholder="שם משפחה ושם פרטי" oninput="syncClient()"/></div>
+    <div class="frow"><label>מספר זהות <span class="req">*</span></label><input type="text" id="c-id" placeholder="מספר ת.ז."/></div>
+    <div class="frow"><label>טלפון <span class="req">*</span></label><input type="tel" id="c-phone" placeholder="050-0000000"/></div>
+    <div class="frow"><label>דואר אלקטרוני <span class="req">*</span></label><input type="email" id="c-email" placeholder="example@gmail.com"/></div>
+    <div class="frow"><label>שם בן/בת הזוג</label><input type="text" id="c-sp-last" placeholder="שם מלא של בן/בת הזוג"/></div>
+    <div class="frow"><label>ת.ז. בן/בת הזוג</label><input type="text" id="c-sp-id" placeholder="מספר ת.ז."/></div>
+    <div class="frow"><label>שנת ההצהרה <span class="req">*</span></label><input type="number" id="c-year" placeholder="2024" min="2000" max="2099"/></div>
+    <!-- hidden compat fields -->
+    <input type="hidden" id="c-first"/><input type="hidden" id="c-sp-first"/>
+  </div>
+
+  <div class="prog-card">
+    <h3>📋 סעיפים שטופלו</h3>
+    <div class="prog-track"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div class="prog-lbl"><span id="prog-pct">0% הושלם</span><span id="prog-cnt">0 / 12 סעיפים</span></div>
+  </div>
+
+</div><!-- /client-mode -->
+
+<!-- ═══ SECTIONS ═══ -->
+<!-- Each section has: client notes + upload (always) + pro fields (pro mode only) -->
+
+<!-- 10 -->
+<div class="sec" id="sec-10"><div class="sec-hdr" onclick="tog(10)"><div class="sec-left"><div class="sec-icon">🏠</div><div><div class="sec-lbl">נדל"ן בארץ</div><div class="sec-sub">מבנה, בית, דירה, קרקע, שטחים חקלאיים כולל עלויות נלוות</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 10</span><span class="chk" id="chk-10">○</span><span class="chv" id="chv-10">▼</span></div></div>
+<div class="sec-body" id="body-10">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>נסח טאבו / אישור רישום</li><li>חוזה רכישה</li><li>שומת מס שבח (אם בוצעה)</li><li>אישור ארנונה</li><li>הסכם שכירות (אם הנכס מושכר)</li></ul></div>
+  <div class="note-wrap" id="note-wrap-10"><label>💬 הערות הלקוח</label><textarea id="txt-10" placeholder="לדוגמה: דירת מגורים ברחוב הרצל 5 תל-אביב, גוש 6784 חלקה 12. נרכשה 2018..." oninput="markDone(10)"></textarea></div>
+  <div id="ro-note-10" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-10"></span></div>
+  <div class="pro-section" id="pro-10">
+    <a class="db-link-btn" id="dbl-10" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 10</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 10</h4><div id="pro-rows-10"></div><button class="add-pro-row" onclick="addProRow(10)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-10"><div class="uz-top"><label class="ul-btn" for="fi-10">📎 בחר קבצים</label><input type="file" id="fi-10" multiple onchange="onFiles(10,this)"/><span class="uz-hint">גרור קבצים לכאן · PDF, JPG, PNG, Word</span></div><div class="file-list" id="fl-10"></div></div>
+</div></div>
+
+<!-- 20 -->
+<div class="sec" id="sec-20"><div class="sec-hdr" onclick="tog(20)"><div class="sec-left"><div class="sec-icon">🌍</div><div><div class="sec-lbl">נדל"ן בחו"ל</div><div class="sec-sub">נכסים מחוץ לישראל — דירות, בתים, קרקעות</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 20</span><span class="chk" id="chk-20">○</span><span class="chv" id="chv-20">▼</span></div></div>
+<div class="sec-body" id="body-20">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>נסח בעלות / אישור רישום</li><li>חוזה רכישה</li><li>הערכת שמאי / שווי שוק</li></ul></div>
+  <div class="note-wrap" id="note-wrap-20"><label>💬 הערות הלקוח</label><textarea id="txt-20" placeholder="לדוגמה: דירה בברלין, גרמניה, רכשתי ב-2019 ב-250,000 יורו..." oninput="markDone(20)"></textarea></div>
+  <div id="ro-note-20" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-20"></span></div>
+  <div class="pro-section" id="pro-20">
+    <a class="db-link-btn" id="dbl-20" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 20</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 20</h4><div id="pro-rows-20"></div><button class="add-pro-row" onclick="addProRow(20)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-20"><div class="uz-top"><label class="ul-btn" for="fi-20">📎 בחר קבצים</label><input type="file" id="fi-20" multiple onchange="onFiles(20,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-20"></div></div>
+</div></div>
+
+<!-- 30 -->
+<div class="sec" id="sec-30"><div class="sec-hdr" onclick="tog(30)"><div class="sec-left"><div class="sec-icon">🏦</div><div><div class="sec-lbl">חשבונות בנקים ומוסדות כספיים</div><div class="sec-sub">עו"ש, פיקדונות, חסכונות — בארץ ובחו"ל, כולל חשבונות דיגיטליים</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 30</span><span class="chk" id="chk-30">○</span><span class="chv" id="chv-30">▼</span></div></div>
+<div class="sec-body" id="body-30">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>אישור יתרה לתאריך ההצהרה (מכל חשבון)</li><li>דפי חשבון — 12 חודשים אחרונים</li><li>אישור פיקדונות / חסכונות</li></ul></div>
+  <div class="note-wrap" id="note-wrap-30"><label>💬 הערות הלקוח</label><textarea id="txt-30" placeholder="לדוגמה: חשבון בבנק לאומי סניף 800, חשבון משותף. פיקדון ל-5 שנים בבנק הפועלים..." oninput="markDone(30)"></textarea></div>
+  <div id="ro-note-30" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-30"></span></div>
+  <div class="pro-section" id="pro-30">
+    <a class="db-link-btn" id="dbl-30" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 30</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 30</h4><div id="pro-rows-30"></div><button class="add-pro-row" onclick="addProRow(30)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-30"><div class="uz-top"><label class="ul-btn" for="fi-30">📎 בחר קבצים</label><input type="file" id="fi-30" multiple onchange="onFiles(30,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-30"></div></div>
+</div></div>
+
+<!-- 40 -->
+<div class="sec" id="sec-40"><div class="sec-hdr" onclick="tog(40)"><div class="sec-left"><div class="sec-icon">₿</div><div><div class="sec-lbl">נכסים דיגיטליים</div><div class="sec-sub">ביטקוין, אטריום, לייטקוין ועוד</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 40</span><span class="chk" id="chk-40">○</span><span class="chv" id="chv-40">▼</span></div></div>
+<div class="sec-body" id="body-40">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>צילום מסך ארנק / Exchange עם יתרה</li><li>אסמכתאות רכישה</li><li>דוח רווח/הפסד מה-Exchange</li></ul></div>
+  <div class="note-wrap" id="note-wrap-40"><label>💬 הערות הלקוח</label><textarea id="txt-40" placeholder="לדוגמה: 0.5 Bitcoin ב-Coinbase, 2 Ethereum ב-Ledger..." oninput="markDone(40)"></textarea></div>
+  <div id="ro-note-40" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-40"></span></div>
+  <div class="pro-section" id="pro-40">
+    <a class="db-link-btn" id="dbl-40" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 40</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 40</h4><div id="pro-rows-40"></div><button class="add-pro-row" onclick="addProRow(40)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-40"><div class="uz-top"><label class="ul-btn" for="fi-40">📎 בחר קבצים</label><input type="file" id="fi-40" multiple onchange="onFiles(40,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-40"></div></div>
+</div></div>
+
+<!-- 50 -->
+<div class="sec" id="sec-50"><div class="sec-hdr" onclick="tog(50)"><div class="sec-left"><div class="sec-icon">💵</div><div><div class="sec-lbl">מזומנים</div><div class="sec-sub">כסף מזומן שאינו מופקד בבנק</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 50</span><span class="chk" id="chk-50">○</span><span class="chv" id="chv-50">▼</span></div></div>
+<div class="sec-body" id="body-50">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>הצהרה על החזקת מזומן (אם נדרש)</li></ul></div>
+  <div class="note-wrap" id="note-wrap-50"><label>💬 הערות הלקוח</label><textarea id="txt-50" placeholder="לדוגמה: ₪15,000 מזומן בכספת. 2,000 דולר..." oninput="markDone(50)"></textarea></div>
+  <div id="ro-note-50" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-50"></span></div>
+  <div class="pro-section" id="pro-50">
+    <a class="db-link-btn" id="dbl-50" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 50</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 50</h4><div id="pro-rows-50"></div><button class="add-pro-row" onclick="addProRow(50)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-50"><div class="uz-top"><label class="ul-btn" for="fi-50">📎 בחר קבצים</label><input type="file" id="fi-50" multiple onchange="onFiles(50,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-50"></div></div>
+</div></div>
+
+<!-- 60 -->
+<div class="sec" id="sec-60"><div class="sec-hdr" onclick="tog(60)"><div class="sec-left"><div class="sec-icon">🔒</div><div><div class="sec-lbl">ביטוח חיים, קופות גמל, קרן פנסיה, קרן השתלמות</div><div class="sec-sub">תכניות חיסכון ארוכות טווח — בארץ ובחו"ל</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 60</span><span class="chk" id="chk-60">○</span><span class="chv" id="chv-60">▼</span></div></div>
+<div class="sec-body" id="body-60">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>דוח שנתי מכל קרן / קופה</li><li>אישור יתרה לתאריך ההצהרה</li><li>פוליסת ביטוח חיים</li></ul></div>
+  <div class="note-wrap" id="note-wrap-60"><label>💬 הערות הלקוח</label><textarea id="txt-60" placeholder="לדוגמה: קרן פנסיה במגדל מס' 12345, קרן השתלמות בהראל..." oninput="markDone(60)"></textarea></div>
+  <div id="ro-note-60" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-60"></span></div>
+  <div class="pro-section" id="pro-60">
+    <a class="db-link-btn" id="dbl-60" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 60</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 60</h4><div id="pro-rows-60"></div><button class="add-pro-row" onclick="addProRow(60)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-60"><div class="uz-top"><label class="ul-btn" for="fi-60">📎 בחר קבצים</label><input type="file" id="fi-60" multiple onchange="onFiles(60,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-60"></div></div>
+</div></div>
+
+<!-- 70 -->
+<div class="sec" id="sec-70"><div class="sec-hdr" onclick="tog(70)"><div class="sec-left"><div class="sec-icon">📈</div><div><div class="sec-lbl">ניירות ערך וקרנות נאמנות</div><div class="sec-sub">מניות, אג"ח, קרנות — בארץ ובחו"ל</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 70</span><span class="chk" id="chk-70">○</span><span class="chv" id="chv-70">▼</span></div></div>
+<div class="sec-body" id="body-70">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>דוח תיק השקעות לתאריך ההצהרה</li><li>אישור יתרה מהברוקר / הבנק</li><li>דוח רווח והפסד שנתי</li></ul></div>
+  <div class="note-wrap" id="note-wrap-70"><label>💬 הערות הלקוח</label><textarea id="txt-70" placeholder="לדוגמה: תיק השקעות ב-IBI, מניות ב-Interactive Brokers..." oninput="markDone(70)"></textarea></div>
+  <div id="ro-note-70" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-70"></span></div>
+  <div class="pro-section" id="pro-70">
+    <a class="db-link-btn" id="dbl-70" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 70</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 70</h4><div id="pro-rows-70"></div><button class="add-pro-row" onclick="addProRow(70)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-70"><div class="uz-top"><label class="ul-btn" for="fi-70">📎 בחר קבצים</label><input type="file" id="fi-70" multiple onchange="onFiles(70,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-70"></div></div>
+</div></div>
+
+<!-- 80 -->
+<div class="sec" id="sec-80"><div class="sec-hdr" onclick="tog(80)"><div class="sec-left"><div class="sec-icon">🤝</div><div><div class="sec-lbl">חייבים — הלוואות שנתתי לאחרים</div><div class="sec-sub">כספים שהלוויתי לאנשים פרטיים, חברות, קרובים</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 80</span><span class="chk" id="chk-80">○</span><span class="chv" id="chv-80">▼</span></div></div>
+<div class="sec-body" id="body-80">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>חוזה הלוואה / שטר חוב</li><li>אסמכתאות העברה בנקאית</li></ul></div>
+  <div class="note-wrap" id="note-wrap-80"><label>💬 הערות הלקוח</label><textarea id="txt-80" placeholder="לדוגמה: הלוואה לאחי ₪50,000 משנת 2022, לא הוחזרה..." oninput="markDone(80)"></textarea></div>
+  <div id="ro-note-80" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-80"></span></div>
+  <div class="pro-section" id="pro-80">
+    <a class="db-link-btn" id="dbl-80" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 80</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 80</h4><div id="pro-rows-80"></div><button class="add-pro-row" onclick="addProRow(80)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-80"><div class="uz-top"><label class="ul-btn" for="fi-80">📎 בחר קבצים</label><input type="file" id="fi-80" multiple onchange="onFiles(80,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-80"></div></div>
+</div></div>
+
+<!-- 90 -->
+<div class="sec" id="sec-90"><div class="sec-hdr" onclick="tog(90)"><div class="sec-left"><div class="sec-icon">🚗</div><div><div class="sec-lbl">כלי תחבורה</div><div class="sec-sub">רכב פרטי, אופנוע, סירה, מטוס פרטי</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 90</span><span class="chk" id="chk-90">○</span><span class="chv" id="chv-90">▼</span></div></div>
+<div class="sec-body" id="body-90">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>רישיון רכב עדכני</li><li>חוזה רכישה / הסכם ליסינג</li></ul></div>
+  <div class="note-wrap" id="note-wrap-90"><label>💬 הערות הלקוח</label><textarea id="txt-90" placeholder="לדוגמה: טויוטה קורולה 2021 מס' 12-345-67, אופנוע הונדה 2019..." oninput="markDone(90)"></textarea></div>
+  <div id="ro-note-90" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-90"></span></div>
+  <div class="pro-section" id="pro-90">
+    <a class="db-link-btn" id="dbl-90" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 90</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 90</h4><div id="pro-rows-90"></div><button class="add-pro-row" onclick="addProRow(90)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-90"><div class="uz-top"><label class="ul-btn" for="fi-90">📎 בחר קבצים</label><input type="file" id="fi-90" multiple onchange="onFiles(90,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-90"></div></div>
+</div></div>
+
+<!-- 100 -->
+<div class="sec" id="sec-100"><div class="sec-hdr" onclick="tog(100)"><div class="sec-left"><div class="sec-icon">💎</div><div><div class="sec-lbl">תכשיטים, זהב, יהלומים, פריטי אסמכנות ואומנות</div><div class="sec-sub">שעונים יקרים, כלי כסף, מטבעות, יצירות אמנות</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 100</span><span class="chk" id="chk-100">○</span><span class="chv" id="chv-100">▼</span></div></div>
+<div class="sec-body" id="body-100">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>שמאות / הערכת ערך</li><li>חשבונית רכישה</li></ul></div>
+  <div class="note-wrap" id="note-wrap-100"><label>💬 הערות הלקוח</label><textarea id="txt-100" placeholder="לדוגמה: תכשיטי ירושה מוערכים ב-₪30,000, שעון Rolex רכשתי 2020..." oninput="markDone(100)"></textarea></div>
+  <div id="ro-note-100" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-100"></span></div>
+  <div class="pro-section" id="pro-100">
+    <a class="db-link-btn" id="dbl-100" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 100</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 100</h4><div id="pro-rows-100"></div><button class="add-pro-row" onclick="addProRow(100)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-100"><div class="uz-top"><label class="ul-btn" for="fi-100">📎 בחר קבצים</label><input type="file" id="fi-100" multiple onchange="onFiles(100,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-100"></div></div>
+</div></div>
+
+<!-- 110 -->
+<div class="sec" id="sec-110"><div class="sec-hdr" onclick="tog(110)"><div class="sec-left"><div class="sec-icon">🏡</div><div><div class="sec-lbl">תכולת בית</div><div class="sec-sub">ריהוט, מכשירי חשמל, ציוד יקר ערך</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 110</span><span class="chk" id="chk-110">○</span><span class="chv" id="chv-110">▼</span></div></div>
+<div class="sec-body" id="body-110">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>פוליסת ביטוח תכולה</li><li>חשבוניות לפריטים יקרים</li></ul></div>
+  <div class="note-wrap" id="note-wrap-110"><label>💬 הערות הלקוח</label><textarea id="txt-110" placeholder="לדוגמה: ריהוט סלון מעוצב ₪40,000, מערכת סטריאו ₪15,000..." oninput="markDone(110)"></textarea></div>
+  <div id="ro-note-110" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-110"></span></div>
+  <div class="pro-section" id="pro-110">
+    <a class="db-link-btn" id="dbl-110" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 110</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 110</h4><div id="pro-rows-110"></div><button class="add-pro-row" onclick="addProRow(110)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-110"><div class="uz-top"><label class="ul-btn" for="fi-110">📎 בחר קבצים</label><input type="file" id="fi-110" multiple onchange="onFiles(110,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-110"></div></div>
+</div></div>
+
+<!-- 120 -->
+<div class="sec" id="sec-120"><div class="sec-hdr" onclick="tog(120)"><div class="sec-left"><div class="sec-icon">📦</div><div><div class="sec-lbl">רכוש אחר שלא פורט לעיל</div><div class="sec-sub">כל נכס שלא נכלל בסעיפים הקודמים</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 120</span><span class="chk" id="chk-120">○</span><span class="chv" id="chv-120">▼</span></div></div>
+<div class="sec-body" id="body-120">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>כל אסמכתא רלוונטית</li></ul></div>
+  <div class="note-wrap" id="note-wrap-120"><label>💬 הערות הלקוח</label><textarea id="txt-120" placeholder="לדוגמה: זכות בשותפות, פטנט, כספים בנאמנות..." oninput="markDone(120)"></textarea></div>
+  <div id="ro-note-120" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-120"></span></div>
+  <div class="pro-section" id="pro-120">
+    <a class="db-link-btn" id="dbl-120" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 120</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 120</h4><div id="pro-rows-120"></div><button class="add-pro-row" onclick="addProRow(120)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-120"><div class="uz-top"><label class="ul-btn" for="fi-120">📎 בחר קבצים</label><input type="file" id="fi-120" multiple onchange="onFiles(120,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-120"></div></div>
+</div></div>
+
+<!-- TOTAL 200 (pro only) -->
+<div class="pro-section total-bar tb-assets" id="pro-t200" style="border-radius:10px;margin:6px 0;">
+  <span class="tb-label">שורה 200 — סה"כ רכוש פרטי</span>
+  <span class="tb-val">₪ <span id="t200">0</span></span>
+</div>
+
+<div class="divider" id="liab-divider"><span>📉 התחייבויות</span></div>
+
+<!-- 130 -->
+<div class="sec" id="sec-130"><div class="sec-hdr" onclick="tog(130)"><div class="sec-left"><div class="sec-icon">🏧</div><div><div class="sec-lbl">התחייבויות לבנקים ולמוסדות כספיים</div><div class="sec-sub">משכנתאות, הלוואות בנקאיות — בארץ ובחו"ל</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 130</span><span class="chk" id="chk-130">○</span><span class="chv" id="chv-130">▼</span></div></div>
+<div class="sec-body" id="body-130">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>אישור יתרת משכנתא לתאריך ההצהרה</li><li>לוח סילוקין עדכני</li><li>אישור יתרת הלוואות בנקאיות</li></ul></div>
+  <div class="note-wrap" id="note-wrap-130"><label>💬 הערות הלקוח</label><textarea id="txt-130" placeholder="לדוגמה: משכנתא בבנק לאומי על הדירה, יתרה כ-₪600,000. הלוואת רכב בבנק הפועלים..." oninput="markDone(130)"></textarea></div>
+  <div id="ro-note-130" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-130"></span></div>
+  <div class="pro-section" id="pro-130">
+    <a class="db-link-btn" id="dbl-130" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 130</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 130</h4><div id="pro-rows-130"></div><button class="add-pro-row" onclick="addProRow(130)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-130"><div class="uz-top"><label class="ul-btn" for="fi-130">📎 בחר קבצים</label><input type="file" id="fi-130" multiple onchange="onFiles(130,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-130"></div></div>
+</div></div>
+
+<!-- 140 -->
+<div class="sec" id="sec-140"><div class="sec-hdr" onclick="tog(140)"><div class="sec-left"><div class="sec-icon">💳</div><div><div class="sec-lbl">הלוואות שלקחתי מאחרים</div><div class="sec-sub">הלוואות מאנשים פרטיים, ממשפחה, מחברים</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 140</span><span class="chk" id="chk-140">○</span><span class="chv" id="chv-140">▼</span></div></div>
+<div class="sec-body" id="body-140">
+  <div class="docs-box"><h4>📋 מסמכים לצירוף</h4><ul><li>חוזה הלוואה / שטר חוב</li><li>אסמכתאות קבלת הכסף</li></ul></div>
+  <div class="note-wrap" id="note-wrap-140"><label>💬 הערות הלקוח</label><textarea id="txt-140" placeholder="לדוגמה: הלוואה מהורים ₪200,000 לצורך רכישת הדירה, ללא ריבית..." oninput="markDone(140)"></textarea></div>
+  <div id="ro-note-140" class="client-note-ro" style="display:none;"><div class="lbl">💬 הערות הלקוח</div><span id="ro-txt-140"></span></div>
+  <div class="pro-section" id="pro-140">
+    <a class="db-link-btn" id="dbl-140" href="#" target="_blank">📁 פתח תיקיית Dropbox — שורה 140</a>
+    <div class="pro-fields-wrap"><h4>✏️ מילוי רו"ח — נתוני שורה 140</h4><div id="pro-rows-140"></div><button class="add-pro-row" onclick="addProRow(140)">＋ הוסף שורה</button></div>
+  </div>
+  <div class="upload-zone" id="uz-140"><div class="uz-top"><label class="ul-btn" for="fi-140">📎 בחר קבצים</label><input type="file" id="fi-140" multiple onchange="onFiles(140,this)"/><span class="uz-hint">גרור קבצים לכאן</span></div><div class="file-list" id="fl-140"></div></div>
+</div></div>
+
+<!-- TOTALS 210 / 220 (pro only) -->
+<div class="pro-section total-bar tb-liab" id="pro-t210" style="border-radius:10px;margin:6px 0;">
+  <span class="tb-label">שורה 210 — סה"כ התחייבויות (130+140)</span>
+  <span class="tb-val">₪ <span id="t210">0</span></span>
+</div>
+<div class="pro-section total-bar tb-net" id="pro-t220" style="border-radius:10px;margin:6px 0 18px;">
+  <span class="tb-label">שורה 220 — סה"כ רכוש פרטי נטו (200−210)</span>
+  <span class="tb-val">₪ <span id="t220">0</span></span>
+</div>
+
+<!-- CLIENT ACTION -->
+<div class="action-area" id="client-action">
+  <h3>✅ מוכן לשליחה?</h3>
+  <p>לאחר שצירפת את כל המסמכים והוספת הערות,<br/>לחץ "שלח למשרד" — הכל יגיע ישירות לרואה החשבון.</p>
+  <div class="act-btns">
+    <button class="btn btn-outline btn-big" onclick="saveDraft()">💾 שמור את הטופס</button>
+    <button class="btn btn-blue btn-big" onclick="clientSubmit()">שלח ←</button>
+  </div>
+</div>
+
+<!-- PRO ACTION -->
+<div class="action-area pro-area pro-section" id="pro-action">
+  <h3>💾 שמירת הטופס המלא</h3>
+  <p>לאחר מילוי כל הנתונים, שמור את הטופס הסופי לדרופבוקס.</p>
+  <div class="act-btns">
+    <button class="btn btn-pro btn-big" onclick="proSave()">💾 שמור לדרופבוקס</button>
+    <button class="btn btn-blue btn-big" onclick="printForm()">🖨️ הדפס טופס 1219</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<!-- SUCCESS SCREEN -->
+<div id="success">
+  <div class="big-icon">✅</div>
+  <h2>הטופס נשלח בהצלחה!</h2>
+  <p>המסמכים שלך הועלו ויגיעו למשרד רואה החשבון.<br/>תודה רבה! 🙏</p>
+</div>
+
+<div id="toasts"></div>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════
+// ROWS & FIELD DEFINITIONS (for pro mode)
+// ═══════════════════════════════════════════════════
+const ROWS=[10,20,30,40,50,60,70,80,90,100,110,120,130,140];
+const ASSET_ROWS=[10,20,30,40,50,60,70,80,90,100,110,120];
+const LIAB_ROWS=[130,140];
+
+const PRO_FIELDS={
+  10:[{l:'סוג הנכס',t:'select',o:['דירת מגורים','בית פרטי','קרקע','נכס מסחרי','אחר']},{l:'תאריך רכישה/שיפורים',t:'date'},{l:'גוש',t:'text',p:'גוש'},{l:'חלקה',t:'text',p:'חלקה'},{l:'תת חלקה',t:'text',p:'תת'},{l:'כתובת',t:'text',p:'כתובת הנכס'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  20:[{l:'סוג הנכס',t:'select',o:['דירה','בית','קרקע','נכס מסחרי','אחר']},{l:'תאריך רכישה/שיפורים',t:'date'},{l:'מדינה',t:'text',p:'מדינה'},{l:'כתובת',t:'text',p:'כתובת'},{l:'מטבע',t:'select',o:['USD','EUR','GBP','אחר']},{l:'עלות מט"ח',t:'number',p:'0'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  30:[{l:'שם המוסד',t:'text',p:'בנק/מוסד'},{l:'מדינה',t:'text',p:'ישראל'},{l:'שם בעל החשבון',t:'text',p:'שם'},{l:'מספר חשבון',t:'text',p:'חשבון'},{l:'מספר בנק',t:'text',p:'בנק'},{l:'מספר סניף',t:'text',p:'סניף'},{l:'מטבע',t:'select',o:['₪','$','€','£','אחר']},{l:'סכום מט"ח',t:'number',p:'0'},{l:'סכום ₪',t:'number',p:'0',sum:true}],
+  40:[{l:'סוג',t:'select',o:['Bitcoin','Ethereum','Litecoin','Solana','XRP','אחר']},{l:'כמות',t:'text',p:'כמות'},{l:'תאריך רכישה',t:'date'},{l:'כתובת ארנק',t:'text',p:'אופציונלי'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  50:[{l:'מטבע',t:'select',o:['₪','$','€','£','אחר']},{l:'סכום מט"ח',t:'number',p:'0'},{l:'סכום ₪',t:'number',p:'0',sum:true}],
+  60:[{l:'סוג',t:'select',o:['קרן פנסיה','קופת גמל','קרן השתלמות','ביטוח מנהלים','ביטוח חיים','אחר']},{l:'מדינה',t:'text',p:'ישראל'},{l:'שם המוסד',t:'text',p:'שם הגוף'},{l:'שם בעל החשבון',t:'text',p:'שם'},{l:'מספר פוליסה/חשבון',t:'text',p:'מספר'},{l:'מטבע',t:'select',o:['₪','$','€','אחר']},{l:'סכום מט"ח',t:'number',p:'0'},{l:'סכום ₪',t:'number',p:'0',sum:true}],
+  70:[{l:'סוג נייר',t:'select',o:['מניה','אג"ח','קרן נאמנות','תעודת סל','נאמנות','אחר']},{l:'שם המוסד',t:'text',p:'ברוקר/בנק'},{l:'מדינה',t:'text',p:'ישראל'},{l:'שם החשבון',t:'text',p:'שם'},{l:'מספר חשבון',t:'text',p:'חשבון'},{l:'מספר בנק',t:'text',p:'בנק'},{l:'מספר סניף',t:'text',p:'סניף'},{l:'מטבע',t:'select',o:['₪','$','€','אחר']},{l:'סכום מט"ח',t:'number',p:'0'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  80:[{l:'שם החייב/ת',t:'text',p:'שם מלא'},{l:'קירבה',t:'select',o:['בן/בת זוג','בן/בת','הורה','אח/אחות','ידיד/ה','חברה','אחר']},{l:'מספר זהות/ח"פ',t:'text',p:'מזהה'},{l:'שנת היווצרות',t:'number',p:'2020'},{l:'מטבע',t:'select',o:['₪','$','€','אחר']},{l:'סכום מט"ח',t:'number',p:'0'},{l:'סכום ₪',t:'number',p:'0',sum:true}],
+  90:[{l:'סוג',t:'select',o:['רכב פרטי','משאית','אופנוע','סירה','יאכטה','מטוס','אחר']},{l:'תאריך רכישה',t:'date'},{l:'מספר רישוי/רישום',t:'text',p:'00-000-00'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  100:[{l:'סוג הפריט',t:'select',o:['תכשיטים','שעון יוקרה','זהב/כסף','יהלומים','יצירת אמנות','אספנות','אחר']},{l:'תאריך רכישה',t:'date'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  110:[{l:'סוג הפריט',t:'select',o:['ריהוט','מכשירי חשמל','ציוד אלקטרוני','כלי נגינה','אחר']},{l:'תאריך רכישה',t:'date'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  120:[{l:'תיאור',t:'text',p:'תיאור הרכוש'},{l:'תאריך רכישה',t:'date'},{l:'עלות ₪',t:'number',p:'0',sum:true}],
+  130:[{l:'מדינה',t:'text',p:'ישראל'},{l:'שם המוסד',t:'text',p:'בנק/מוסד'},{l:'שם בעל החשבון',t:'text',p:'שם'},{l:'מספר חשבון',t:'text',p:'חשבון'},{l:'מספר בנק',t:'text',p:'בנק'},{l:'מספר סניף',t:'text',p:'סניף'},{l:'מטבע',t:'select',o:['₪','$','€','אחר']},{l:'סכום מט"ח',t:'number',p:'0'},{l:'סכום ₪',t:'number',p:'0',sum:true}],
+  140:[{l:'שם הגורם ממנו נלקחה ההלוואה',t:'text',p:'שם מלא'},{l:'קירבה',t:'select',o:['בן/בת זוג','בן/בת','הורה','אח/אחות','ידיד/ה','חברה','אחר']},{l:'מספר זהות/ח"פ',t:'text',p:'מזהה'},{l:'שנת היווצרות',t:'number',p:'2020'},{l:'מטבע',t:'select',o:['₪','$','€','אחר']},{l:'סכום מט"ח',t:'number',p:'0'},{l:'סכום ₪',t:'number',p:'0',sum:true}],
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let isProMode=false;
+let dbToken='sl.u.AGfC7TXqCx702nUkaGJ_6_Efwixaff51CR04tZyCH_4_36x7XyqgcmSKq1suLHEl7zauXK8NRSP1egF58bzk8Os0GEAG4desYT9ZNbXXYtVAack9LICNZVNhF0Ne8_gfV0THcTjdl3WL2H7v96qLh--Hy0IuMViyJBr6lpEQdd-Pmeo8G2cecyIEcBglSydfaP7yTL_IisVcrpRF8DFjxxtq-G9J7MOX9Wt-oIAFGsFd9SfZLNBjQfbvfeK0VmEEbP8pK7sCdbf_30ttfs9-kXXTXfDFuAKqM4VIJSuD7GVFjJRjMyePS5R9kNfRv6RoCnDxjyD7R87Wveg19WPQGHqKMXKgrBLOnUTgmZMvpNFqjRlirkU7ICXVeo_Wvzfes7TAv3NTDcuOsg3Nce9w201PjYAM_-6R7M4pGq0Fny911xg9mrrk7q-tANL5qXCS-NOTqBTAiUgIGssN4fwZ8KtjElBUAEvziUfWyI7HBYnNR3MU_ZjrK-0swN3ktK_5rNpmbCKS7R-MS3sDcIQEEp7ecG4rOZVnBj80Ffy4zcB0ts-Ef8eDvxOpKzVF7EjHFTksstdapnKeF6VeptZHsw08Flfan18G4ljS1cawcl-aUiLZ3g6ut_HJ9zYCOtEF8f6dAPePYiXs8glsFWq0uIKhFIl9G6w9p6MvZ15FlAVZpt1d8JUmumBujVI5oYg0J6AlnEgeQNjMgVtXg5OjTMBvXhmcLvVnRnJXjb9jETFV5MlyuE9e77jcFGtrqbcX4q35-P9yvTr2j3EfEs_ysL106MHFdSdMeTwiLVQmw1EDCKzqkW2puhB1ZVKoYfbsOhDJKWq2PAz_1kF0E4Yu3RgSnEXtJ7H2HVFBEEbJoIUjm1m3Qy-jVEIFuN7bKRZzzgfZU4TCa2X2vcuK5X0Hg0Vp9TSEjPdnlDAbZZnaBwGZUD2PuEjCpdwlHFLQJdRQuCGyAEljuToczkhKBH2lxv8EoCU_tXjpLYvAj3ne_n_OuSV5dYgQ3rVc7MmKgRR1dImCWzCi8HdzHFx61fUweH61UObxU1-BqrztnAGO5Ly0VFUgZ7DgzT6pomnQ8revdv09sFgMmv85_WE-gdMpseD_2OkDIpvlJVI5w3y1PyIEbriKxR03LWaNsggPofEdsh6XjzlGh4oV0jVsg2EPTK1mC8C1TLa6eA5kBPsy-1tfxfPkGA9KaPMxNUvnBUE_8CNWXyQHC3ZaeQBZdW17YgwPWJt3lPguQ9n8LZVNvAAIs9wuo3ebXjqm0MYwvp0VbOaxagr0GcEp1QsUfl2xuMtfDhmxllv2BuKAjbVOfZRXIw';
+const done=new Set();
+let proRowCtrs={};
+ROWS.forEach(r=>proRowCtrs[r]=0);
+
+// Default number of pre-populated rows per section (matching form 1219)
+const DEFAULT_ROWS={
+  10:3, // נכסי מקרקעין בישראל
+  20:3, // נכסי מקרקעין בחו"ל
+  30:5, // חשבונות בנק
+  40:3, // מטבעות וירטואליים
+  50:2, // מזומן ומטבע חוץ
+  60:3, // קופות גמל וביטוח
+  70:4, // ניירות ערך
+  80:3, // חייבים
+  90:3, // כלי תחבורה
+  100:2, // תכשיטים
+  110:2, // תכולת בית
+  120:2, // רכוש אחר
+  130:4, // התחייבויות לבנקים
+  140:3, // הלוואות מאחרים
+};
+
+// ═══════════════════════════════════════════════════
+// MODE TOGGLE
+// ═══════════════════════════════════════════════════
+function toggleMode(){
+  isProMode=!isProMode;
+  const pill=document.getElementById('mode-toggle');
+  document.getElementById('mode-icon').textContent=isProMode?'👤':'⚙️';
+  document.getElementById('mode-lbl').textContent=isProMode?'מצב לקוח':'כניסת רו"ח';
+  pill.classList.toggle('pro-mode',isProMode);
+  document.getElementById('settings-card').classList.toggle('show',isProMode);
+  document.getElementById('pro-guide').classList.toggle('show',isProMode);
+  document.getElementById('link-gen-card').style.display=isProMode?'block':'none';
+  document.getElementById('client-mode').style.display=isProMode?'none':'block';
+  document.getElementById('client-action').style.display=isProMode?'none':'block';
+  document.querySelectorAll('.pro-section').forEach(el=>el.classList.toggle('show',isProMode));
+  // swap note views
+  ROWS.forEach(r=>{
+    const nw=document.getElementById('note-wrap-'+r);
+    const ro=document.getElementById('ro-note-'+r);
+    if(nw)nw.style.display=isProMode?'none':'block';
+    if(ro)ro.style.display=isProMode?'block':'none';
+    // populate readonly
+    if(isProMode&&ro){
+      const txt=document.getElementById('txt-'+r);
+      document.getElementById('ro-txt-'+r).textContent=txt?.value||'(אין הערות)';
+    }
+  });
+  if(isProMode){
+    loadSettings();
+    // Auto-populate default rows for each section if none added yet
+    ROWS.forEach(r=>{
+      if(proRowCtrs[r]===0){
+        const n=DEFAULT_ROWS[r]||1;
+        for(let i=0;i<n;i++) addProRow(r);
+      }
+    });
+    // Auto-expand ALL sections so everything is visible immediately
+    ROWS.forEach(r=>{
+      const b=document.getElementById('body-'+r);
+      const c=document.getElementById('chv-'+r);
+      const h=document.querySelector('#sec-'+r+' .sec-hdr');
+      if(b&&!b.classList.contains('open')){
+        b.classList.add('open');
+        if(c)c.classList.add('open');
+        if(h)h.classList.add('open');
+      }
+    });
+  } else {
+    // Collapse all sections when returning to client mode
+    ROWS.forEach(r=>{
+      const b=document.getElementById('body-'+r);
+      const c=document.getElementById('chv-'+r);
+      const h=document.querySelector('#sec-'+r+' .sec-hdr');
+      if(b){
+        b.classList.remove('open');
+        if(c)c.classList.remove('open');
+        if(h)h.classList.remove('open');
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS SAVE/LOAD
+// ═══════════════════════════════════════════════════
+function saveSettings(){
+  const s={
+    token:document.getElementById('db-token').value,
+    folder:document.getElementById('db-folder').value,
+    email:document.getElementById('accountant-email').value,
+    ejsService:document.getElementById('ejs-service').value,
+    ejsTemplate:document.getElementById('ejs-template').value,
+    ejsKey:document.getElementById('ejs-key').value,
+  };
+  localStorage.setItem('hatzarat_settings',JSON.stringify(s));
+  toast('✅ הגדרות נשמרו','ok');
+}
+function loadSettings(){
+  try{
+    const s=JSON.parse(localStorage.getItem('hatzarat_settings')||'{}');
+    if(s.token){document.getElementById('db-token').value=s.token;dbToken=s.token;}
+    if(s.folder)document.getElementById('db-folder').value=s.folder;
+    if(s.email)document.getElementById('accountant-email').value=s.email;
+    if(s.ejsService)document.getElementById('ejs-service').value=s.ejsService;
+    if(s.ejsTemplate)document.getElementById('ejs-template').value=s.ejsTemplate;
+    if(s.ejsKey)document.getElementById('ejs-key').value=s.ejsKey;
+    if(s.token)setBadge('chk','טוקן נטען');
+  }catch(e){}
+}
+function onTok(){dbToken=document.getElementById('db-token').value.trim();}
+
+// ═══════════════════════════════════════════════════
+// TOGGLE SECTION
+// ═══════════════════════════════════════════════════
+function tog(r){
+  const b=document.getElementById('body-'+r);
+  const c=document.getElementById('chv-'+r);
+  const h=document.querySelector('#sec-'+r+' .sec-hdr');
+  const op=b.classList.toggle('open');
+  c.classList.toggle('open',op);
+  h.classList.toggle('open',op);
+}
+
+// ═══════════════════════════════════════════════════
+// MARK DONE
+// ═══════════════════════════════════════════════════
+function markDone(r){
+  const txt=document.getElementById('txt-'+r)?.value.trim();
+  const fl=document.getElementById('fl-'+r);
+  const files=fl?fl.querySelectorAll('.fi').length:0;
+  const isDone=!!(txt||files>0);
+  const badge=document.getElementById('chk-'+r);
+  const sec=document.getElementById('sec-'+r);
+  if(isDone){done.add(r);if(badge){badge.textContent='✓';badge.classList.add('done');}if(sec)sec.classList.add('has-data');}
+  else{done.delete(r);if(badge){badge.textContent='○';badge.classList.remove('done');}if(sec)sec.classList.remove('has-data');}
+  // only count 10-120 for progress
+  const cnt=[...done].filter(x=>ASSET_ROWS.includes(x)).length;
+  const pct=Math.round(cnt/12*100);
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'% הושלם';
+  document.getElementById('prog-cnt').textContent=`${cnt} / 12 סעיפים`;
+}
+
+// ═══════════════════════════════════════════════════
+// PRO TABLE (one row per entry, like the official form)
+// ═══════════════════════════════════════════════════
+function ensureProTable(r){
+  const wrap=document.getElementById('pro-rows-'+r);
+  if(wrap.querySelector('table'))return wrap.querySelector('tbody');
+  const fields=PRO_FIELDS[r]||[];
+  const heads=fields.map(f=>`<th>${f.l}</th>`).join('');
+  const table=document.createElement('table');
+  table.className='pro-tbl';table.id='ptbl-'+r;
+  table.innerHTML=`<thead><tr><th>#</th>${heads}<th></th></tr></thead><tbody id="ptbody-${r}"></tbody>`;
+  wrap.appendChild(table);
+  return table.querySelector('tbody');
+}
+
+function addProRow(r){
+  proRowCtrs[r]=(proRowCtrs[r]||0)+1;
+  const n=proRowCtrs[r];
+  const fields=PRO_FIELDS[r]||[];
+  const tbody=ensureProTable(r);
+  let cells=`<td class="row-num">${n}</td>`;
+  fields.forEach(f=>{
+    const fid=`pf_${r}_${n}_${f.l.replace(/[^a-zא-ת0-9]/gi,'_')}`;
+    let inp;
+    if(f.t==='select'){
+      inp=`<select id="${fid}" onchange="recalc()"><option value="">--</option>${(f.o||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
+    } else {
+      inp=`<input type="${f.t}" id="${fid}" placeholder="${f.p||''}" oninput="recalc()"/>`;
+    }
+    cells+=`<td>${inp}</td>`;
+  });
+  cells+=`<td><button class="rm-pro-row" onclick="rmProRow(${r},${n})" title="הסר שורה">✕</button></td>`;
+  const tr=document.createElement('tr');
+  tr.id=`pi_${r}_${n}`;tr.innerHTML=cells;
+  tbody.appendChild(tr);
+  recalc();
+}
+function rmProRow(r,n){
+  const el=document.getElementById(`pi_${r}_${n}`);if(el)el.remove();recalc();
+}
+
+// ═══════════════════════════════════════════════════
+// PRINT FORM 1219
+// ═══════════════════════════════════════════════════
+const SEC_TITLES={
+  10:'נדל"ן בארץ (מבנה, שיפורים במבנה, לרבות בנייה בשלבי ביצוע, דמי מפתח, שטחים חקלאיים כולל עלויות נלוות)',
+  20:'נדל"ן בחו"ל (מבנה, שיפורים במבנה)',
+  30:'פיקדונות וחשבונות עו"ש — בנקים ומוסדות כספיים',
+  40:'מטבעות וירטואליים (קריפטו)',
+  50:'מזומן ומטבע חוץ',
+  60:'קרנות פנסיה, קופות גמל וביטוחי מנהלים',
+  70:'ניירות ערך — מניות, אגרות חוב וקרנות נאמנות',
+  80:'חייבים — הלוואות שנתתי לאחרים',
+  90:'כלי תחבורה',
+  100:'תכשיטים, זהב, יהלומים, פריטי אסמכנות ואומנות',
+  110:'תכולת בית',
+  120:'רכוש אחר שלא פורט לעיל',
+  130:'התחייבויות לבנקים ולמוסדות כספיים',
+  140:'הלוואות שלקחתי מאחרים',
+};
+
+function getRowData(r){
+  const tbody=document.getElementById('ptbody-'+r);
+  if(!tbody)return[];
+  const fields=PRO_FIELDS[r]||[];
+  const rows=[];
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    const cells=[];
+    fields.forEach((f,i)=>{
+      const fid=`pf_${r}_${tr.id.split('_')[2]}_${f.l.replace(/[^a-zא-ת0-9]/gi,'_')}`;
+      const el=document.getElementById(fid);
+      cells.push(el?el.value:'');
+    });
+    if(cells.some(v=>v&&v!=='--'&&v!==''))rows.push(cells);
+  });
+  return rows;
+}
+
+function getSectionTotal(r){
+  const fields=PRO_FIELDS[r]||[];
+  const sumField=fields.find(f=>f.sum);
+  if(!sumField)return 0;
+  let tot=0;
+  const wrap=document.getElementById('pro-rows-'+r);
+  if(!wrap)return 0;
+  wrap.querySelectorAll('input[type=number]').forEach(el=>{
+    const lbl=el.id.split('_').slice(3).join('_');
+    const sf=sumField.l.replace(/[^a-zא-ת0-9]/gi,'_');
+    if(lbl===sf)tot+=parseFloat(el.value)||0;
+  });
+  return tot;
+}
+
+function printForm(){
+  const clientName=(document.getElementById('c-last')?.value||'').trim()||'_____________';
+  const clientId=(document.getElementById('c-id')?.value||'').trim()||'_____________';
+  const spName=(document.getElementById('c-sp-last')?.value||'').trim()||'';
+  const spId=(document.getElementById('c-sp-id')?.value||'').trim()||'';
+  const year=(document.getElementById('c-year')?.value||'').trim()||new Date().getFullYear()-1;
+  const today=new Date().toLocaleDateString('he-IL');
+
+  let t200=0,t210=0;
+
+  function buildSection(r,isLiab){
+    const fields=PRO_FIELDS[r]||[];
+    const rows=getRowData(r);
+    const tot=getSectionTotal(r);
+    if(isLiab)t210+=tot; else t200+=tot;
+
+    const heads=fields.map(f=>`<th>${f.l}</th>`).join('');
+    let dataRows='';
+    const EMPTY_ROWS=Math.max(rows.length,isLiab?(r===130?4:3):(r<=30?4:3));
+    for(let i=0;i<EMPTY_ROWS;i++){
+      const vals=rows[i]||[];
+      const cells=fields.map((_,j)=>`<td>${vals[j]||''}</td>`).join('');
+      dataRows+=`<tr>${cells}</tr>`;
+    }
+    const sumLabel=isLiab?`סה"כ שורה ${r}`:`סה"כ שורה ${r}`;
+    const sumField=fields.find(f=>f.sum);
+    const sumColspan=sumField?fields.indexOf(sumField):fields.length-1;
+
+    return `
+    <div class="form-section">
+      <div class="sec-title">${r}. ${SEC_TITLES[r]||''}</div>
+      <table>
+        <thead><tr>${heads}</tr></thead>
+        <tbody>${dataRows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="${sumColspan}" class="total-label">${sumLabel}</td>
+            <td class="total-val">${tot?Math.round(tot).toLocaleString('he-IL'):''}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+  }
+
+  const assetSections=ASSET_ROWS.map(r=>buildSection(r,false)).join('');
+  const liabSections=LIAB_ROWS.map(r=>buildSection(r,true)).join('');
+  const t220=t200-t210;
+
+  const html=`<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<title>הצהרת הון — טופס 1219 — ${clientName}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Arial',sans-serif;font-size:9pt;color:#000;background:#fff;direction:rtl;}
+.page{max-width:210mm;margin:0 auto;padding:8mm 10mm;}
+
+/* HEADER */
+.form-header{border:2px solid #000;margin-bottom:6mm;padding:3mm 4mm;}
+.form-header-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #000;padding-bottom:2mm;margin-bottom:2mm;}
+.form-title{font-size:14pt;font-weight:900;color:#1a2456;}
+.form-subtitle{font-size:8pt;color:#333;margin-top:1mm;}
+.form-num{font-size:10pt;font-weight:700;border:1px solid #000;padding:2px 8px;}
+.form-meta{display:grid;grid-template-columns:1fr 1fr;gap:2mm;font-size:8.5pt;}
+.meta-row{display:flex;gap:4px;align-items:center;}
+.meta-lbl{font-weight:700;white-space:nowrap;min-width:80px;}
+.meta-val{border-bottom:1px solid #666;flex:1;min-height:14px;padding:0 2px;}
+
+/* PART HEADER */
+.part-header{background:#1a2456;color:#fff;font-size:10pt;font-weight:700;padding:2mm 4mm;margin:4mm 0 2mm;text-align:right;}
+.part-header.liab{background:#7f1d1d;}
+
+/* SECTION */
+.form-section{margin-bottom:4mm;page-break-inside:avoid;}
+.sec-title{font-size:7.5pt;font-weight:700;background:#e8e8e8;border:1px solid #999;border-bottom:none;padding:1.5mm 3mm;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:7.5pt;}
+thead tr{background:#c8860a;color:#fff;}
+th{border:1px solid #888;padding:2.5mm 2mm;text-align:center;font-weight:700;font-size:7pt;white-space:nowrap;}
+td{border:1px solid #bbb;padding:2mm;min-height:7mm;height:7mm;}
+tfoot td{background:#f0f0f0;font-weight:700;}
+.total-label{text-align:right;font-size:7.5pt;}
+.total-val{text-align:center;font-size:8pt;font-weight:900;color:#1a2456;}
+tbody tr:nth-child(even){background:#fafafa;}
+
+/* TOTALS BOX */
+.totals-box{border:2px solid #1a2456;margin-top:4mm;padding:3mm 5mm;}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:2mm 0;border-bottom:1px solid #ddd;font-size:9pt;}
+.total-row:last-child{border-bottom:none;font-size:10pt;font-weight:900;color:#1a2456;}
+.total-row.liab{color:#7f1d1d;}
+.t-name{font-weight:700;}
+.t-val{font-size:10pt;font-weight:900;min-width:120px;text-align:left;border-bottom:1px solid #000;}
+
+/* SIGNATURE */
+.sig-area{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:8mm;font-size:8pt;}
+.sig-box{border-top:1px solid #000;padding-top:2mm;text-align:center;color:#555;}
+
+/* FOOTER */
+.form-footer{text-align:center;font-size:7pt;color:#888;margin-top:6mm;border-top:1px solid #ddd;padding-top:2mm;}
+
+@media print{
+  body{font-size:8.5pt;}
+  .page{padding:5mm 8mm;}
+  @page{size:A4 portrait;margin:10mm;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="form-header">
+  <div class="form-header-top">
+    <div>
+      <div class="form-title">הצהרת הון</div>
+      <div class="form-subtitle">רשות המסים בישראל — פירוט רכוש והתחייבויות פרטיים — חלק א׳</div>
+    </div>
+    <div class="form-num">טופס 1219</div>
+  </div>
+  <div class="form-meta">
+    <div class="meta-row"><span class="meta-lbl">שם המצהיר/ה:</span><span class="meta-val">${clientName}</span></div>
+    <div class="meta-row"><span class="meta-lbl">מספר זהות:</span><span class="meta-val">${clientId}</span></div>
+    <div class="meta-row"><span class="meta-lbl">שם בן/בת הזוג:</span><span class="meta-val">${spName}</span></div>
+    <div class="meta-row"><span class="meta-lbl">ת.ז. בן/בת הזוג:</span><span class="meta-val">${spId}</span></div>
+    <div class="meta-row"><span class="meta-lbl">שנת המס:</span><span class="meta-val">${year}</span></div>
+    <div class="meta-row"><span class="meta-lbl">תאריך עריכה:</span><span class="meta-val">${today}</span></div>
+  </div>
+</div>
+
+<!-- PART A: ASSETS -->
+<div class="part-header">חלק א׳ — רכוש פרטי (נכסים)</div>
+${assetSections}
+
+<!-- TOTAL 200 -->
+<div class="totals-box" style="margin-bottom:4mm;">
+  <div class="total-row">
+    <span class="t-name">שורה 200 — סה"כ רכוש פרטי</span>
+    <span class="t-val">${Math.round(t200).toLocaleString('he-IL')} ₪</span>
+  </div>
+</div>
+
+<!-- LIABILITIES -->
+<div class="part-header liab">התחייבויות</div>
+${liabSections}
+
+<!-- TOTALS 210 / 220 -->
+<div class="totals-box">
+  <div class="total-row liab">
+    <span class="t-name">שורה 210 — סה"כ התחייבויות (130+140)</span>
+    <span class="t-val">${Math.round(t210).toLocaleString('he-IL')} ₪</span>
+  </div>
+  <div class="total-row">
+    <span class="t-name">שורה 220 — סה"כ רכוש פרטי נטו (200 פחות 210)</span>
+    <span class="t-val">${Math.round(t220).toLocaleString('he-IL')} ₪</span>
+  </div>
+</div>
+
+<!-- SIGNATURE -->
+<div class="sig-area">
+  <div class="sig-box">חתימת המצהיר/ה ותאריך</div>
+  <div class="sig-box">חתימת רואה החשבון וחותמת</div>
+</div>
+
+<div class="form-footer">
+  אייל רז ושות׳ — רואי חשבון · ACCOUNTING, TAX &amp; BEYOND · SINCE 2005 · eyal@erh.co.il
+</div>
+
+</div>
+</body>
+</html>`;
+
+  const w=window.open('','_blank','width=900,height=750');
+  w.document.write(html);
+  w.document.close();
+  w.onload=()=>w.print();
+}
+
+// ═══════════════════════════════════════════════════
+// RECALC TOTALS
+// ═══════════════════════════════════════════════════
+function recalc(){
+  let t200=0,t210=0;
+  ASSET_ROWS.forEach(r=>{
+    const fields=PRO_FIELDS[r]||[];
+    const sumField=fields.find(f=>f.sum);
+    if(!sumField)return;
+    const rows=document.getElementById('pro-rows-'+r);
+    if(!rows)return;
+    rows.querySelectorAll('input[type=number]').forEach(el=>{
+      const id=el.id;
+      const lbl=id.split('_').slice(3).join('_');
+      const sf=sumField.l.replace(/[^a-zא-ת0-9]/gi,'_');
+      if(lbl===sf)t200+=parseFloat(el.value)||0;
+    });
+  });
+  LIAB_ROWS.forEach(r=>{
+    const fields=PRO_FIELDS[r]||[];
+    const sumField=fields.find(f=>f.sum);
+    if(!sumField)return;
+    const rows=document.getElementById('pro-rows-'+r);
+    if(!rows)return;
+    rows.querySelectorAll('input[type=number]').forEach(el=>{
+      const id=el.id;
+      const lbl=id.split('_').slice(3).join('_');
+      const sf=sumField.l.replace(/[^a-zא-ת0-9]/gi,'_');
+      if(lbl===sf)t210+=parseFloat(el.value)||0;
+    });
+  });
+  const t220=t200-t210;
+  document.getElementById('t200').textContent=fmt(t200);
+  document.getElementById('t210').textContent=fmt(t210);
+  document.getElementById('t220').textContent=fmt(t220);
+}
+function fmt(n){return Math.round(n).toLocaleString('he-IL');}
+
+// ═══════════════════════════════════════════════════
+// FILES
+// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// URL PARAMS — pre-fill client from link
+// Usage: form.html#name=ישראל ישראלי&id=123456789&year=2024&sp=שרה ישראלי&spid=987654321
+// ═══════════════════════════════════════════════════
+function readUrlParams(){
+  const hash=window.location.hash.replace(/^#/,'');
+  if(!hash)return;
+  const p=Object.fromEntries(hash.split('&').map(s=>{
+    const [k,...v]=s.split('=');
+    return[k,decodeURIComponent(v.join('='))];
+  }));
+  if(p.name){
+    const el=document.getElementById('c-last');
+    if(el){el.value=p.name;el.dispatchEvent(new Event('input'));}
+  }
+  if(p.id){
+    const el=document.getElementById('c-id');
+    if(el)el.value=p.id;
+  }
+  if(p.phone){
+    const el=document.getElementById('c-phone');
+    if(el)el.value=p.phone;
+  }
+  if(p.year){
+    const el=document.getElementById('c-year');
+    if(el)el.value=p.year;
+  }
+  if(p.sp){
+    const el=document.getElementById('c-sp-last');
+    if(el)el.value=p.sp;
+  }
+  if(p.spid){
+    const el=document.getElementById('c-sp-id');
+    if(el)el.value=p.spid;
+  }
+  // If params came in, show a welcome banner
+  if(p.name){
+    const banner=document.getElementById('client-welcome');
+    if(banner){
+      banner.textContent=`שלום ${p.name}! הטופס הוכן עבורך — אנא מלא/י את הפרטים וצרף/י מסמכים.`;
+      banner.style.display='block';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// GENERATE LINK HELPER (pro mode)
+// ═══════════════════════════════════════════════════
+function generateClientLink(){
+  const name=document.getElementById('gen-name')?.value.trim()||'';
+  const id=document.getElementById('gen-id')?.value.trim()||'';
+  const year=document.getElementById('gen-year')?.value.trim()||new Date().getFullYear()-1;
+  const sp=document.getElementById('gen-sp')?.value.trim()||'';
+  const spid=document.getElementById('gen-spid')?.value.trim()||'';
+  if(!name){toast('הכנס שם לקוח','er');return;}
+  const base=window.location.href.split('#')[0];
+  let params=`name=${encodeURIComponent(name)}`;
+  if(id)params+=`&id=${encodeURIComponent(id)}`;
+  if(year)params+=`&year=${encodeURIComponent(year)}`;
+  if(sp)params+=`&sp=${encodeURIComponent(sp)}`;
+  if(spid)params+=`&spid=${encodeURIComponent(spid)}`;
+  const link=`${base}#${params}`;
+  document.getElementById('gen-result').value=link;
+  document.getElementById('gen-result-wrap').style.display='block';
+  navigator.clipboard?.writeText(link).then(()=>toast('📋 קישור הועתק ללוח','ok'));
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ROWS.forEach(r=>{
+    const uz=document.getElementById('uz-'+r);
+    if(!uz)return;
+    uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
+    uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+    uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');procFiles(r,Array.from(e.dataTransfer.files));});
+  });
+  tog(10);tog(30);tog(130);
+  loadSettings();
+  readUrlParams();
+});
+function onFiles(r,inp){procFiles(r,Array.from(inp.files));inp.value='';}
+function procFiles(r,files){
+  const fl=document.getElementById('fl-'+r);
+  files.forEach(file=>{
+    const id='f'+Date.now()+Math.random().toString(36).slice(2,7);
+    const el=document.createElement('div');
+    el.className='fi';el.id=id;
+    el.innerHTML=`<span>📄</span><span class="fn" title="${esc(file.name)}">${trunc(file.name,42)}</span><span class="fs up" id="st-${id}">⏳</span><button class="rm" onclick="rmFile('${id}',${r})">✕</button>`;
+    fl.appendChild(el);
+    if(dbToken){
+      uploadDB(file,'שורה '+r)
+        .then(()=>{const e=document.getElementById('st-'+id);if(e){e.className='fs ok';e.textContent='✅ הועלה';}})
+        .catch(err=>{const e=document.getElementById('st-'+id);if(e){e.className='fs er';e.textContent='❌';e.title=err.message;}toast('❌ '+file.name,'er');});
+    } else {
+      const e=document.getElementById('st-'+id);if(e){e.className='fs';e.style.color='var(--muted)';e.textContent='ישמר בשליחה';}
+    }
+    markDone(r);
+  });
+}
+function rmFile(id,r){const el=document.getElementById(id);if(el)el.remove();markDone(r);}
+
+// ═══════════════════════════════════════════════════
+// DROPBOX
+// ═══════════════════════════════════════════════════
+function setBadge(type,txt){
+  const b=document.getElementById('db-badge');
+  b.className='sbadge '+(type==='ok'?'s-ok':type==='chk'?'s-chk':'s-no');
+  b.innerHTML=`<span class="dot"></span>${txt}`;
+}
+async function testDB(){
+  const t=document.getElementById('db-token').value.trim();
+  if(!t){toast('נא להזין Token','er');return;}
+  setBadge('chk','בודק...');
+  try{
+    const r=await fetch('https://api.dropboxapi.com/2/users/get_current_account',{method:'POST',headers:{Authorization:'Bearer '+t}});
+    if(r.ok){const d=await r.json();dbToken=t;setBadge('ok','✓ '+(d.name?.display_name||'מחובר'));toast('✅ מחובר לדרופבוקס!','ok');}
+    else{setBadge('no','Token שגוי');toast('❌ Token לא תקין','er');}
+  }catch(e){setBadge('no','שגיאת רשת');toast('❌ שגיאת רשת','er');}
+}
+async function uploadDB(file,sub){
+  const client=clientFolder();
+  const base=document.getElementById('db-folder').value.trim()||'/הצהרת הון - לקוחות';
+  const path=`${base}/${client}/${sub}/${file.name}`;
+  const buf=await file.arrayBuffer();
+  const res=await fetch('https://content.dropboxapi.com/2/files/upload',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':JSON.stringify({path,mode:'add',autorename:true}),'Content-Type':'application/octet-stream'},
+    body:buf
+  });
+  if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error_summary||res.statusText);}
+  return res.json();
+}
+async function uploadJson(json,name){
+  if(!dbToken)return;
+  const client=clientFolder();
+  const base=document.getElementById('db-folder').value.trim()||'/הצהרת הון - לקוחות';
+  const path=`${base}/${client}/${name}`;
+  await fetch('https://content.dropboxapi.com/2/files/upload',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':JSON.stringify({path,mode:'overwrite'}),'Content-Type':'application/octet-stream'},
+    body:new Blob([json],{type:'application/json'})
+  });
+}
+async function loadClient(){
+  if(!dbToken){toast('נא לחבר Dropbox תחילה','er');return;}
+  const clientName=document.getElementById('db-load-client').value.trim();
+  if(!clientName){toast('נא להזין שם לקוח','er');return;}
+  const base=document.getElementById('db-folder').value.trim()||'/הצהרת הון - לקוחות';
+  const path=`${base}/${clientName}`;
+  toast('📥 טוען נתוני לקוח...','nfo');
+  // Try to find and load summary JSON
+  try{
+    const res=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+dbToken,'Content-Type':'application/json'},
+      body:JSON.stringify({path})
+    });
+    const d=await res.json();
+    const jsonFile=d.entries?.find(e=>e.name.endsWith('.json'));
+    if(jsonFile){
+      const dl=await fetch('https://content.dropboxapi.com/2/files/download',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':JSON.stringify({path:jsonFile.path_lower})}
+      });
+      const data=await dl.json();
+      populateFromJson(data,clientName,base);
+      toast('✅ נתוני לקוח נטענו','ok');
+    } else {toast('⚠️ לא נמצא קובץ JSON ללקוח זה','er');}
+  }catch(e){toast('❌ שגיאה בטעינה: '+e.message,'er');}
+}
+function populateFromJson(data,clientName,base){
+  // Fill client fields
+  if(data.client){
+    const c=data.client;
+    if(c.last)document.getElementById('c-last').value=c.last;
+    if(c.first)document.getElementById('c-first').value=c.first;
+    if(c.id)document.getElementById('c-id').value=c.id;
+    if(c.phone)document.getElementById('c-phone').value=c.phone||'';
+    if(c.sp_last)document.getElementById('c-sp-last').value=c.sp_last||'';
+    if(c.sp_first)document.getElementById('c-sp-first').value=c.sp_first||'';
+    if(c.sp_id)document.getElementById('c-sp-id').value=c.sp_id||'';
+    if(c.year)document.getElementById('c-year').value=c.year||'';
+  }
+  // Fill notes (readonly) and set Dropbox links
+  if(data.sections){
+    Object.entries(data.sections).forEach(([r,sec])=>{
+      const rNum=parseInt(r);
+      const roTxt=document.getElementById('ro-txt-'+rNum);
+      if(roTxt)roTxt.textContent=sec.notes||'(אין הערות)';
+      // Dropbox folder link
+      const dbLink=document.getElementById('dbl-'+rNum);
+      if(dbLink){
+        const folder=`${base}/${clientName}/שורה ${rNum}`;
+        dbLink.href=`https://www.dropbox.com/home${folder}`;
+        dbLink.textContent=`📁 פתח תיקיית Dropbox — שורה ${rNum}`;
+      }
+    });
+  }
+}
+function clientFolder(){
+  const last=document.getElementById('c-last')?.value.trim();
+  const first=document.getElementById('c-first')?.value.trim();
+  const year=document.getElementById('c-year')?.value.trim()||new Date().getFullYear();
+  const name=[last,first].filter(Boolean).join(' ')||'לקוח';
+  return `${name}/${year}`;
+}
+
+// ═══════════════════════════════════════════════════
+// SYNC CLIENT
+// ═══════════════════════════════════════════════════
+function syncClient(){
+  const name=clientFolder();
+  const dbc=document.getElementById('db-load-client');
+  if(dbc&&!dbc.dataset.m)dbc.value=name;
+}
+
+// ═══════════════════════════════════════════════════
+// SAVE DRAFT (local)
+function saveDraft(){
+  const data={};
+  ROWS.forEach(r=>{const t=document.getElementById('txt-'+r);if(t)data['note_'+r]=t.value;});
+  ['c-last','c-id','c-phone','c-email','c-sp-last','c-sp-id','c-year'].forEach(id=>{
+    const el=document.getElementById(id);if(el)data[id]=el.value;
+  });
+  localStorage.setItem('hatzarat_draft',JSON.stringify(data));
+  toast('💾 הטיוטה נשמרה','nfo');
+}
+
+// CLIENT SUBMIT
+// ═══════════════════════════════════════════════════
+async function clientSubmit(){
+  const last=document.getElementById('c-last').value.trim();
+  const first=document.getElementById('c-first').value.trim();
+  if(!last||!first){toast('נא למלא שם פרטי ושם משפחה','er');return;}
+  if(!dbToken){toast('⚠️ הטופס לא מחובר ל-Dropbox — פנה למשרד','er');return;}
+  toast('📤 שולח...','nfo');
+  // Collect summary
+  const summary=collectSummary();
+  const year=document.getElementById('c-year').value||new Date().getFullYear();
+  try{
+    await uploadJson(JSON.stringify(summary,null,2),`סיכום_${last}_${first}_${year}.json`);
+    // Send email if configured
+    await sendEmail(summary);
+    // Show success
+    document.getElementById('page-wrap').style.display='none';
+    document.querySelector('.hero').style.display='none';
+    document.getElementById('success').style.display='block';
+    toast('✅ נשלח בהצלחה!','ok');
+  }catch(e){toast('❌ שגיאה: '+e.message,'er');}
+}
+
+// ═══════════════════════════════════════════════════
+// PRO SAVE
+// ═══════════════════════════════════════════════════
+async function proSave(){
+  if(!dbToken){toast('נא לחבר Dropbox','er');return;}
+  toast('💾 שומר...','pro');
+  const data=collectFull();
+  const last=document.getElementById('c-last').value||'לקוח';
+  const first=document.getElementById('c-first').value||'';
+  const year=document.getElementById('c-year').value||new Date().getFullYear();
+  try{
+    await uploadJson(JSON.stringify(data,null,2),`טופס_מלא_${last}_${first}_${year}.json`);
+    toast('✅ הטופס המלא נשמר לדרופבוקס!','ok');
+  }catch(e){toast('❌ שגיאה: '+e.message,'er');}
+}
+
+// ═══════════════════════════════════════════════════
+// COLLECT DATA
+// ═══════════════════════════════════════════════════
+function collectSummary(){
+  const data={
+    submitted:new Date().toLocaleString('he-IL'),
+    form:'טופס 1219 — הצהרת הון',
+    client:{
+      last:document.getElementById('c-last').value,
+      first:document.getElementById('c-first').value,
+      id:document.getElementById('c-id').value,
+      phone:document.getElementById('c-phone').value,
+      sp_last:document.getElementById('c-sp-last').value,
+      sp_first:document.getElementById('c-sp-first').value,
+      sp_id:document.getElementById('c-sp-id').value,
+      year:document.getElementById('c-year').value,
+    },
+    sections:{}
+  };
+  const labels={10:'נדל"ן בארץ',20:'נדל"ן בחו"ל',30:'חשבונות בנקים',40:'נכסים דיגיטליים',50:'מזומנים',60:'ביטוח/פנסיה',70:'ניירות ערך',80:'הלוואות שנתתי',90:'כלי רכב',100:'תכשיטים/אמנות',110:'תכולת בית',120:'רכוש אחר',130:'התחייבויות לבנקים',140:'הלוואות מאחרים'};
+  ROWS.forEach(r=>{
+    const txt=document.getElementById('txt-'+r)?.value.trim()||'';
+    const files=Array.from(document.getElementById('fl-'+r)?.querySelectorAll('.fn')||[]).map(e=>e.textContent);
+    data.sections[r]={label:labels[r]||'שורה '+r,notes:txt,files};
+  });
+  return data;
+}
+function collectFull(){
+  const summary=collectSummary();
+  summary.proData={};
+  summary.totals={t200:document.getElementById('t200').textContent,t210:document.getElementById('t210').textContent,t220:document.getElementById('t220').textContent};
+  ROWS.forEach(r=>{
+    const rows=document.getElementById('pro-rows-'+r);
+    if(!rows)return;
+    const items=[];
+    rows.querySelectorAll('.pro-item').forEach(item=>{
+      const obj={};
+      item.querySelectorAll('input,select').forEach(el=>{
+        const parts=el.id.split('_');
+        const lbl=parts.slice(3).join(' ');
+        obj[lbl]=el.value;
+      });
+      items.push(obj);
+    });
+    summary.proData[r]=items;
+  });
+  return summary;
+}
+
+// ═══════════════════════════════════════════════════
+// EMAIL (EmailJS)
+// ═══════════════════════════════════════════════════
+async function sendEmail(data){
+  const serviceId=document.getElementById('ejs-service')?.value.trim();
+  const templateId=document.getElementById('ejs-template')?.value.trim();
+  const publicKey=document.getElementById('ejs-key')?.value.trim();
+  const toEmail=document.getElementById('accountant-email')?.value.trim();
+  if(!serviceId||!templateId||!publicKey||!toEmail)return; // skip if not configured
+  try{
+    emailjs.init(publicKey);
+    const lines=Object.entries(data.sections).map(([r,s])=>`שורה ${r} (${s.label}): ${s.notes||'—'} | קבצים: ${s.files.join(', ')||'אין'}`).join('\n');
+    await emailjs.send(serviceId,templateId,{
+      client_name:`${data.client.first} ${data.client.last}`,
+      client_id:data.client.id,
+      client_year:data.client.year,
+      summary:lines,
+      to_email:toEmail,
+    });
+    toast('📧 מייל נשלח לרו"ח','ok');
+  }catch(e){console.warn('EmailJS error',e);}
+}
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+function trunc(s,n){return s.length>n?s.slice(0,n-2)+'…':s;}
+function esc(s){return s.replace(/"/g,'&quot;');}
+function toast(msg,type='nfo'){
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className=`toast t-${type}`;t.textContent=msg;
+  c.appendChild(t);setTimeout(()=>t.remove(),3800);
+}
+</script>
+</body>
+</html>
