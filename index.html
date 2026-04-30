@@ -1478,6 +1478,8 @@ async function clientSubmit(){
     // Generate HTML report
     const htmlReport=generateHtmlReport(summary);
     await uploadJson(htmlReport,`סיכום_${last} ${first}_${year}.html`);
+    // Send Make webhook (WhatsApp notification)
+    await sendMakeWebhook(summary);
     // Send email if configured
     await sendEmail(summary);
     // Show success + download link for client copy
@@ -1551,9 +1553,7 @@ function generateHtmlReport(d){
 </head>
 <body>
 <div class="page">
-  <div class="top-bar">
-    <div>
-      <div class="firm">רז <span class="gold">&</קבצים</div>
+קבצים</div>
   ${rows}
   <div class="footer">סיכום זה הופק אוטומטית מטופס הצהרת הון דיגיטלי &bull; רז &amp; שות׳ רואי חשבון</div>
 </div>
@@ -1624,6 +1624,34 @@ function collectFull(){
     summary.proData[r]=items;
   });
   return summary;
+}
+
+// ═══════════════════════════════════════════════════
+// MAKE WEBHOOK (WhatsApp via Green API)
+// ═══════════════════════════════════════════════════
+async function sendMakeWebhook(data){
+  const WEBHOOK='https://hook.eu2.make.com/bwu1vr3p2w9ekm3k15tiovu7x55uql8w';
+  const c=data.client;
+  const filesCount=Object.values(data.sections).reduce((n,s)=>n+(s.files?.length||0),0);
+  const sectionLines=Object.values(data.sections)
+    .filter(s=>s.notes||s.files?.length)
+    .map(s=>`• ${s.label}: ${s.notes||''} ${s.files?.length?'('+s.files.length+' קבצים)':''}`)
+    .join('\n');
+  try{
+    await fetch(WEBHOOK,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        client_name:[c.last,c.first].filter(Boolean).join(' '),
+        client_id:c.id||'',
+        client_phone:c.phone||'',
+        year:c.year||'',
+        files_count:filesCount,
+        submitted:data.submitted,
+        sections_summary:sectionLines||'אין הערות',
+      })
+    });
+  }catch(e){console.warn('Webhook error',e);}
 }
 
 // ═══════════════════════════════════════════════════
