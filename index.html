@@ -204,8 +204,8 @@ body{font-family:'Assistant',Arial,sans-serif;background:var(--bg);color:var(--w
 /* ── TOTALS ── */
 .total-bar{display:flex;align-items:center;justify-content:space-between;border-radius:9px;padding:13px 20px;margin:8px 0;font-weight:700;}
 .tb-assets{background:var(--gold);color:#111;}
-.tb-liab{background:rgba(239,68,68,.25);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
-.tb-net{background:rgba(34,197,94,.18);color:var(--ok);border:1px solid rgba(34,197,94,.3);}
+.tb-liab{background:rgba(239,68,68,.35);color:#ff6b6b;border:1px solid rgba(239,68,68,.5);}
+.tb-net{background:rgba(239,68,68,.35);color:#ff6b6b;border:1px solid rgba(239,68,68,.5);}
 .tb-label{font-size:.86rem;}
 .tb-val{font-size:1rem;}
 
@@ -1566,11 +1566,4 @@ async function sendEmail(data){
 function trunc(s,n){return s.length>n?s.slice(0,n-2)+'…':s;}
 function esc(s){return s.replace(/"/g,'&quot;');}
 function toast(msg,type='nfo'){
-  const c=document.getElementById('toasts');
-  const t=document.createElement('div');
-  t.className=`toast t-${type}`;t.textContent=msg;
-  c.appendChild(t);setTimeout(()=>t.remove(),3800);
-}
-</script>
-</body>
-</html>
+  const c=d
