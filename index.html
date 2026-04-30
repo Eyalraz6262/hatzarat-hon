@@ -1373,7 +1373,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
     uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');procFiles(r,Array.from(e.dataTransfer.files));});
   });
-  tog(10);tog(30);tog(130);
   loadSettings();
   readUrlParams();
   handleOAuthCallback();
@@ -1562,15 +1561,12 @@ async function clientSubmit(){
       });
     });
     if(fileJobs.length>0){toast('📎 מעלה '+fileJobs.length+' קבצים...','nfo');}
+    awaiצים...','nfo');}
     await Promise.all(fileJobs);
-    // Generate HTML report
     const htmlReport=generateHtmlReport(summary);
     await uploadJson(htmlReport,`סיכום_${last} ${first}_${year}.html`);
-    // Send Make webhook (WhatsApp notification)
     await sendMakeWebhook(summary);
-    // Send email if configured
     await sendEmail(summary);
-    // Show success + download link for client copy
     document.getElementById('page-wrap').style.display='none';
     document.querySelector('.hero').style.display='none';
     document.getElementById('success').style.display='block';
@@ -1772,7 +1768,7 @@ async function sendEmail(data){
   const templateId=document.getElementById('ejs-template')?.value.trim();
   const publicKey=document.getElementById('ejs-key')?.value.trim();
   const toEmail=document.getElementById('accountant-email')?.value.trim();
-  if(!serviceId||!templateId||!publicKey||!toEmail)return; // skip if not configured
+  if(!serviceId||!templateId||!publicKey||!toEmail)return;
   try{
     emailjs.init(publicKey);
     const lines=Object.entries(data.sections).map(([r,s])=>`שורה ${r} (${s.label}): ${s.notes||'—'} | קבצים: ${s.files.join(', ')||'אין'}`).join('\n');
