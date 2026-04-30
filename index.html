@@ -1449,8 +1449,8 @@ function saveDraft(){
 // ═══════════════════════════════════════════════════
 async function clientSubmit(){
   const last=document.getElementById('c-last').value.trim();
-  const first=document.getElementById('c-first').value.trim();
-  if(!last||!first){toast('נא למלא שם פרטי ושם משפחה','er');return;}
+  const first=document.getElementById('c-first').value.trim()||'_';
+  if(!last){toast('נא למלא שם','er');return;}
   if(!dbToken){toast('⚠️ הטופס לא מחובר ל-Dropbox — פנה למשרד','er');return;}
   toast('📤 שולח...','nfo');
   // Collect summary
