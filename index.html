@@ -1355,13 +1355,14 @@ async function uploadDB(file,sub){
 async function uploadJson(json,name){
   if(!dbToken)return;
   const client=clientFolder();
-  const base=document.getElementById('db-folder').value.trim()||'/הצהרת הון - לקוחות';
+  const base=(document.getElementById('db-folder')?.value||'').trim()||'/הצהרת הון - לקוחות';
   const path=`${base}/${client}/${name}`;
-  await fetch('https://content.dropboxapi.com/2/files/upload',{
+  const res=await fetch('https://content.dropboxapi.com/2/files/upload',{
     method:'POST',
     headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':dbArg({path,mode:'overwrite'}),'Content-Type':'application/octet-stream'},
     body:new Blob([json],{type:'application/json'})
   });
+  if(!res.ok){const t=await res.text();throw new Error('Dropbox: '+res.status+' '+t);}
 }
 async function loadClient(){
   if(!dbToken){toast('נא לחבר Dropbox תחילה','er');return;}
@@ -1565,6 +1566,4 @@ async function sendEmail(data){
 function trunc(s,n){return s.length>n?s.slice(0,n-2)+'…':s;}
 function esc(s){return s.replace(/"/g,'&quot;');}
 function toast(msg,type='nfo'){
-  const c=document.getElementById('toasts');
-  const t=document.createElement('div');
-  t.className=`toast t-${ty
+  const c
