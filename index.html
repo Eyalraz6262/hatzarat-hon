@@ -309,6 +309,11 @@ input[type=file]{display:none;}
 .pro-tbl tbody tr{background:rgba(255,255,255,.05);transition:background .1s;}
 .pro-tbl tbody tr:nth-child(even){background:rgba(255,255,255,.09);}
 .pro-tbl tbody tr:hover{background:rgba(200,134,10,.08);}
+.pro-tbl tfoot tr.sum-row{background:rgba(200,134,10,.18);border-top:2px solid var(--gold);}
+.pro-tbl tfoot td{padding:6px 8px;border:1px solid var(--dk-border);font-weight:800;font-size:.78rem;vertical-align:middle;}
+.pro-tbl td.sum-label{text-align:right;color:var(--gold);font-size:.77rem;direction:rtl;}
+.pro-tbl td.sum-num-lbl{text-align:center;color:var(--gold2);font-weight:900;font-size:.8rem;width:28px;}
+.pro-tbl td.sum-val{text-align:center;color:#fff;font-weight:900;font-size:.82rem;min-width:70px;}
 .pro-tbl td{
   padding:4px 5px;border:1px solid var(--dk-border);
   vertical-align:middle;
@@ -736,6 +741,7 @@ input[type=file]{display:none;}
 // ROWS & FIELD DEFINITIONS (for pro mode)
 // ═══════════════════════════════════════════════════
 const ROWS=[10,20,30,40,50,60,70,80,90,100,110,120,130,140];
+const SEC_LABELS={10:'נדל"ן בארץ',20:'נדל"ן בחו"ל',30:'חשבונות בנקים',40:'נכסים דיגיטליים',50:'מזומנים',60:'ביטוח/פנסיה',70:'ניירות ערך',80:'הלוואות שנתתי',90:'כלי רכב',100:'תכשיטים/אמנות',110:'תכולת בית',120:'רכוש אחר',130:'התחייבויות לבנקים',140:'הלוואות שקיבלתי'};
 const ASSET_ROWS=[10,20,30,40,50,60,70,80,90,100,110,120];
 const LIAB_ROWS=[130,140];
 
@@ -993,9 +999,24 @@ function ensureProTable(r){
   if(wrap.querySelector('table'))return wrap.querySelector('tbody');
   const fields=PRO_FIELDS[r]||[];
   const heads=fields.map(f=>`<th>${f.l}</th>`).join('');
+  // Build tfoot: section number | label spanning non-sum cols | sum cell(s) | empty
+  let tfCells=`<td class="sum-num-lbl">${r}</td>`;
+  let labelDone=false;
+  fields.forEach((f,i)=>{
+    if(f.sum){
+      tfCells+=`<td id="sum_${r}_${i}" class="sum-val">0</td>`;
+    } else if(!labelDone){
+      // count consecutive non-sum from here
+      const span=fields.slice(i).findIndex(x=>x.sum);
+      const cs=span<0?fields.length-i:span;
+      tfCells+=`<td class="sum-label" colspan="${cs}">סה"כ ${SEC_LABELS[r]||''}</td>`;
+      labelDone=true;
+    }
+  });
+  tfCells+=`<td></td>`;
   const table=document.createElement('table');
   table.className='pro-tbl';table.id='ptbl-'+r;
-  table.innerHTML=`<thead><tr><th>#</th>${heads}<th></th></tr></thead><tbody id="ptbody-${r}"></tbody>`;
+  table.innerHTML=`<thead><tr><th>#</th>${heads}<th></th></tr></thead><tbody id="ptbody-${r}"></tbody><tfoot><tr class="sum-row">${tfCells}</tr></tfoot>`;
   wrap.appendChild(table);
   return table.querySelector('tbody');
 }
@@ -1012,7 +1033,7 @@ function addProRow(r){
     if(f.t==='select'){
       inp=`<select id="${fid}" onchange="recalc()"><option value="">--</option>${(f.o||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
     } else {
-      inp=`<input type="${f.t}" id="${fid}" placeholder="${f.p||''}" oninput="recalc()"/>`;
+      inp=`<input type="${f.t}" id="${fid}" placeholder="${f.p||''}" oninput="recalc();updateProSum(${r})"/>`;
     }
     cells+=`<td>${inp}</td>`;
   });
@@ -1023,7 +1044,25 @@ function addProRow(r){
   recalc();
 }
 function rmProRow(r,n){
-  const el=document.getElementById(`pi_${r}_${n}`);if(el)el.remove();recalc();
+  const el=document.getElementById(`pi_${r}_${n}`);if(el)el.remove();recalc();updateProSum(r);
+}
+function updateProSum(r){
+  const fields=PRO_FIELDS[r]||[];
+  const tbody=document.getElementById('ptbody-'+r);
+  if(!tbody)return;
+  fields.forEach((f,i)=>{
+    if(!f.sum)return;
+    const cell=document.getElementById(`sum_${r}_${i}`);
+    if(!cell)return;
+    let total=0;
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      const td=tr.cells[i+1];
+      if(!td)return;
+      const inp=td.querySelector('input[type="number"]');
+      if(inp)total+=parseFloat(inp.value)||0;
+    });
+    cell.textContent=total.toLocaleString('he-IL');
+  });
 }
 
 // ═══════════════════════════════════════════════════
