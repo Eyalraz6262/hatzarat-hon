@@ -249,6 +249,31 @@ input[type=file]{display:none;}
 /* ── ACTION AREA ── */
 .action-area{background:var(--dk);border-radius:var(--r);box-shadow:var(--sh);padding:20px 22px;margin-top:14px;text-align:center;border:1px solid var(--dk-border);border-top:3px solid var(--gold);}
 .action-area.pro-area{border-top-color:var(--gold);}
+
+/* ── PART B ── */
+.part-b-hdr{background:linear-gradient(135deg,#1a2456,#2a3a80);color:#fff;text-align:center;
+  padding:12px 18px;border-radius:10px;margin:18px 0 10px;font-size:.95rem;font-weight:800;letter-spacing:.5px;}
+.pb-sub-hdr{color:var(--gold);font-size:.85rem;font-weight:800;margin:14px 0 6px;padding-right:4px;border-right:3px solid var(--gold);padding:3px 8px;}
+.pb-entity-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px;margin-bottom:10px;}
+.pb-entity-grid label{display:flex;flex-direction:column;font-size:.72rem;color:var(--muted);gap:3px;}
+.pb-entity-grid input,.pb-entity-grid select{
+  background:var(--inp);color:var(--inp-txt);border:1px solid var(--dk-border);
+  border-radius:5px;padding:5px 8px;font-size:.8rem;}
+.pb-tbl{width:100%;border-collapse:collapse;font-size:.8rem;direction:rtl;margin-bottom:10px;}
+.pb-tbl thead tr{background:var(--gold);color:#111;}
+.pb-tbl th{padding:6px 8px;font-weight:800;font-size:.74rem;border:1px solid rgba(0,0,0,.15);text-align:center;}
+.pb-tbl td{padding:5px 8px;border:1px solid var(--dk-border);vertical-align:middle;}
+.pb-tbl td:first-child{text-align:center;font-weight:800;color:var(--gold2);width:45px;}
+.pb-tbl td:last-child{text-align:center;width:130px;}
+.pb-tbl td input[type=number]{width:100%;background:var(--inp);color:var(--inp-txt);border:none;
+  border-radius:4px;padding:5px 7px;font-size:.8rem;text-align:left;}
+.pb-tbl tr.pb-calc td{background:rgba(200,134,10,.13);font-weight:800;color:var(--gold);}
+.pb-tbl tr.pb-calc td:last-child{font-size:.85rem;}
+.pb-grand{display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(90deg,rgba(200,134,10,.2),rgba(200,134,10,.08));
+  border:2px solid var(--gold);border-radius:8px;padding:10px 16px;margin-top:12px;}
+.pb-grand .pb-g-label{font-size:.85rem;font-weight:800;color:var(--gold);}
+.pb-grand .pb-g-val{font-size:1rem;font-weight:900;color:#fff;}
 .action-area h3{font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:5px;}
 .action-area p{font-size:.82rem;color:var(--muted);margin-bottom:12px;line-height:1.6;}
 .act-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
@@ -704,6 +729,87 @@ input[type=file]{display:none;}
   <span class="tb-val">₪ <span id="t220">0</span></span>
 </div>
 
+<!-- PART B -->
+<div class="pro-section" id="part-b-wrap">
+  <div class="part-b-hdr">חלק ב — השקעה בעסק בו נערך מאזן</div>
+
+  <!-- 1. עסק -->
+  <div class="pb-sub-hdr">1. השקעה בעסק</div>
+  <div class="pb-entity-grid">
+    <label>שם העסק<input type="text" id="pb-bus-name" placeholder="שם העסק" oninput="recalcB()"/></label>
+    <label>מס' עוסק<input type="text" id="pb-bus-id" placeholder="מספר" oninput="recalcB()"/></label>
+    <label>סוג העסק<input type="text" id="pb-bus-type" placeholder="סוג" oninput="recalcB()"/></label>
+    <label>מדינה<input type="text" id="pb-bus-country" value="ישראל" oninput="recalcB()"/></label>
+    <label>חלקי ב-%<input type="number" id="pb-bus-pct" placeholder="%" min="0" max="100" oninput="recalcB()"/></label>
+  </div>
+  <table class="pb-tbl">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr><td>300</td><td>יתרת חשבון ההון שלך</td><td><input type="number" id="pb300" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>310</td><td>יתרת חשבון החו"ז שלך</td><td><input type="number" id="pb310" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>320</td><td>הלוואות שנתת לעסק</td><td><input type="number" id="pb320" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>330</td><td>הלוואות שלקחת מהעסק</td><td><input type="number" id="pb330" placeholder="0" oninput="recalcB()"/></td></tr>
+    </tbody>
+    <tfoot>
+      <tr class="pb-calc"><td>340</td><td>סה"כ השקעה נטו בעסק (300+310+320−330)</td><td id="pb340">0</td></tr>
+    </tfoot>
+  </table>
+
+  <!-- 2. שותפות -->
+  <div class="pb-sub-hdr">2. השקעה בשותפות</div>
+  <div class="pb-entity-grid">
+    <label>שם השותפות<input type="text" id="pb-par-name" placeholder="שם השותפות" oninput="recalcB()"/></label>
+    <label>מספר שותפות<input type="text" id="pb-par-id" placeholder="מספר" oninput="recalcB()"/></label>
+    <label>מדינה<input type="text" id="pb-par-country" value="ישראל" oninput="recalcB()"/></label>
+    <label>חלקי ב-%<input type="number" id="pb-par-pct" placeholder="%" min="0" max="100" oninput="recalcB()"/></label>
+  </div>
+  <table class="pb-tbl">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr><td>350</td><td>יתרת חשבון ההון שלך</td><td><input type="number" id="pb350" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>360</td><td>יתרת חשבון החו"ז שלך</td><td><input type="number" id="pb360" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>370</td><td>הלוואות שנתת לשותפות</td><td><input type="number" id="pb370" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>380</td><td>הלוואות שלקחת מהשותפות</td><td><input type="number" id="pb380" placeholder="0" oninput="recalcB()"/></td></tr>
+    </tbody>
+    <tfoot>
+      <tr class="pb-calc"><td>390</td><td>סה"כ השקעה נטו בשותפות (350+360+370−380)</td><td id="pb390">0</td></tr>
+    </tfoot>
+  </table>
+
+  <!-- 3. חברה -->
+  <div class="pb-sub-hdr">3. השקעה בחברה, אגודה שיתופית ותאגיד אחר</div>
+  <div class="pb-entity-grid">
+    <label>שם החברה / התאגיד<input type="text" id="pb-co-name" placeholder="שם" oninput="recalcB()"/></label>
+    <label>מספר ח.פ. / רישום<input type="text" id="pb-co-id" placeholder="מספר" oninput="recalcB()"/></label>
+    <label>סוג העסק<input type="text" id="pb-co-type" placeholder="סוג" oninput="recalcB()"/></label>
+    <label>מדינה<input type="text" id="pb-co-country" value="ישראל" oninput="recalcB()"/></label>
+    <label>חלקי ב-%<input type="number" id="pb-co-pct" placeholder="%" min="0" max="100" oninput="recalcB()"/></label>
+  </div>
+  <table class="pb-tbl">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr><td>400</td><td>יתרת חשבון ההון שלך</td><td><input type="number" id="pb400" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>410</td><td>יתרת חשבון החו"ז שלך</td><td><input type="number" id="pb410" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>420</td><td>הלוואות שנתת לחברה וכן תשלום מניות שלא הוקצו</td><td><input type="number" id="pb420" placeholder="0" oninput="recalcB()"/></td></tr>
+      <tr><td>430</td><td>הלוואות שלקחת מהחברה</td><td><input type="number" id="pb430" placeholder="0" oninput="recalcB()"/></td></tr>
+    </tbody>
+    <tfoot>
+      <tr class="pb-calc"><td>440</td><td>סה"כ השקעה נטו בחברה (400+410+420−430)</td><td id="pb440">0</td></tr>
+    </tfoot>
+  </table>
+  <table class="pb-tbl" style="margin-top:-1px;">
+    <tbody>
+      <tr><td>450</td><td>השקעות נוספות בעסקים (נספחים)</td><td><input type="number" id="pb450" placeholder="0" oninput="recalcB()"/></td></tr>
+    </tbody>
+  </table>
+
+  <!-- סה"כ 460 -->
+  <div class="pb-grand">
+    <span class="pb-g-label">שורה 460 — סה"כ השקעה נטו בעסקים, שותפויות וחברות (340+390+440+450)</span>
+    <span class="pb-g-val">₪ <span id="pb460">0</span></span>
+  </div>
+</div>
+
 <!-- CLIENT ACTION -->
 <div class="action-area" id="client-action">
   <h3>✅ מוכן לשליחה?</h3>
@@ -1063,6 +1169,18 @@ function updateProSum(r){
     });
     cell.textContent=total.toLocaleString('he-IL');
   });
+}
+
+function recalcB(){
+  const n=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const s=id=>{ const el=document.getElementById(id); if(el) el.textContent=Math.round(val).toLocaleString('he-IL'); };
+  const t340=n('pb300')+n('pb310')+n('pb320')-n('pb330');
+  const t390=n('pb350')+n('pb360')+n('pb370')-n('pb380');
+  const t440=n('pb400')+n('pb410')+n('pb420')-n('pb430');
+  const t460=t340+t390+t440+n('pb450');
+  const fmt=v=>Math.round(v).toLocaleString('he-IL');
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=fmt(v);};
+  set('pb340',t340); set('pb390',t390); set('pb440',t440); set('pb460',t460);
 }
 
 // ═══════════════════════════════════════════════════
