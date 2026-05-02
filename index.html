@@ -379,6 +379,133 @@ input[type=file]{display:none;}
   .sec-lbl,.sec-sub,.f label,.note-wrap label{color:#000!important;}
   .f input,.f select,.f textarea,.note-wrap textarea{background:#f5f5f5!important;color:#000!important;border-color:#ccc!important;}
 }
+
+/* ══════════════════════════════════════════
+   B&W ZONE — form sections (real estate ↓)
+   ══════════════════════════════════════════ */
+.bw-zone{background:transparent;}
+
+/* Section card */
+.bw-zone .sec{
+  background:#fff;
+  border:1px solid #ccc;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+  border-radius:8px;
+  margin-bottom:8px;
+}
+.bw-zone .sec:hover{border-color:#999;}
+
+/* Section header */
+.bw-zone .sec-hdr{
+  background:#f0f0f0;
+  border-bottom:1px solid #ddd;
+  padding:11px 16px;
+}
+.bw-zone .sec-hdr:hover{background:#e8e8e8;}
+.bw-zone .sec-lbl{color:#111 !important;font-size:.9rem;}
+.bw-zone .sec-sub{color:#555 !important;}
+.bw-zone .sec-icon{background:#e0e0e0 !important;color:#333 !important;}
+.bw-zone .sec-chev{color:#555 !important;}
+
+/* Status badges */
+.bw-zone .sec-status{filter:saturate(0.4);}
+
+/* Inner content */
+.bw-zone .sec-body{padding:12px 16px;background:#fff;}
+
+/* Notes */
+.bw-zone .note-wrap label{color:#444 !important;font-size:.78rem;}
+.bw-zone .note-wrap textarea{
+  background:#fff !important;color:#111 !important;
+  border:1px solid #bbb !important;border-radius:6px;
+}
+.bw-zone .note-wrap textarea:focus{border-color:#555 !important;box-shadow:0 0 0 2px rgba(0,0,0,.1) !important;}
+.bw-zone .client-note-ro{background:#f5f5f5 !important;color:#333 !important;border:1px solid #ddd !important;}
+.bw-zone .client-note-ro .lbl{color:#555 !important;}
+
+/* Upload zone */
+.bw-zone .upload-zone{
+  border-color:#bbb !important;
+  background:#f8f8f8 !important;
+}
+.bw-zone .upload-zone:hover,.bw-zone .upload-zone.drag{
+  border-color:#555 !important;background:#eee !important;
+}
+.bw-zone .ul-btn{background:#444 !important;color:#fff !important;}
+.bw-zone .ul-btn:hover{background:#222 !important;}
+.bw-zone .uz-hint{color:#666 !important;}
+.bw-zone .fi{background:#f5f5f5 !important;border-color:#ddd !important;color:#333 !important;}
+.bw-zone .fn{color:#333 !important;}
+.bw-zone .fdel{color:#c00 !important;}
+.bw-zone .fann{color:#666 !important;}
+
+/* Pro fields */
+.bw-zone .pro-fields-wrap{
+  background:#f9f9f9 !important;
+  border:1px solid #ddd !important;
+}
+.bw-zone .pro-fields-wrap h4{color:#333 !important;}
+.bw-zone .pro-item{
+  background:#fff !important;
+  border:1px solid #ddd !important;
+}
+.bw-zone .pro-item-num{background:#555 !important;color:#fff !important;}
+.bw-zone .f label{color:#555 !important;}
+.bw-zone .f input,.bw-zone .f select,.bw-zone .f textarea{
+  background:#fff !important;color:#111 !important;
+  border:1px solid #bbb !important;
+}
+.bw-zone .f input:focus,.bw-zone .f select:focus,.bw-zone .f textarea:focus{
+  border-color:#555 !important;box-shadow:0 0 0 2px rgba(0,0,0,.1) !important;
+}
+.bw-zone .f select option{background:#fff !important;color:#111 !important;}
+
+/* Pro row buttons */
+.bw-zone .add-pro-row{
+  border-color:#aaa !important;color:#333 !important;
+  background:transparent !important;
+}
+.bw-zone .add-pro-row:hover{background:#f0f0f0 !important;}
+.bw-zone .rm-pro{color:#c00 !important;}
+.bw-zone .rm-pro:hover{background:#fee !important;}
+
+/* Dropbox link button */
+.bw-zone .db-link-btn{
+  background:#f0f0f0 !important;color:#333 !important;
+  border-color:#bbb !important;
+}
+.bw-zone .db-link-btn:hover{background:#e0e0e0 !important;}
+
+/* Pro table (tfoot sum row) */
+.bw-zone .pro-tbl tfoot td{background:#e8e8e8 !important;color:#111 !important;}
+.bw-zone .pro-tbl thead th{background:#f0f0f0 !important;color:#111 !important;border-color:#ccc !important;}
+.bw-zone .pro-tbl td{border-color:#ddd !important;color:#111 !important;}
+
+/* Totals bars */
+.bw-zone .total-bar.tb-assets{background:#222 !important;color:#fff !important;}
+.bw-zone .total-bar.tb-liab{background:#fee2e2 !important;color:#7f1d1d !important;border-color:#fca5a5 !important;}
+.bw-zone .total-bar.tb-net{background:#dcfce7 !important;color:#14532d !important;border-color:#86efac !important;}
+
+/* Divider */
+.bw-zone .divider{border-color:#bbb !important;}
+.bw-zone .divider span{background:#f0f0f0 !important;color:#333 !important;}
+
+/* Part B / Part C headers */
+.bw-zone .part-hdr,.bw-zone .phdr-ui{
+  background:#e8e8e8 !important;color:#000 !important;
+  border:1px solid #bbb !important;
+}
+
+/* frow inside bw-zone */
+.bw-zone .frow{background:#f5f5f5 !important;border-color:#ddd !important;}
+.bw-zone .frow label{color:#333 !important;}
+.bw-zone .frow input,.bw-zone .frow select{
+  background:#fff !important;color:#111 !important;
+}
+
+/* Card headers inside bw-zone */
+.bw-zone .card-hdr{color:#333 !important;border-color:#ddd !important;}
+
 </style>
 </head>
 <body>
@@ -528,6 +655,7 @@ input[type=file]{display:none;}
 
 <!-- ═══ SECTIONS ═══ -->
 <!-- Each section has: client notes + upload (always) + pro fields (pro mode only) -->
+<div class="bw-zone">
 
 <!-- 10 -->
 <div class="sec" id="sec-10"><div class="sec-hdr" onclick="tog(10)"><div class="sec-left"><div class="sec-icon">🏠</div><div><div class="sec-lbl">נדל"ן בארץ</div><div class="sec-sub">מבנה, בית, דירה, קרקע, שטחים חקלאיים כולל עלויות נלוות</div></div></div><div style="display:flex;align-items:center;gap:6px;"><span class="row-tag">שורה 10</span><span class="chk" id="chk-10">○</span><span class="chv" id="chv-10">▼</span></div></div>
@@ -902,6 +1030,7 @@ input[type=file]{display:none;}
 </div>
 
 <!-- CLIENT ACTION -->
+</div><!-- /bw-zone -->
 <div class="action-area" id="client-action">
   <h3>✅ מוכן לשליחה?</h3>
   <p>לאחר שצירפת את כל המסמכים והוספת הערות,<br/>לחץ "שלח למשרד" — הכל יגיע ישירות לרואה החשבון.</p>
