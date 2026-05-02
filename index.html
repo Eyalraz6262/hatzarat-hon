@@ -1346,183 +1346,335 @@ function getSectionTotal(r){
 }
 
 function printForm(){
-  const clientName=(document.getElementById('c-last')?.value||'').trim()||'_____________';
-  const clientId=(document.getElementById('c-id')?.value||'').trim()||'_____________';
-  const spName=(document.getElementById('c-sp-last')?.value||'').trim()||'';
-  const spId=(document.getElementById('c-sp-id')?.value||'').trim()||'';
-  const year=(document.getElementById('c-year')?.value||'').trim()||new Date().getFullYear()-1;
+  /* ── helpers ── */
+  const gv=id=>(document.getElementById(id)?.value||'').trim();
+  const gt=id=>(document.getElementById(id)?.textContent||'').trim();
+  const gn=id=>parseFloat((document.getElementById(id)?.value||'0').replace(/,/g,''))||0;
+  const fmt=v=>v?Math.round(v).toLocaleString('he-IL'):'';
+
+  /* ── client info ── */
+  const last=gv('c-last')||'___________';
+  const first=gv('c-first')||'___________';
+  const cid=gv('c-id')||'___________';
+  const spLast=gv('c-sp-last'); const spFirst=gv('c-sp-first'); const spId=gv('c-sp-id');
+  const year=gv('c-year')||String(new Date().getFullYear()-1);
   const today=new Date().toLocaleDateString('he-IL');
 
-  let t200=0,t210=0;
-
-  function buildSection(r,isLiab){
+  /* ── Part A row data ── */
+  let t200=0, t210=0;
+  function getSumRows(r){
     const fields=PRO_FIELDS[r]||[];
-    const rows=getRowData(r);
-    const tot=getSectionTotal(r);
-    if(isLiab)t210+=tot; else t200+=tot;
-
-    const heads=fields.map(f=>`<th>${f.l}</th>`).join('');
-    let dataRows='';
-    const EMPTY_ROWS=Math.max(rows.length,isLiab?(r===130?4:3):(r<=30?4:3));
-    for(let i=0;i<EMPTY_ROWS;i++){
-      const vals=rows[i]||[];
-      const cells=fields.map((_,j)=>`<td>${vals[j]||''}</td>`).join('');
-      dataRows+=`<tr>${cells}</tr>`;
-    }
-    const sumLabel=isLiab?`סה"כ שורה ${r}`:`סה"כ שורה ${r}`;
-    const sumField=fields.find(f=>f.sum);
-    const sumColspan=sumField?fields.indexOf(sumField):fields.length-1;
-
-    return `
-    <div class="form-section">
-      <div class="sec-title">${r}. ${SEC_TITLES[r]||''}</div>
-      <table>
-        <thead><tr>${heads}</tr></thead>
-        <tbody>${dataRows}</tbody>
-        <tfoot>
-          <tr>
-            <td colspan="${sumColspan}" class="total-label">${sumLabel}</td>
-            <td class="total-val">${tot?Math.round(tot).toLocaleString('he-IL'):''}</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>`;
+    const tbody=document.getElementById('ptbody-'+r);
+    if(!tbody)return{rows:[],tot:0};
+    const rows=[]; let tot=0;
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      const vals=[]; let rowTot=0;
+      fields.forEach((f,i)=>{
+        const td=tr.cells[i+1]; if(!td)return;
+        const inp=td.querySelector('input,select');
+        const v=inp?inp.value:''; vals.push(v);
+        if(f.sum)rowTot+=parseFloat(v)||0;
+      });
+      rows.push({vals,tot:rowTot});
+      tot+=rowTot;
+    });
+    return{rows,tot};
   }
 
-  const assetSections=ASSET_ROWS.map(r=>buildSection(r,false)).join('');
-  const liabSections=LIAB_ROWS.map(r=>buildSection(r,true)).join('');
+  function buildSecA(r,isLiab){
+    const fields=PRO_FIELDS[r]||[];
+    const {rows,tot}=getSumRows(r);
+    if(isLiab)t210+=tot; else t200+=tot;
+    const minRows=Math.max(rows.length,3);
+    const padded=[...rows];
+    while(padded.length<minRows)padded.push({vals:fields.map(()=>''),tot:0});
+    const sumIdx=fields.findIndex(f=>f.sum);
+    const heads=fields.map(f=>`<th>${f.l}</th>`).join('');
+    const bodyRows=padded.map(row=>{
+      const cells=row.vals.map((v,i)=>`<td class="${fields[i]?.t==='number'?'tc':'tr'}">${v||''}</td>`).join('');
+      return`<tr>${cells}</tr>`;
+    }).join('');
+    return`<div class="fsec pba">
+      <div class="stitle"><span class="snum">${r}</span>${SEC_TITLES[r]||''}</div>
+      <table><thead><tr>${heads}</tr></thead>
+      <tbody>${bodyRows}</tbody>
+      <tfoot><tr>
+        <td colspan="${sumIdx<0?fields.length:sumIdx}" class="tlbl">סה"כ שורה ${r}</td>
+        <td class="tval">${fmt(tot)}</td>
+      </tr></tfoot></table></div>`;
+  }
+
+  const partsA_assets=ASSET_ROWS.map(r=>buildSecA(r,false)).join('');
+  const partsA_liab=LIAB_ROWS.map(r=>buildSecA(r,true)).join('');
   const t220=t200-t210;
 
-  const html=`<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
+  /* ── Part B data ── */
+  const pb=r=>{const el=document.getElementById('pb'+r);return el?.tagName==='INPUT'?parseFloat(el.value)||0:parseFloat(el?.textContent?.replace(/,/g,'')||'0')||0;};
+  const pbFields=[
+    ['bus','שם העסק','pb-bus-name','מס\' עוסק','pb-bus-id','סוג','pb-bus-type','מדינה','pb-bus-country','%','pb-bus-pct'],
+    ['par','שם השותפות','pb-par-name','מספר שותפות','pb-par-id','','','מדינה','pb-par-country','%','pb-par-pct'],
+    ['co','שם החברה/תאגיד','pb-co-name','מספר ח.פ.','pb-co-id','סוג','pb-co-type','מדינה','pb-co-country','%','pb-co-pct'],
+  ];
+  function entityRow(lbls){
+    return lbls.filter((_,i)=>i%2===0).map((lbl,i)=>{
+      const val=gv(lbls[i*2+1])||'';
+      return lbl?`<td><span class="elbl">${lbl}</span><span class="eval">${val}</span></td>`:'';
+    }).join('');
+  }
+  function pbRow(rowNum,desc,val,isTot){
+    return`<tr class="${isTot?'trow':''}"><td class="rnum">${rowNum}</td><td>${desc}</td><td class="tval">${isTot?`<b>${val}</b>`:val}</td></tr>`;
+  }
+  const pbSec1=`<table><tbody>
+    ${pbRow(300,'יתרת חשבון ההון שלך',fmt(pb(300)))}
+    ${pbRow(310,'יתרת חשבון החו"ז שלך',fmt(pb(310)))}
+    ${pbRow(320,'הלוואות שנתת לעסק',fmt(pb(320)))}
+    ${pbRow(330,'הלוואות שלקחת מהעסק',fmt(pb(330)))}
+    ${pbRow(340,'סה"כ השקעה נטו בעסק (300+310+320−330)',gt('pb340'),true)}
+  </tbody></table>`;
+  const pbSec2=`<table><tbody>
+    ${pbRow(350,'יתרת חשבון ההון שלך',fmt(pb(350)))}
+    ${pbRow(360,'יתרת חשבון החו"ז שלך',fmt(pb(360)))}
+    ${pbRow(370,'הלוואות שנתת לשותפות',fmt(pb(370)))}
+    ${pbRow(380,'הלוואות שלקחת מהשותפות',fmt(pb(380)))}
+    ${pbRow(390,'סה"כ השקעה נטו בשותפות (350+360+370−380)',gt('pb390'),true)}
+  </tbody></table>`;
+  const pbSec3=`<table><tbody>
+    ${pbRow(400,'יתרת חשבון ההון שלך',fmt(pb(400)))}
+    ${pbRow(410,'יתרת חשבון החו"ז שלך',fmt(pb(410)))}
+    ${pbRow(420,'הלוואות שנתת לחברה וכן תשלום מניות שלא הוקצו',fmt(pb(420)))}
+    ${pbRow(430,'הלוואות שלקחת מהחברה',fmt(pb(430)))}
+    ${pbRow(440,'סה"כ השקעה נטו בחברה (400+410+420−430)',gt('pb440'),true)}
+    ${pbRow(450,'השקעות נוספות בעסקים — נספחים',fmt(pb(450)))}
+    ${pbRow(460,'סה"כ השקעה נטו בעסקים, שותפויות וחברות (340+390+440+450)',gt('pb460'),true)}
+  </tbody></table>`;
+
+  /* ── Part C data ── */
+  const pc=r=>{const el=document.getElementById('pc'+r);return el?.tagName==='INPUT'?parseFloat(el.value)||0:parseFloat(el?.textContent?.replace(/,/g,'')||'0')||0;};
+  const pcSec=`<table><tbody>
+    <tr class="shdr"><td colspan="3"><b>נכסים שוטפים</b></td></tr>
+    ${pbRow(500,'מזומנים ואחמאות בקופה',fmt(pc(500)))}
+    ${pbRow(510,'שטרות לגביה ואחמאות',fmt(pc(510)))}
+    ${pbRow(520,'כרטיסי אשראי',fmt(pc(520)))}
+    ${pbRow(530,'לקוחות',fmt(pc(530)))}
+    ${pbRow(540,'סה"כ נכסים שוטפים (500+510+520+530)',gt('pc540'),true)}
+    ${pbRow(550,'מלאי (גלם, מוצרים, עבודות בביצוע)',fmt(pc(550)))}
+    ${pbRow(560,'נכסים שוטפים אחרים',fmt(pc(560)))}
+    ${pbRow(570,'חשבונות בבנקים ומוסדות פיננסיים (כולל יתרת חובה)',fmt(pc(570)))}
+    <tr class="shdr"><td colspan="3"><b>נכסים קבועים</b></td></tr>
+    ${pbRow(580,'ניירות ערך וקרנות נאמנות',fmt(pc(580)))}
+    ${pbRow(590,'הלוואות שהעסק נתן לאחרים ובייחו אחרים בעסק',fmt(pc(590)))}
+    ${pbRow(600,'נכסים דיגיטליים',fmt(pc(600)))}
+    ${pbRow(610,'נדל"ן בארץ',fmt(pc(610)))}
+    ${pbRow(620,'נדל"ן בחו"ל',fmt(pc(620)))}
+    ${pbRow(630,'כלי רכב, שיט וסייט, ציוד כבד',fmt(pc(630)))}
+    ${pbRow(640,'ציוד, מכונות, ריהוט ומכשירים',fmt(pc(640)))}
+    ${pbRow(650,'נכסים קבועים אחרים (פטנט, מוניטין, שיפורים במושכר)',fmt(pc(650)))}
+    ${pbRow(660,'תשלומות על חשבון נכסים קבועים',fmt(pc(660)))}
+    ${pbRow(670,'סה"כ נכסים (540+550+560+570+580+590+600+610+620+630+640+650+660)',gt('pc670'),true)}
+    <tr class="shdr"><td colspan="3"><b>התחייבויות</b></td></tr>
+    ${pbRow(680,'חובות לספקים',fmt(pc(680)))}
+    ${pbRow(690,'אשראי חברות לרבות שטרות לפירעון',fmt(pc(690)))}
+    ${pbRow(700,'סה"כ התחייבויות שוטפות (680+690)',gt('pc700'),true)}
+    ${pbRow(710,'הלוואות מבנקים ומוסדות פיננסיים אחרים',fmt(pc(710)))}
+    ${pbRow(720,'הלוואות מאחרים, זכאים והתחייבויות אחרות',fmt(pc(720)))}
+    ${pbRow(730,'סה"כ התחייבויות (700+710+720)',gt('pc730'),true)}
+    <tr class="shdr"><td colspan="3"><b>הון עצמי</b></td></tr>
+    ${pbRow(740,'הון עצמי בעסק (670−730)',gt('pc740'),true)}
+    ${pbRow(750,'חלקי מהון העצמי של העסק/שותפות (740 × %)',gt('pc750'),true)}
+    ${pbRow(760,'חלקי בהון עצמי — עסקים/שותפויות נוספים, נספחים',fmt(pc(760)))}
+    ${pbRow(770,'סה"כ הון נטו בעסקים ושותפויות ללא מאזן (750+760)',gt('pc770'),true)}
+  </tbody></table>`;
+
+  /* ── HTML ── */
+  const html=`<!DOCTYPE html><html lang="he" dir="rtl"><head>
 <meta charset="UTF-8"/>
-<title>הצהרת הון — טופס 1219 — ${clientName}</title>
+<title>הצהרת הון — טופס 1219 — ${last} ${first}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Arial',sans-serif;font-size:9pt;color:#000;background:#fff;direction:rtl;}
-.page{max-width:210mm;margin:0 auto;padding:8mm 10mm;}
-
-/* HEADER */
-.form-header{border:2px solid #000;margin-bottom:6mm;padding:3mm 4mm;}
-.form-header-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #000;padding-bottom:2mm;margin-bottom:2mm;}
-.form-title{font-size:14pt;font-weight:900;color:#1a2456;}
-.form-subtitle{font-size:8pt;color:#333;margin-top:1mm;}
-.form-num{font-size:10pt;font-weight:700;border:1px solid #000;padding:2px 8px;}
-.form-meta{display:grid;grid-template-columns:1fr 1fr;gap:2mm;font-size:8.5pt;}
-.meta-row{display:flex;gap:4px;align-items:center;}
-.meta-lbl{font-weight:700;white-space:nowrap;min-width:80px;}
-.meta-val{border-bottom:1px solid #666;flex:1;min-height:14px;padding:0 2px;}
-
-/* PART HEADER */
-.part-header{background:#1a2456;color:#fff;font-size:10pt;font-weight:700;padding:2mm 4mm;margin:4mm 0 2mm;text-align:right;}
-.part-header.liab{background:#7f1d1d;}
-
-/* SECTION */
-.form-section{margin-bottom:4mm;page-break-inside:avoid;}
-.sec-title{font-size:7.5pt;font-weight:700;background:#e8e8e8;border:1px solid #999;border-bottom:none;padding:1.5mm 3mm;}
-
-/* TABLE */
+body{font-family:Arial,sans-serif;font-size:9pt;color:#000;background:#f4f4f4;direction:rtl;}
+.page{width:210mm;margin:0 auto;background:#fff;padding:8mm 10mm;box-shadow:0 2px 12px rgba(0,0,0,.15);}
+.no-print{background:#1a2456;color:#fff;text-align:center;padding:8px;position:sticky;top:0;z-index:99;}
+.no-print button{background:#c8860a;color:#fff;border:none;padding:6px 20px;font-size:10pt;border-radius:4px;cursor:pointer;font-weight:700;}
+/* header */
+.fhdr{border:2px solid #000;padding:3mm;margin-bottom:4mm;}
+.fhdr-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #000;padding-bottom:2mm;margin-bottom:2mm;}
+.ftitle{font-size:13pt;font-weight:900;color:#1a2456;}
+.fnum{font-size:11pt;font-weight:900;border:2px solid #1a2456;padding:2px 10px;color:#1a2456;}
+.fmeta{display:grid;grid-template-columns:1fr 1fr;gap:2mm;font-size:8.5pt;}
+.mrow{display:flex;align-items:center;gap:4px;padding:1mm 0;border-bottom:1px dashed #ccc;}
+.mlbl{font-weight:700;min-width:60px;white-space:nowrap;}
+.mval{flex:1;border-bottom:1px solid #333;padding:0 3px;min-height:14px;}
+/* part headers */
+.phdr{background:#1a2456;color:#fff;padding:2mm 4mm;margin:4mm 0 2mm;font-weight:800;font-size:9.5pt;}
+.phdr.liab{background:#7b1a1a;}
+.phdr.biz{background:#14532d;}
+/* section */
+.fsec{margin-bottom:3mm;page-break-inside:avoid;}
+.stitle{font-size:7.5pt;font-weight:700;background:#e8e8e8;border:1px solid #999;border-bottom:none;padding:1.5mm 3mm;display:flex;align-items:center;gap:5px;}
+.snum{display:inline-block;background:#1a2456;color:#fff;padding:1px 6px;border-radius:3px;font-size:7pt;font-weight:900;min-width:22px;text-align:center;margin-left:4px;}
+.snum.liab{background:#7b1a1a;}
+/* tables */
 table{width:100%;border-collapse:collapse;font-size:7.5pt;}
-thead tr{background:#c8860a;color:#fff;}
-th{border:1px solid #888;padding:2.5mm 2mm;text-align:center;font-weight:700;font-size:7pt;white-space:nowrap;}
-td{border:1px solid #bbb;padding:2mm;min-height:7mm;height:7mm;}
-tfoot td{background:#f0f0f0;font-weight:700;}
-.total-label{text-align:right;font-size:7.5pt;}
-.total-val{text-align:center;font-size:8pt;font-weight:900;color:#1a2456;}
-tbody tr:nth-child(even){background:#fafafa;}
-
-/* TOTALS BOX */
-.totals-box{border:2px solid #1a2456;margin-top:4mm;padding:3mm 5mm;}
-.total-row{display:flex;justify-content:space-between;align-items:center;padding:2mm 0;border-bottom:1px solid #ddd;font-size:9pt;}
-.total-row:last-child{border-bottom:none;font-size:10pt;font-weight:900;color:#1a2456;}
-.total-row.liab{color:#7f1d1d;}
-.t-name{font-weight:700;}
-.t-val{font-size:10pt;font-weight:900;min-width:120px;text-align:left;border-bottom:1px solid #000;}
-
-/* SIGNATURE */
-.sig-area{display:grid;grid-template-columns:1fr 1fr;gap:8mm;margin-top:8mm;font-size:8pt;}
-.sig-box{border-top:1px solid #000;padding-top:2mm;text-align:center;color:#555;}
-
-/* FOOTER */
-.form-footer{text-align:center;font-size:7pt;color:#888;margin-top:6mm;border-top:1px solid #ddd;padding-top:2mm;}
-
+thead tr{background:#1a2456;color:#fff;}
+th{border:1px solid #555;padding:2mm 2mm;text-align:center;font-weight:700;font-size:7pt;white-space:nowrap;}
+td{border:1px solid #bbb;padding:1.5mm 2mm;vertical-align:middle;}
+tbody tr:nth-child(even){background:#f8f8f8;}
+tfoot tr{background:#e8e0cc;}
+.tlbl{text-align:right;font-weight:700;font-size:7.5pt;}
+.tval{text-align:center;font-weight:900;color:#1a2456;font-size:8pt;width:90px;}
+.tr{text-align:right;} .tc{text-align:center;}
+/* totals */
+.totbox{border:2px solid #1a2456;padding:3mm 5mm;margin:3mm 0;}
+.totrow{display:flex;justify-content:space-between;align-items:center;padding:2mm 0;border-bottom:1px solid #ddd;}
+.totrow.liab .tname{color:#7b1a1a;}
+.totrow.net{background:#e8e0cc;padding:3mm;border-radius:4px;margin-top:2mm;}
+.tname{font-size:8.5pt;font-weight:700;}
+.tamt{font-size:10pt;font-weight:900;color:#1a2456;}
+/* part B/C rows */
+.rnum{text-align:center;font-weight:900;color:#1a2456;background:#f0f0f0;width:38px;font-size:8pt;}
+.trow td{background:#e8e0cc;font-weight:700;}
+.trow .rnum{background:#c8860a;color:#fff;}
+.shdr td{background:#d1d5db;font-size:7.5pt;padding:1.5mm 2mm;}
+/* entity */
+.etbl{width:100%;border-collapse:collapse;margin-bottom:2mm;font-size:7.5pt;}
+.etbl td{border:1px solid #bbb;padding:1.5mm 2mm;}
+.elbl{font-weight:700;color:#555;font-size:7pt;display:block;}
+.eval{display:block;min-height:12px;border-bottom:1px solid #aaa;}
+/* sig */
+.sigarea{display:flex;gap:6mm;margin-top:6mm;}
+.sigbox{flex:1;border:1px solid #000;padding:3mm;min-height:20mm;font-size:8pt;text-align:center;color:#444;}
+/* footer */
+.ffooter{text-align:center;font-size:7.5pt;color:#555;border-top:1px solid #ccc;padding-top:2mm;margin-top:4mm;}
 @media print{
-  body{font-size:8.5pt;}
-  .page{padding:5mm 8mm;}
-  @page{size:A4 portrait;margin:10mm;}
+  body{background:#fff;}
+  .page{box-shadow:none;margin:0;padding:6mm 8mm;}
+  .no-print{display:none!important;}
+  @page{size:A4;margin:8mm;}
 }
-</style>
-</head>
-<body>
+</style></head><body>
+<div class="no-print"><button onclick="window.print()">🖨️ הדפס</button> &nbsp; תצוגה מקדימה — טופס 1219</div>
 <div class="page">
 
-<!-- HEADER -->
-<div class="form-header">
-  <div class="form-header-top">
+<!-- ═══ HEADER ═══ -->
+<div class="fhdr">
+  <div class="fhdr-top">
     <div>
-      <div class="form-title">הצהרת הון</div>
-      <div class="form-subtitle">רשות המסים בישראל — פירוט רכוש והתחייבויות פרטיים — חלק א׳</div>
+      <div class="ftitle">הצהרת הון</div>
+      <div style="font-size:8pt;color:#555">דין וחשבון על רכוש והתחייבויות ליום ___________</div>
     </div>
-    <div class="form-num">טופס 1219</div>
+    <div class="fnum">1219</div>
   </div>
-  <div class="form-meta">
-    <div class="meta-row"><span class="meta-lbl">שם המצהיר/ה:</span><span class="meta-val">${clientName}</span></div>
-    <div class="meta-row"><span class="meta-lbl">מספר זהות:</span><span class="meta-val">${clientId}</span></div>
-    <div class="meta-row"><span class="meta-lbl">שם בן/בת הזוג:</span><span class="meta-val">${spName}</span></div>
-    <div class="meta-row"><span class="meta-lbl">ת.ז. בן/בת הזוג:</span><span class="meta-val">${spId}</span></div>
-    <div class="meta-row"><span class="meta-lbl">שנת המס:</span><span class="meta-val">${year}</span></div>
-    <div class="meta-row"><span class="meta-lbl">תאריך עריכה:</span><span class="meta-val">${today}</span></div>
-  </div>
-</div>
-
-<!-- PART A: ASSETS -->
-<div class="part-header">חלק א׳ — רכוש פרטי (נכסים)</div>
-${assetSections}
-
-<!-- TOTAL 200 -->
-<div class="totals-box" style="margin-bottom:4mm;">
-  <div class="total-row">
-    <span class="t-name">שורה 200 — סה"כ רכוש פרטי</span>
-    <span class="t-val">${Math.round(t200).toLocaleString('he-IL')} ₪</span>
+  <div class="fmeta">
+    <div class="mrow"><span class="mlbl">שם משפחה ופרטי:</span><span class="mval">${last} ${first}</span></div>
+    <div class="mrow"><span class="mlbl">מספר זהות:</span><span class="mval">${cid}</span></div>
+    <div class="mrow"><span class="mlbl">שם בן/בת הזוג:</span><span class="mval">${spLast} ${spFirst}</span></div>
+    <div class="mrow"><span class="mlbl">מספר זהות בן/בת זוג:</span><span class="mval">${spId}</span></div>
+    <div class="mrow"><span class="mlbl">שנת המס:</span><span class="mval">${year}</span></div>
+    <div class="mrow"><span class="mlbl">תאריך הגשה:</span><span class="mval">${today}</span></div>
   </div>
 </div>
 
-<!-- LIABILITIES -->
-<div class="part-header liab">התחייבויות</div>
-${liabSections}
+<!-- ═══ PART A ASSETS ═══ -->
+<div class="phdr">חלק א — רכוש פרטי</div>
+${partsA_assets}
 
-<!-- TOTALS 210 / 220 -->
-<div class="totals-box">
-  <div class="total-row liab">
-    <span class="t-name">שורה 210 — סה"כ התחייבויות (130+140)</span>
-    <span class="t-val">${Math.round(t210).toLocaleString('he-IL')} ₪</span>
+<!-- totals 200 -->
+<div class="totbox">
+  <div class="totrow"><span class="tname">שורה 200 — סה"כ רכוש פרטי (10+20+30+40+50+60+70+80+90+100+110+120)</span><span class="tamt">${fmt(t200)} ₪</span></div>
+</div>
+
+<!-- ═══ PART A LIABILITIES ═══ -->
+<div class="phdr liab">חלק א — התחייבויות פרטיות</div>
+${partsA_liab}
+
+<div class="totbox">
+  <div class="totrow liab"><span class="tname">שורה 210 — סה"כ התחייבויות (130+140)</span><span class="tamt">${fmt(t210)} ₪</span></div>
+  <div class="totrow net"><span class="tname">שורה 220 — סה"כ רכוש פרטי נטו (200 פחות 210)</span><span class="tamt">${fmt(t220)} ₪</span></div>
+</div>
+
+<!-- ═══ PART B ═══ -->
+<div class="phdr biz">חלק ב — השקעה בעסק בו נערך מאזן</div>
+
+<div class="fsec">
+  <div class="stitle"><span class="snum" style="background:#14532d;">ב1</span>השקעה בעסק</div>
+  <table class="etbl"><tr>
+    <td><span class="elbl">שם העסק</span><span class="eval">${gv('pb-bus-name')}</span></td>
+    <td><span class="elbl">מס' עוסק</span><span class="eval">${gv('pb-bus-id')}</span></td>
+    <td><span class="elbl">סוג</span><span class="eval">${gv('pb-bus-type')}</span></td>
+    <td><span class="elbl">מדינה</span><span class="eval">${gv('pb-bus-country')}</span></td>
+    <td><span class="elbl">חלקי ב-%</span><span class="eval">${gv('pb-bus-pct')}</span></td>
+  </tr></table>
+  <table><thead><tr><th width="40">שורה</th><th>תיאור</th><th width="90">סכום ₪</th></tr></thead><tbody>
+    ${pbSec1.match(/<tbody>([\s\S]*?)<\/tbody>/)?.[1]||''}
+  </tbody></table>
+</div>
+
+<div class="fsec">
+  <div class="stitle"><span class="snum" style="background:#14532d;">ב2</span>השקעה בשותפות</div>
+  <table class="etbl"><tr>
+    <td><span class="elbl">שם השותפות</span><span class="eval">${gv('pb-par-name')}</span></td>
+    <td><span class="elbl">מספר שותפות</span><span class="eval">${gv('pb-par-id')}</span></td>
+    <td><span class="elbl">מדינה</span><span class="eval">${gv('pb-par-country')}</span></td>
+    <td><span class="elbl">חלקי ב-%</span><span class="eval">${gv('pb-par-pct')}</span></td>
+  </tr></table>
+  <table><thead><tr><th width="40">שורה</th><th>תיאור</th><th width="90">סכום ₪</th></tr></thead><tbody>
+    ${pbSec2.match(/<tbody>([\s\S]*?)<\/tbody>/)?.[1]||''}
+  </tbody></table>
+</div>
+
+<div class="fsec">
+  <div class="stitle"><span class="snum" style="background:#14532d;">ב3</span>השקעה בחברה, אגודה שיתופית ותאגיד אחר</div>
+  <table class="etbl"><tr>
+    <td><span class="elbl">שם החברה/תאגיד</span><span class="eval">${gv('pb-co-name')}</span></td>
+    <td><span class="elbl">מספר ח.פ./רישום</span><span class="eval">${gv('pb-co-id')}</span></td>
+    <td><span class="elbl">סוג</span><span class="eval">${gv('pb-co-type')}</span></td>
+    <td><span class="elbl">מדינה</span><span class="eval">${gv('pb-co-country')}</span></td>
+    <td><span class="elbl">חלקי ב-%</span><span class="eval">${gv('pb-co-pct')}</span></td>
+  </tr></table>
+  <table><thead><tr><th width="40">שורה</th><th>תיאור</th><th width="90">סכום ₪</th></tr></thead><tbody>
+    ${pbSec3.match(/<tbody>([\s\S]*?)<\/tbody>/)?.[1]||''}
+  </tbody></table>
+</div>
+
+<!-- ═══ PART C ═══ -->
+<div class="phdr biz">חלק ג — רכוש והתחייבויות בעסק שלא נערך בו מאזן</div>
+
+<div class="fsec">
+  <table class="etbl"><tr>
+    <td><span class="elbl">שם העסק</span><span class="eval">${gv('pc-name')}</span></td>
+    <td><span class="elbl">מס' עוסק/רישום</span><span class="eval">${gv('pc-id')}</span></td>
+    <td><span class="elbl">סוג</span><span class="eval">${gv('pc-type')}</span></td>
+    <td><span class="elbl">מדינה</span><span class="eval">${gv('pc-country')}</span></td>
+    <td><span class="elbl">חלקי ב-%</span><span class="eval">${gv('pc-pct')}</span></td>
+  </tr></table>
+  <table><thead><tr><th width="40">שורה</th><th>תיאור</th><th width="90">סכום ₪</th></tr></thead><tbody>
+    ${pcSec.match(/<tbody>([\s\S]*?)<\/tbody>/)?.[1]||''}
+  </tbody></table>
+</div>
+
+<!-- ═══ GRAND TOTAL 800 ═══ -->
+<div class="totbox">
+  <div class="totrow net" style="background:#1a2456;color:#fff;border-radius:6px;padding:4mm;">
+    <span class="tname" style="color:#fff;font-size:9.5pt;">שורה 800 — סה"כ נכסים נטו (עסקי ופרטי) (220 + 460 + 770)</span>
+    <span class="tamt" style="color:#c8860a;font-size:12pt;">${gt('pc800')||'0'} ₪</span>
   </div>
-  <div class="total-row">
-    <span class="t-name">שורה 220 — סה"כ רכוש פרטי נטו (200 פחות 210)</span>
-    <span class="t-val">${Math.round(t220).toLocaleString('he-IL')} ₪</span>
-  </div>
 </div>
 
-<!-- SIGNATURE -->
-<div class="sig-area">
-  <div class="sig-box">חתימת המצהיר/ה ותאריך</div>
-  <div class="sig-box">חתימת רואה החשבון וחותמת</div>
+<!-- ═══ SIGNATURE ═══ -->
+<div class="sigarea">
+  <div class="sigbox">חתימת המצהיר/ה ותאריך</div>
+  <div class="sigbox">חתימת רואה החשבון וחותמת</div>
 </div>
 
-<div class="form-footer">
-  אייל רז ושות׳ — רואי חשבון · ACCOUNTING, TAX &amp; BEYOND · SINCE 2005 · eyal@erh.co.il
+<div class="ffooter">אייל רז ושות׳ — רואי חשבון · ACCOUNTING, TAX &amp; BEYOND · SINCE 2005 · eyal@erh.co.il</div>
 </div>
+</body></html>`;
 
-</div>
-</body>
-</html>`;
-
-  const w=window.open('','_blank','width=900,height=750');
+  const w=window.open('','_blank','width=950,height=850,scrollbars=yes');
   w.document.write(html);
   w.document.close();
-  w.onload=()=>w.print();
 }
+
 
 // ═══════════════════════════════════════════════════
 // RECALC TOTALS
