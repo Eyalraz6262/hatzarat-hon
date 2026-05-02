@@ -1474,7 +1474,7 @@ body{font-family:Arial,'Arial Hebrew',Helvetica,sans-serif;font-size:8.5pt;color
 .stamp-lbl{font-size:7.5pt;font-weight:700;}
 .stamp-date{font-size:7pt;color:#333;}
 .fttl{text-align:center;padding:0 4mm;direction:rtl;display:flex;flex-direction:column;justify-content:center;}
-.ftitle{font-size:15pt;font-weight:700;letter-spacing:2px;line-height:1.2;}
+.ftitle{font-size:17pt;font-weight:700;letter-spacing:1px;line-height:1.2;}
 .fline{border-bottom:1.5px solid #000;margin:2mm 5mm 1.5mm;}
 .fsub{font-size:8.5pt;margin-bottom:0;}
 .fdate-line{border-bottom:1px solid #000;display:inline-block;width:42mm;height:11px;vertical-align:bottom;}
@@ -1496,7 +1496,7 @@ body{font-family:Arial,'Arial Hebrew',Helvetica,sans-serif;font-size:8.5pt;color
 .pi-names{display:grid;grid-template-columns:1fr 1fr;font-size:7.5pt;text-align:center;}
 .pi-names>div{padding:2mm 2mm 1.5mm;border-right:1px solid #000;}
 .pi-names>div:first-child{border-right:none;}
-.note{font-size:7.5pt;line-height:1.55;margin:2mm 0 2.5mm;border-top:1px solid #ccc;padding-top:1.5mm;}
+.note{font-size:7.5pt;line-height:1.55;margin:2mm 0 2.5mm;}
 /* ── section / part headers ── */
 .phdr{background:#d0d0d0;color:#000;font-weight:700;font-size:9.5pt;text-align:center;padding:2mm;margin:2mm 0 1.5mm;border:1px solid #888;}
 /* ── Part A tables ── */
@@ -1618,12 +1618,12 @@ td.nc{text-align:left;}
 </div>
 <div class="note">בטופס זה יש למלא את כל הרכוש וההתחייבויות (בארץ ובחו"ל), שלך, של בן/בת זוגך ושל ילדיכם, שבשנת המס עדיין לא מלאו להם 18 שנה. יש ליד כל נכס לציין את הסכום ששולם עבורו וכן לצרף מסמכים לאימות הפרטים המוצהרים.</div>
 <div class="phdr">חלק א' — פירוט רכוש והתחייבויות פרטיים</div>
-${sectionsA.slice(0,5).join('')}`;
+${sectionsA.slice(0,4).join('')}`;
   html_pages += closePage();
 
   /* ── PAGE 2: sections 6–9 (codes 60–90) ── */
   html_pages += openPage(2, TOTAL_PAGES, false);
-  html_pages += sectionsA.slice(5,9).join('');
+  html_pages += sectionsA.slice(4,9).join('');
   html_pages += closePage();
 
   /* ── PAGE 3: sections 10–12 + row200 + liabilities + rows 210/220 ── */
@@ -1644,17 +1644,17 @@ ${sectionsA.slice(0,5).join('')}`;
   html_pages += openPage(4, TOTAL_PAGES, false);
   html_pages += `<div class="phdr">חלק ב' — השקעה בעסקים בהם נערך מאזן</div>
 <div class="fsec">
-  <div class="sttl">.1 השקעה בעסק</div>
+  <div class="sttl">1. השקעה בעסק</div>
   ${egrid([['שם העסק','pb-bus-name'],['מס\' עוסק','pb-bus-id'],['סוג','pb-bus-type'],['מדינה','pb-bus-country'],['חלקי ב-%','pb-bus-pct']])}
   <table class="dtbl"><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:28mm">סכום — ₪</th></tr></thead><tbody>${b1}</tbody></table>
 </div>
 <div class="fsec">
-  <div class="sttl">.2 השקעה בשותפות</div>
+  <div class="sttl">2. השקעה בשותפות</div>
   ${egrid([['שם השותפות','pb-par-name'],['מספר שותפות','pb-par-id'],['מדינה','pb-par-country'],['חלקי ב-%','pb-par-pct']])}
   <table class="dtbl"><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:28mm">סכום — ₪</th></tr></thead><tbody>${b2}</tbody></table>
 </div>
 <div class="fsec">
-  <div class="sttl">.3 השקעה בחברה, אגודה שיתופית ותאגיד אחר</div>
+  <div class="sttl">3. השקעה בחברה, אגודה שיתופית ותאגיד אחר</div>
   ${egrid([['שם החברה/תאגיד','pb-co-name'],['מספר ח.פ.','pb-co-id'],['סוג','pb-co-type'],['מדינה','pb-co-country'],['חלקי ב-%','pb-co-pct']])}
   <table class="dtbl"><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:28mm">סכום — ₪</th></tr></thead><tbody>${b3}</tbody></table>
 </div>`;
