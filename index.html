@@ -810,6 +810,97 @@ input[type=file]{display:none;}
   </div>
 </div>
 
+<!-- PART C -->
+<div class="pro-section" id="part-c-wrap">
+  <div class="part-b-hdr">חלק ג — רכוש והתחייבויות בעסק שלא נערך בו מאזן (כולל שותפויות)</div>
+
+  <!-- פרטי העסק -->
+  <div class="pb-sub-hdr">פרטי העסק</div>
+  <div class="pb-entity-grid">
+    <label>שם העסק<input type="text" id="pc-name" placeholder="שם העסק" oninput="recalcC()"/></label>
+    <label>מס' עוסק/רישום<input type="text" id="pc-id" placeholder="מספר" oninput="recalcC()"/></label>
+    <label>סוג העסק<select id="pc-type" onchange="recalcC()"><option>עצמאי</option><option>שותפות</option><option>אחר</option></select></label>
+    <label>מדינה<input type="text" id="pc-country" value="ישראל" oninput="recalcC()"/></label>
+    <label>חלקי ב-%<input type="number" id="pc-pct" placeholder="%" min="0" max="100" oninput="recalcC()"/></label>
+  </div>
+
+  <!-- נכסים שוטפים -->
+  <div class="pb-sub-hdr">נכסים שוטפים</div>
+  <table class="pb-tbl">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr><td>500</td><td>מזומנים ואחמאות בקופה</td><td><input type="number" id="pc500" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>510</td><td>שטרות לגביה ואחמאות</td><td><input type="number" id="pc510" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>520</td><td>כרטיסי אשראי</td><td><input type="number" id="pc520" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>530</td><td>לקוחות</td><td><input type="number" id="pc530" placeholder="0" oninput="recalcC()"/></td></tr>
+    </tbody>
+    <tfoot><tr class="pb-calc"><td>540</td><td>סה"כ נכסים שוטפים (500+510+520+530)</td><td id="pc540">0</td></tr></tfoot>
+  </table>
+
+  <table class="pb-tbl" style="margin-top:-1px;">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr><td>550</td><td>מלאי (גלם, מוצרים, עבודות בביצוע)</td><td><input type="number" id="pc550" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>560</td><td>נכסים שוטפים אחרים</td><td><input type="number" id="pc560" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>570</td><td>חשבונות בבנקים ומוסדות פיננסיים בארץ ובחו"ל (כולל יתרת משיכת יתר)</td><td><input type="number" id="pc570" placeholder="0" oninput="recalcC()"/></td></tr>
+    </tbody>
+  </table>
+
+  <!-- נכסים קבועים -->
+  <div class="pb-sub-hdr">נכסים קבועים</div>
+  <table class="pb-tbl">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr><td>580</td><td>ניירות ערך וקרנות נאמנות</td><td><input type="number" id="pc580" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>590</td><td>הלוואות שהעסק נתן לאחרים ובייחו אחרים בעסק</td><td><input type="number" id="pc590" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>600</td><td>נכסים דיגיטליים (ביטקוין, אתריום, NFT וכד')</td><td><input type="number" id="pc600" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>610</td><td>נדל"ן בארץ (מבנה, שיפורים, קרקע, כולל עלויות נלוות)</td><td><input type="number" id="pc610" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>620</td><td>נדל"ן בחו"ל (מבנה, שיפורים, קרקע, כולל עלויות נלוות)</td><td><input type="number" id="pc620" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>630</td><td>כלי רכב, כלי שיט וסייט, ציוד כבד</td><td><input type="number" id="pc630" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>640</td><td>ציוד, מכונות, ריהוט ומכשירים</td><td><input type="number" id="pc640" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>650</td><td>נכסים קבועים אחרים (פטנט, מוניטין, שיפורים במושכר וכד')</td><td><input type="number" id="pc650" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>660</td><td>תשלומות על חשבון נכסים קבועים</td><td><input type="number" id="pc660" placeholder="0" oninput="recalcC()"/></td></tr>
+    </tbody>
+    <tfoot><tr class="pb-calc"><td>670</td><td>סה"כ נכסים (540+550+560+570+580+590+600+610+620+630+640+650+660)</td><td id="pc670">0</td></tr></tfoot>
+  </table>
+
+  <!-- התחייבויות -->
+  <div class="pb-sub-hdr">התחייבויות</div>
+  <table class="pb-tbl">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr><td>680</td><td>חובות לספקים</td><td><input type="number" id="pc680" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>690</td><td>אשראי חברות לרבות שטרות לפירעון ואחמאות</td><td><input type="number" id="pc690" placeholder="0" oninput="recalcC()"/></td></tr>
+    </tbody>
+    <tfoot><tr class="pb-calc"><td>700</td><td>סה"כ התחייבויות שוטפות (680+690)</td><td id="pc700">0</td></tr></tfoot>
+  </table>
+  <table class="pb-tbl" style="margin-top:-1px;">
+    <tbody>
+      <tr><td>710</td><td>הלוואות מבנקים ומוסדות פיננסיים אחרים</td><td><input type="number" id="pc710" placeholder="0" oninput="recalcC()"/></td></tr>
+      <tr><td>720</td><td>הלוואות מאחרים, זכאים והתחייבויות אחרות</td><td><input type="number" id="pc720" placeholder="0" oninput="recalcC()"/></td></tr>
+    </tbody>
+    <tfoot><tr class="pb-calc"><td>730</td><td>סה"כ התחייבויות (700+710+720)</td><td id="pc730">0</td></tr></tfoot>
+  </table>
+
+  <!-- חישובי הון עצמי -->
+  <div class="pb-sub-hdr">הון עצמי</div>
+  <table class="pb-tbl">
+    <thead><tr><th>שורה</th><th>תיאור</th><th>סכום ₪</th></tr></thead>
+    <tbody>
+      <tr class="pb-calc"><td>740</td><td>הון עצמי בעסק (כל הנכסים פחות כל ההתחייבויות) (670−730)</td><td id="pc740">0</td></tr>
+      <tr class="pb-calc"><td>750</td><td>חלקי מהון העצמי של העסק / השותפות (740 × חלקי %)</td><td id="pc750">0</td></tr>
+      <tr><td>760</td><td>חלקי בהון עצמי של עסקים/שותפויות נוספים (ללא מאזן) — נספחים מצ"ב</td><td><input type="number" id="pc760" placeholder="0" oninput="recalcC()"/></td></tr>
+    </tbody>
+    <tfoot><tr class="pb-calc"><td>770</td><td>סה"כ הון נטו בעסקים ושותפויות ללא מאזן (750+760)</td><td id="pc770">0</td></tr></tfoot>
+  </table>
+
+  <!-- סה"כ כולל 800 -->
+  <div class="pb-grand" style="margin-top:16px;">
+    <span class="pb-g-label">שורה 800 — סה"כ נכסים נטו (עסקי ופרטי) (220 + 460 + 770)</span>
+    <span class="pb-g-val">₪ <span id="pc800">0</span></span>
+  </div>
+</div>
+
 <!-- CLIENT ACTION -->
 <div class="action-area" id="client-action">
   <h3>✅ מוכן לשליחה?</h3>
@@ -1181,6 +1272,25 @@ function recalcB(){
   const fmt=v=>Math.round(v).toLocaleString('he-IL');
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=fmt(v);};
   set('pb340',t340); set('pb390',t390); set('pb440',t440); set('pb460',t460);
+}
+
+function recalcC(){
+  const n=id=>parseFloat(document.getElementById(id)?.value)||0;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=Math.round(v).toLocaleString('he-IL');};
+  const t540=n('pc500')+n('pc510')+n('pc520')+n('pc530');
+  const t670=t540+n('pc550')+n('pc560')+n('pc570')+n('pc580')+n('pc590')+n('pc600')+n('pc610')+n('pc620')+n('pc630')+n('pc640')+n('pc650')+n('pc660');
+  const t700=n('pc680')+n('pc690');
+  const t730=t700+n('pc710')+n('pc720');
+  const t740=t670-t730;
+  const pct=(parseFloat(document.getElementById('pc-pct')?.value)||0)/100;
+  const t750=t740*pct;
+  const t770=t750+n('pc760');
+  // row 800 = t220 + t460 + t770
+  const t220v=parseFloat((document.getElementById('t220')?.textContent||'0').replace(/,/g,''))||0;
+  const t460v=parseFloat((document.getElementById('pb460')?.textContent||'0').replace(/,/g,''))||0;
+  const t800=t220v+t460v+t770;
+  set('pc540',t540); set('pc670',t670); set('pc700',t700); set('pc730',t730);
+  set('pc740',t740); set('pc750',t750); set('pc770',t770); set('pc800',t800);
 }
 
 // ═══════════════════════════════════════════════════
