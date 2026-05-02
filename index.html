@@ -1348,336 +1348,313 @@ function getSectionTotal(r){
 function printForm(){
   const gv=id=>(document.getElementById(id)?.value||'').trim();
   const gt=id=>(document.getElementById(id)?.textContent||'').replace(/,/g,'').trim();
-  const gn=id=>parseFloat(gt(id))||0;
+  const fmtInp=id=>{const el=document.getElementById(id);
+    if(el?.tagName==='INPUT'){const v=parseFloat(el.value);return v?Math.round(v).toLocaleString('he-IL'):'';}
+    return gt(id);}
   const fmt=v=>v?Math.round(v).toLocaleString('he-IL'):'';
-  const fmtInp=id=>{const v=parseFloat(gv(id));return v?fmt(v):'';}
 
-  const last=gv('c-last')||''; const first=gv('c-first')||'';
-  const cid=gv('c-id')||''; const phone=gv('c-phone')||'';
-  const spLast=gv('c-sp-last')||''; const spFirst=gv('c-sp-first')||'';
-  const spId=gv('c-sp-id')||'';
+  const last=gv('c-last'); const first=gv('c-first'); const cid=gv('c-id'); const phone=gv('c-phone');
+  const spLast=gv('c-sp-last'); const spFirst=gv('c-sp-first'); const spId=gv('c-sp-id');
   const year=gv('c-year')||String(new Date().getFullYear()-1);
   const today=new Date().toLocaleDateString('he-IL');
 
-  /* ── Part A row extractor ── */
+  /* ── Part A ── */
   let t200=0, t210=0;
-  function getRowData(r){
+  function getRows(r){
     const fields=PRO_FIELDS[r]||[];
     const tbody=document.getElementById('ptbody-'+r);
     if(!tbody)return{rows:[],tot:0,fields};
-    const rows=[]; let tot=0;
+    const rows=[];let tot=0;
     tbody.querySelectorAll('tr').forEach(tr=>{
       const cells=[];
       fields.forEach((f,i)=>{
-        const td=tr.cells[i+1]; if(!td){cells.push('');return;}
+        const td=tr.cells[i+1];if(!td){cells.push('');return;}
         const inp=td.querySelector('input,select');
-        cells.push(inp?inp.value:'');
-        if(f.sum) tot+=parseFloat(inp?.value||'0')||0;
+        const v=inp?inp.value:''; cells.push(v);
+        if(f.sum)tot+=parseFloat(v)||0;
       });
       rows.push(cells);
     });
     return{rows,tot,fields};
   }
-
-  function buildSecA(r,isLiab){
-    const {rows,tot,fields}=getRowData(r);
-    if(isLiab) t210+=tot; else t200+=tot;
+  function buildA(r,isLiab){
+    const{rows,tot,fields}=getRows(r);
+    if(isLiab)t210+=tot;else t200+=tot;
     const minRows=Math.max(rows.length,3);
-    const padded=[...rows]; while(padded.length<minRows)padded.push(fields.map(()=>''));
+    const padded=[...rows];while(padded.length<minRows)padded.push(fields.map(()=>''));
     const sumIdx=fields.findIndex(f=>f.sum);
-    // build headers
     const ths=fields.map(f=>`<th>${f.l}</th>`).join('');
-    // build rows
     const trs=padded.map(row=>
-      `<tr>${row.map((v,i)=>`<td class="${fields[i]?.t==='number'?'num':''}">${v||''}</td>`).join('')}</tr>`
+      `<tr>${row.map((v,i)=>`<td class="${fields[i]?.t==='number'?'nc':''}">${v||''}</td>`).join('')}</tr>`
     ).join('');
-    const totColspan=sumIdx>=0?sumIdx:fields.length-1;
-    return `
-<div class="fsec">
-  <div class="sec-hdr">.${r/10|0} ${SEC_TITLES[r]||''}</div>
-  <table>
-    <thead><tr>${ths}</tr></thead>
-    <tbody>${trs}</tbody>
-    <tfoot><tr>
-      <td colspan="${totColspan}" class="ftlbl">סה"כ שורה ${r}</td>
-      <td class="fttot">${tot?fmt(tot):''}</td>
-    </tr></tfoot>
-  </table>
-</div>`;
+    return`<div class="fsec">
+<div class="sttl"><b>.${Math.floor(r/10)} ${SEC_TITLES[r]||''}</b></div>
+<table><thead><tr>${ths}</tr></thead>
+<tbody>${trs}</tbody>
+<tfoot><tr>
+  <td colspan="${sumIdx>=0?sumIdx:fields.length-1}" class="ftlbl">סה"כ שורה ${r}</td>
+  <td class="fttot">${tot?fmt(tot):''}</td>
+</tr></tfoot></table></div>`;
   }
-
-  const secA_assets=ASSET_ROWS.map(r=>buildSecA(r,false)).join('');
-  const secA_liab=LIAB_ROWS.map(r=>buildSecA(r,true)).join('');
+  const sA=ASSET_ROWS.map(r=>buildA(r,false)).join('');
+  const sL=LIAB_ROWS.map(r=>buildA(r,true)).join('');
   const t220=t200-t210;
 
-  /* ── B/C row builders ── */
-  const gInput=id=>{const el=document.getElementById(id);return el?.tagName==='INPUT'?fmtInp(id):gt(id);};
-  function brow(num,desc,val,isTot){
-    return `<tr class="${isTot?'brow-tot':''}">
-      <td class="bnum">${num}</td>
-      <td class="bdesc">${desc}</td>
-      <td class="bamt">${val||''}</td>
-    </tr>`;
-  }
+  /* ── B/C rows ── */
+  function brow(n,d,v,tot){
+    return`<tr class="${tot?'bt':''}"><td class="bn">${n}</td><td>${d}</td><td class="bv">${v||''}</td></tr>`;}
 
-  /* Part B */
-  const pbB1=[
-    brow(300,'יתרת חשבון ההון שלך',gInput('pb300')),
-    brow(310,'יתרת חשבון החו"ז שלך',gInput('pb310')),
-    brow(320,'הלוואות שנתת לעסק',gInput('pb320')),
-    brow(330,'הלוואות שלקחת מהעסק',gInput('pb330')),
-    brow(340,'סה"כ השקעה נטו בעסק (300+310+320−330)',gt('pb340'),true),
-  ].join('');
-  const pbB2=[
-    brow(350,'יתרת חשבון ההון שלך',gInput('pb350')),
-    brow(360,'יתרת חשבון החו"ז שלך',gInput('pb360')),
-    brow(370,'הלוואות שנתת לשותפות',gInput('pb370')),
-    brow(380,'הלוואות שלקחת מהשותפות',gInput('pb380')),
-    brow(390,'סה"כ השקעה נטו בשותפות (350+360+370−380)',gt('pb390'),true),
-  ].join('');
-  const pbB3=[
-    brow(400,'יתרת חשבון ההון שלך',gInput('pb400')),
-    brow(410,'יתרת חשבון החו"ז שלך',gInput('pb410')),
-    brow(420,'הלוואות שנתת לחברה וכן תשלום מניות שלא הוקצו',gInput('pb420')),
-    brow(430,'הלוואות שלקחת מהחברה',gInput('pb430')),
+  const b1=[brow(300,'יתרת חשבון ההון שלך',fmtInp('pb300')),brow(310,'יתרת חשבון החו"ז שלך',fmtInp('pb310')),
+    brow(320,'הלוואות שנתת לעסק',fmtInp('pb320')),brow(330,'הלוואות שלקחת מהעסק',fmtInp('pb330')),
+    brow(340,'סה"כ השקעה נטו בעסק (300+310+320−330)',gt('pb340'),true)].join('');
+  const b2=[brow(350,'יתרת חשבון ההון שלך',fmtInp('pb350')),brow(360,'יתרת חשבון החו"ז שלך',fmtInp('pb360')),
+    brow(370,'הלוואות שנתת לשותפות',fmtInp('pb370')),brow(380,'הלוואות שלקחת מהשותפות',fmtInp('pb380')),
+    brow(390,'סה"כ השקעה נטו בשותפות (350+360+370−380)',gt('pb390'),true)].join('');
+  const b3=[brow(400,'יתרת חשבון ההון שלך',fmtInp('pb400')),brow(410,'יתרת חשבון החו"ז שלך',fmtInp('pb410')),
+    brow(420,'הלוואות שנתת לחברה וכן תשלום מניות שלא הוקצו',fmtInp('pb420')),
+    brow(430,'הלוואות שלקחת מהחברה',fmtInp('pb430')),
     brow(440,'סה"כ השקעה נטו בחברה (400+410+420−430)',gt('pb440'),true),
-    brow(450,'השקעות נוספות בעסקים — נספחים מצ"ב',gInput('pb450')),
-    brow(460,'סה"כ השקעה נטו בעסקים, שותפויות וחברות (340+390+440+450)',gt('pb460'),true),
-  ].join('');
-
-  /* Part C */
-  const pbC=[
-    `<tr class="brow-shdr"><td colspan="3"><b>נכסים שוטפים</b></td></tr>`,
-    brow(500,'מזומנים ואחמאות בקופה',gInput('pc500')),
-    brow(510,'שטרות לגביה ואחמאות',gInput('pc510')),
-    brow(520,'כרטיסי אשראי',gInput('pc520')),
-    brow(530,'לקוחות',gInput('pc530')),
+    brow(450,'השקעות נוספות בעסקים — נספחים מצ"ב',fmtInp('pb450')),
+    brow(460,'סה"כ השקעה נטו בעסקים, שותפויות וחברות (340+390+440+450)',gt('pb460'),true)].join('');
+  const cRows=[
+    `<tr class="bshdr"><td colspan="3">נכסים שוטפים</td></tr>`,
+    brow(500,'מזומנים ואחמאות בקופה',fmtInp('pc500')),brow(510,'שטרות לגביה ואחמאות',fmtInp('pc510')),
+    brow(520,'כרטיסי אשראי',fmtInp('pc520')),brow(530,'לקוחות',fmtInp('pc530')),
     brow(540,'סה"כ נכסים שוטפים (500+510+520+530)',gt('pc540'),true),
-    brow(550,'מלאי',gInput('pc550')),
-    brow(560,'נכסים שוטפים אחרים',gInput('pc560')),
-    brow(570,'חשבונות בבנקים ומוסדות פיננסיים (כולל יתרת משיכת יתר)',gInput('pc570')),
-    `<tr class="brow-shdr"><td colspan="3"><b>נכסים קבועים</b></td></tr>`,
-    brow(580,'ניירות ערך וקרנות נאמנות',gInput('pc580')),
-    brow(590,'הלוואות שהעסק נתן לאחרים ובייחו אחרים בעסק',gInput('pc590')),
-    brow(600,'נכסים דיגיטליים',gInput('pc600')),
-    brow(610,'נדל"ן בארץ',gInput('pc610')),
-    brow(620,'נדל"ן בחו"ל',gInput('pc620')),
-    brow(630,'כלי רכב, שיט וסייט, ציוד כבד',gInput('pc630')),
-    brow(640,'ציוד, מכונות, ריהוט ומכשירים',gInput('pc640')),
-    brow(650,'נכסים קבועים אחרים (פטנט, מוניטין, שיפורים במושכר)',gInput('pc650')),
-    brow(660,'תשלומות על חשבון נכסים קבועים',gInput('pc660')),
+    brow(550,'מלאי',fmtInp('pc550')),brow(560,'נכסים שוטפים אחרים',fmtInp('pc560')),
+    brow(570,'חשבונות בבנקים ומוסדות פיננסיים (כולל יתרת משיכת יתר)',fmtInp('pc570')),
+    `<tr class="bshdr"><td colspan="3">נכסים קבועים</td></tr>`,
+    brow(580,'ניירות ערך וקרנות נאמנות',fmtInp('pc580')),
+    brow(590,'הלוואות שהעסק נתן לאחרים ובייחו אחרים בעסק',fmtInp('pc590')),
+    brow(600,'נכסים דיגיטליים',fmtInp('pc600')),brow(610,'נדל"ן בארץ',fmtInp('pc610')),
+    brow(620,'נדל"ן בחו"ל',fmtInp('pc620')),brow(630,'כלי רכב, שיט וסייט, ציוד כבד',fmtInp('pc630')),
+    brow(640,'ציוד, מכונות, ריהוט ומכשירים',fmtInp('pc640')),
+    brow(650,'נכסים קבועים אחרים (פטנט, מוניטין, שיפורים במושכר)',fmtInp('pc650')),
+    brow(660,'תשלומות על חשבון נכסים קבועים',fmtInp('pc660')),
     brow(670,'סה"כ נכסים (540+550+560+570+580+590+600+610+620+630+640+650+660)',gt('pc670'),true),
-    `<tr class="brow-shdr"><td colspan="3"><b>התחייבויות</b></td></tr>`,
-    brow(680,'חובות לספקים',gInput('pc680')),
-    brow(690,'אשראי חברות לרבות שטרות לפירעון',gInput('pc690')),
+    `<tr class="bshdr"><td colspan="3">התחייבויות</td></tr>`,
+    brow(680,'חובות לספקים',fmtInp('pc680')),brow(690,'אשראי חברות לרבות שטרות לפירעון',fmtInp('pc690')),
     brow(700,'סה"כ התחייבויות שוטפות (680+690)',gt('pc700'),true),
-    brow(710,'הלוואות מבנקים ומוסדות פיננסיים אחרים',gInput('pc710')),
-    brow(720,'הלוואות מאחרים, זכאים והתחייבויות אחרות',gInput('pc720')),
+    brow(710,'הלוואות מבנקים ומוסדות פיננסיים אחרים',fmtInp('pc710')),
+    brow(720,'הלוואות מאחרים, זכאים והתחייבויות אחרות',fmtInp('pc720')),
     brow(730,'סה"כ התחייבויות (700+710+720)',gt('pc730'),true),
-    `<tr class="brow-shdr"><td colspan="3"><b>הון עצמי</b></td></tr>`,
+    `<tr class="bshdr"><td colspan="3">הון עצמי</td></tr>`,
     brow(740,'הון עצמי בעסק — כל הנכסים פחות כל ההתחייבויות (670−730)',gt('pc740'),true),
     brow(750,'חלקי מהון העצמי של העסק / השותפות (740 × חלקי %)',gt('pc750'),true),
-    brow(760,'חלקי בהון עצמי של עסקים/שותפויות נוספים, נספחים מצ"ב',gInput('pc760')),
-    brow(770,'סה"כ הון נטו בעסקים ושותפויות ללא מאזן (750+760)',gt('pc770'),true),
-  ].join('');
+    brow(760,'חלקי בהון עצמי של עסקים/שותפויות נוספים — נספחים מצ"ב',fmtInp('pc760')),
+    brow(770,'סה"כ הון נטו בעסקים ושותפויות ללא מאזן (750+760)',gt('pc770'),true)].join('');
 
-  function entityGrid(fields){
-    return`<table class="egrid"><tr>${fields.map(([l,id])=>
-      `<td><div class="el">${l}</div><div class="ev">${gv(id)}</div></td>`
-    ).join('')}</tr></table>`;
-  }
+  function egrid(flds){
+    return`<table class="eg"><tr>${flds.map(([l,id])=>
+      `<td><div class="el">${l}</div><div class="ev">${gv(id)}</div></td>`).join('')}</tr></table>`;}
 
   /* ── CSS ── */
   const css=`
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:Arial,'Arial Hebrew',sans-serif;font-size:9pt;color:#000;background:#ccc;direction:rtl;}
-.page{width:210mm;margin:6mm auto;background:#fff;padding:7mm 8mm;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+body{font-family:Arial,'Arial Hebrew',Helvetica,sans-serif;font-size:9pt;color:#000;background:#aaa;direction:rtl;}
+.page{width:210mm;margin:5mm auto;background:#fff;padding:7mm 8mm;}
 /* toolbar */
-.toolbar{background:#1a2456;color:#fff;text-align:center;padding:7px;position:sticky;top:0;z-index:99;display:flex;align-items:center;justify-content:center;gap:12px;}
-.toolbar button{background:#c8860a;color:#fff;border:none;padding:6px 22px;font-size:10pt;border-radius:3px;cursor:pointer;font-weight:700;}
-/* page header */
-.pg-meta{display:flex;justify-content:space-between;font-size:8pt;border-bottom:1px solid #000;padding-bottom:2mm;margin-bottom:3mm;}
-.pg-meta span{display:flex;gap:6px;align-items:center;}
-.meta-field{border-bottom:1px solid #000;min-width:40mm;display:inline-block;height:14px;}
-.fnum-box{border:2px solid #000;padding:2px 8px;font-size:12pt;font-weight:900;display:inline-block;}
-/* title */
-.ftitle-wrap{text-align:center;margin-bottom:3mm;}
-.ftitle{font-size:16pt;font-weight:900;}
-.fsubtitle{font-size:9pt;margin-top:1mm;}
-/* client info */
-.client-wrap{display:flex;gap:0;border:1px solid #000;margin-bottom:4mm;}
-.stamp-box{width:38mm;border-left:1px solid #000;padding:2mm;font-size:8pt;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2mm;}
-.stamp-inner{border:1px solid #666;width:100%;height:22mm;}
-.client-grid{flex:1;padding:2mm;}
-.cg-title{font-weight:700;font-size:9pt;border-bottom:1px solid #000;margin-bottom:2mm;padding-bottom:1mm;}
-.cg-row{display:grid;grid-template-columns:1fr 1fr;gap:2mm;margin-bottom:2mm;}
-.cf{display:flex;align-items:center;gap:3px;font-size:8.5pt;}
-.cf-lbl{font-weight:700;white-space:nowrap;min-width:55px;}
-.cf-val{border-bottom:1px solid #555;flex:1;min-height:13px;padding:0 2px;}
+.tb{background:#222;color:#fff;padding:6px 12px;text-align:center;position:sticky;top:0;z-index:9;display:flex;gap:10px;align-items:center;justify-content:center;}
+.tb button{background:#b8860b;color:#fff;border:none;padding:5px 18px;font-size:9.5pt;font-weight:700;border-radius:3px;cursor:pointer;}
+/* meta bar */
+.pgmeta{display:flex;justify-content:space-between;align-items:center;font-size:8pt;margin-bottom:3mm;border-bottom:1px solid #000;padding-bottom:2mm;}
+.pgmeta span{display:flex;align-items:center;gap:4px;}
+.mf{border-bottom:1px solid #000;min-width:35mm;display:inline-block;height:13px;}
+/* HEADER 3-column grid: stamp(left) | title(center) | logo(right) */
+/* We use LTR grid so column order matches physical left/right */
+.fhdr{display:grid;grid-template-columns:42mm 1fr 38mm;gap:0;direction:ltr;margin-bottom:3mm;align-items:start;}
+.stamp{border:1px solid #555;padding:2mm;text-align:center;font-size:8pt;}
+.stamp-area{border:1px solid #aaa;height:18mm;margin:1.5mm 0;}
+.stamp-date{font-size:7.5pt;color:#555;margin-top:1mm;}
+.fttl{text-align:center;padding:0 3mm;direction:rtl;}
+.ftitle{font-size:18pt;font-weight:900;letter-spacing:1px;}
+.fsub{font-size:9pt;margin-top:2mm;}
+.fdate{border-bottom:1px solid #000;width:45mm;display:inline-block;height:13px;margin-right:2mm;}
+.flogo{text-align:left;padding-right:0;direction:rtl;}
+.flogo-num{font-size:11pt;font-weight:900;margin-bottom:2mm;}
+.circle{width:26mm;height:26mm;border:2px solid #000;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;text-align:center;font-size:6pt;font-weight:700;line-height:1.3;padding:2mm;}
+/* client section */
+.al-msrad{font-size:8.5pt;margin:2mm 0 1mm;display:flex;align-items:center;gap:3px;}
+.al-mf{border-bottom:1px solid #000;flex:1;height:13px;}
+.pi-hdr{font-weight:700;font-size:8.5pt;margin:2mm 0 1.5mm;}
+.pi-boxes{display:grid;grid-template-columns:1fr 1fr;gap:3mm;margin-bottom:2mm;direction:ltr;}
+.pi-box{border:1px solid #000;direction:rtl;}
+.pi-box-hdr{text-align:center;font-weight:700;font-size:8.5pt;border-bottom:1px solid #000;padding:1.5mm 2mm;background:#f5f5f5;}
+.pi-box-sub{text-align:center;font-size:7pt;color:#555;border-bottom:1px solid #000;padding:0.5mm 2mm;}
+.pi-id-row{display:flex;align-items:center;padding:2mm;gap:3px;border-bottom:1px solid #000;font-size:8pt;}
+.pi-id-lbl{font-weight:700;white-space:nowrap;}
+.pi-id-val{border:1px solid #000;flex:1;height:12mm;padding:1mm;}
+.pi-name-row{display:grid;grid-template-columns:1fr 1fr;font-size:7.5pt;text-align:center;}
+.pi-name-row div{padding:1.5mm;border-left:1px solid #000;}
+.pi-name-row div:last-child{border-left:none;}
+.note{font-size:8pt;line-height:1.6;margin:2mm 0 3mm;border-top:1px solid #ccc;padding-top:2mm;}
 /* part header */
-.part-hdr{font-size:10pt;font-weight:900;text-align:center;border:1px solid #000;padding:1.5mm;margin:3mm 0 2mm;background:#f0f0f0;}
+.phdr{background:#d0d0d0;color:#000;font-weight:700;font-size:10pt;text-align:center;padding:2mm;margin:3mm 0 1.5mm;border:1px solid #999;}
 /* section */
 .fsec{margin-bottom:3mm;page-break-inside:avoid;}
-.sec-hdr{font-size:8.5pt;font-weight:700;padding:1.5mm 3mm;border:1px solid #000;border-bottom:none;}
+.sttl{font-size:8.5pt;padding:1.5mm 0;margin-bottom:0;}
+/* tables part A */
 table{width:100%;border-collapse:collapse;font-size:8pt;}
-thead th{border:1px solid #000;padding:1.5mm 2mm;text-align:center;font-weight:700;background:#f5f5f5;white-space:nowrap;font-size:7.5pt;}
-tbody td{border:1px solid #000;padding:1.5mm 2mm;height:7mm;vertical-align:middle;}
-td.num{text-align:left;}
-tfoot td{border:1px solid #000;background:#ebebeb;font-weight:700;padding:1.5mm 2mm;}
-.ftlbl{text-align:right;font-size:8pt;}
-.fttot{text-align:center;font-weight:900;font-size:9pt;width:28mm;}
-/* totals box */
-.tot-box{border:1px solid #000;padding:2mm 3mm;margin:2mm 0 3mm;}
-.tot-row{display:flex;justify-content:space-between;align-items:center;padding:1.5mm 0;border-bottom:1px dashed #aaa;font-size:8.5pt;}
-.tot-row:last-child{border-bottom:none;}
-.tot-row.net{font-weight:700;font-size:9pt;margin-top:1mm;}
-.t-amt{font-weight:900;font-size:10pt;min-width:30mm;text-align:left;}
-/* part B/C entity grid */
-.egrid{width:100%;border-collapse:collapse;margin-bottom:1mm;font-size:8pt;}
-.egrid td{border:1px solid #000;padding:1.5mm 2mm;min-width:25mm;}
-.el{font-size:7pt;font-weight:700;color:#444;margin-bottom:1px;}
-.ev{border-bottom:1px solid #aaa;min-height:12px;}
-/* B/C numbered rows */
-.bnum{text-align:center;font-weight:900;font-size:8.5pt;width:12mm;background:#f0f0f0;}
-.bdesc{text-align:right;}
-.bamt{text-align:center;width:28mm;font-weight:700;}
-.brow-tot td{background:#e8e8e8;font-weight:700;}
-.brow-tot .bnum{background:#555;color:#fff;}
-.brow-shdr td{background:#f5f5f5;font-style:italic;font-size:8pt;padding:1mm 2mm;}
+thead th{border:1px solid #000;padding:1.5mm 1.5mm;text-align:center;font-weight:700;font-size:7.5pt;background:#f0f0f0;white-space:nowrap;}
+tbody td{border:1px solid #000;padding:1mm 1.5mm;height:7mm;vertical-align:middle;}
+td.nc{text-align:left;}
+tfoot td{border:1px solid #000;font-weight:700;padding:1.5mm;background:#e8e8e8;}
+.ftlbl{text-align:right;}
+.fttot{text-align:center;font-size:9pt;width:26mm;}
+/* totals */
+.tbox{border:1px solid #000;padding:2mm;margin:2mm 0 3mm;}
+.trow{display:flex;justify-content:space-between;font-size:8.5pt;padding:1mm 0;border-bottom:1px dashed #bbb;}
+.trow:last-child{border:none;font-weight:700;}
+.tamt{font-weight:900;min-width:25mm;text-align:left;}
+/* B/C tables */
+.bn{text-align:center;font-weight:700;background:#f0f0f0;width:12mm;font-size:8pt;}
+.bv{text-align:center;width:26mm;font-weight:700;}
+.bt td{background:#e0e0e0;font-weight:700;}
+.bt .bn{background:#888;color:#fff;}
+.bshdr td{background:#f5f5f5;font-weight:700;font-size:7.5pt;padding:1mm 1.5mm;font-style:italic;}
+/* entity grid */
+.eg{width:100%;border-collapse:collapse;margin-bottom:1mm;font-size:7.5pt;}
+.eg td{border:1px solid #000;padding:1.5mm 2mm;}
+.el{font-size:7pt;font-weight:700;color:#555;margin-bottom:1px;}
+.ev{border-bottom:1px solid #aaa;min-height:11px;}
 /* grand total */
-.grand-tot{border:2px solid #000;padding:2mm 3mm;display:flex;justify-content:space-between;align-items:center;margin:3mm 0;font-weight:700;font-size:10pt;}
-/* signature */
-.sig-area{display:flex;gap:5mm;margin-top:5mm;}
-.sig-box{flex:1;border:1px solid #000;padding:2mm;min-height:18mm;text-align:center;font-size:8pt;color:#555;}
-/* footer */
-.form-footer{text-align:center;font-size:7.5pt;color:#666;border-top:1px solid #ccc;padding-top:2mm;margin-top:3mm;}
-/* print */
+.gtot{border:2px solid #000;padding:2mm 3mm;display:flex;justify-content:space-between;font-weight:700;font-size:10pt;margin:3mm 0;}
+/* sig */
+.sigs{display:flex;gap:5mm;margin-top:5mm;}
+.sig{flex:1;border:1px solid #000;min-height:18mm;padding:2mm;font-size:8pt;text-align:center;color:#555;}
+.fftr{text-align:center;font-size:7.5pt;color:#777;border-top:1px solid #ccc;padding-top:2mm;margin-top:3mm;}
 @media print{
   body{background:#fff;}
-  .toolbar{display:none!important;}
-  .page{box-shadow:none;margin:0;padding:6mm 8mm;width:100%;}
+  .tb{display:none!important;}
+  .page{margin:0;padding:5mm 7mm;width:100%;}
+  .phdr{page-break-before:always;}
+  .phdr.first{page-break-before:avoid;}
   .fsec{page-break-inside:avoid;}
-  .part-hdr{page-break-before:always;}
-  .part-hdr.no-break{page-break-before:avoid;}
-  @page{size:A4 portrait;margin:8mm;}
+  @page{size:A4 portrait;margin:6mm;}
 }`;
 
-  /* ── HTML ── */
   const html=`<!DOCTYPE html><html lang="he" dir="rtl"><head>
 <meta charset="UTF-8"/><title>טופס 1219 — ${last} ${first}</title>
 <style>${css}</style></head><body>
-<div class="toolbar">
-  <button onclick="window.print()">🖨️ הדפס</button>
-  <span style="font-size:9pt;">תצוגה מקדימה — טופס 1219 הצהרת הון</span>
-</div>
+<div class="tb"><button onclick="window.print()">🖨️ הדפס</button><span>תצוגה מקדימה — טופס 1219 הצהרת הון</span></div>
 <div class="page">
 
-<!-- PAGE META -->
-<div class="pg-meta">
-  <span>מספר תיק: <span class="meta-field"></span></span>
-  <span>דר"ח ליום: <span class="meta-field"></span></span>
-  <span><span class="fnum-box">1219</span></span>
+<!-- META BAR -->
+<div class="pgmeta">
+  <span style="font-weight:700;">1219</span>
+  <span>עמוד 1 מתוך 7</span>
+  <span>מספר תיק <span class="mf"></span></span>
 </div>
 
-<!-- TITLE -->
-<div class="ftitle-wrap">
-  <div class="ftitle">הצהרת הון</div>
-  <div class="fsubtitle">דין וחשבון על רכוש והתחייבויות ליום _______________</div>
+<!-- HEADER: stamp(left) | title(center) | logo(right) — LTR grid -->
+<div class="fhdr">
+  <!-- LEFT: stamp -->
+  <div class="stamp">
+    <div style="font-weight:700;">חותמת המשרד</div>
+    <div class="stamp-area"></div>
+    <div class="stamp-date">תאריך הגשת הדוח</div>
+  </div>
+  <!-- CENTER: title -->
+  <div class="fttl">
+    <div class="ftitle">הצהרת הון</div>
+    <div class="fsub">דין וחשבון על רכוש והתחייבויות ליום <span class="fdate"></span></div>
+  </div>
+  <!-- RIGHT: logo -->
+  <div class="flogo">
+    <div class="flogo-num">טופס 1219</div>
+    <div class="circle">רשות<br/>המסים<br/>בישראל</div>
+  </div>
 </div>
 
-<!-- CLIENT INFO -->
-<div class="client-wrap">
-  <div class="stamp-box">
-    <div style="font-weight:700;font-size:8pt;">חתימת המשרד</div>
-    <div class="stamp-inner"></div>
-    <div style="font-size:7.5pt;">תאריך הגשת הדוח</div>
+<!-- אל משרד השומה -->
+<div class="al-msrad">אל: משרד השומה <span class="al-mf"></span></div>
+<div class="pi-hdr">פרטים אישיים</div>
+
+<!-- TWO BOXES: LTR grid so right=col2, left=col1 -->
+<div class="pi-boxes">
+  <!-- LEFT box: בן/בת הזוג -->
+  <div class="pi-box">
+    <div class="pi-box-hdr">בן/בת הזוג</div>
+    <div class="pi-id-row">
+      <span class="pi-id-lbl">מספר זהות</span>
+      <span class="pi-id-val">${spId}</span>
+    </div>
+    <div class="pi-name-row">
+      <div>שם פרטי<br/><b>${spFirst}</b></div>
+      <div>שם משפחה<br/><b>${spLast}</b></div>
+    </div>
   </div>
-  <div class="client-grid">
-    <div class="cg-title">פרטים אישיים</div>
-    <div class="cg-row">
-      <div class="cf"><span class="cf-lbl">שם משפחה:</span><span class="cf-val">${last}</span></div>
-      <div class="cf"><span class="cf-lbl">שם פרטי:</span><span class="cf-val">${first}</span></div>
+  <!-- RIGHT box: בן הזוג הרשום -->
+  <div class="pi-box">
+    <div class="pi-box-hdr">"בן הזוג הרשום"</div>
+    <div class="pi-box-sub">הרשום במרשמי רשות המסים כ"בן הזוג הרשום"</div>
+    <div class="pi-id-row">
+      <span class="pi-id-lbl">מספר זהות</span>
+      <span class="pi-id-val">${cid}</span>
     </div>
-    <div class="cg-row">
-      <div class="cf"><span class="cf-lbl">מספר זהות:</span><span class="cf-val">${cid}</span></div>
-      <div class="cf"><span class="cf-lbl">טלפון:</span><span class="cf-val">${phone}</span></div>
-    </div>
-    <div class="cg-row">
-      <div class="cf"><span class="cf-lbl">שם בן/בת הזוג:</span><span class="cf-val">${spLast} ${spFirst}</span></div>
-      <div class="cf"><span class="cf-lbl">מספר זהות:</span><span class="cf-val">${spId}</span></div>
-    </div>
-    <div class="cg-row">
-      <div class="cf"><span class="cf-lbl">שנת המס:</span><span class="cf-val">${year}</span></div>
-      <div class="cf"><span class="cf-lbl">תאריך הכנה:</span><span class="cf-val">${today}</span></div>
+    <div class="pi-name-row">
+      <div>שם פרטי<br/><b>${first}</b></div>
+      <div>שם משפחה<br/><b>${last}</b></div>
     </div>
   </div>
 </div>
+
+<div class="note">בטופס זה יש למלא את כל הרכוש וההתחייבויות (בארץ ובחו"ל), שלך, של בן/בת זוגך ושל ילדיכם, שבשנת המס עדיין לא מלאו להם 18 שנה. יש ליד כל נכס לציין את הסכום ששולם עבורו וכן לצרף מסמכים לאימות הפרטים המוצהרים.</div>
 
 <!-- PART A ASSETS -->
-<div class="part-hdr no-break">חלק א — רכוש פרטי</div>
-${secA_assets}
-<div class="tot-box">
-  <div class="tot-row"><span>שורה 200 — סה"כ רכוש פרטי (10+20+30+40+50+60+70+80+90+100+110+120)</span><span class="t-amt">${fmt(t200)} ₪</span></div>
+<div class="phdr first">חלק א'- פירוט רכוש והתחייבויות פרטיים</div>
+${sA}
+<div class="tbox">
+  <div class="trow"><span>שורה 200 — סה"כ רכוש פרטי (10+20+30+40+50+60+70+80+90+100+110+120)</span><span class="tamt">${fmt(t200)} ₪</span></div>
 </div>
 
 <!-- PART A LIABILITIES -->
-<div class="part-hdr">חלק א — התחייבויות פרטיות</div>
-${secA_liab}
-<div class="tot-box">
-  <div class="tot-row"><span>שורה 210 — סה"כ התחייבויות (130+140)</span><span class="t-amt">${fmt(t210)} ₪</span></div>
-  <div class="tot-row net"><span>שורה 220 — סה"כ רכוש פרטי נטו (200 פחות 210)</span><span class="t-amt">${fmt(t220)} ₪</span></div>
+<div class="phdr">חלק א'- המשך — התחייבויות פרטיות</div>
+${sL}
+<div class="tbox">
+  <div class="trow"><span>שורה 210 — סה"כ התחייבויות (130+140)</span><span class="tamt">${fmt(t210)} ₪</span></div>
+  <div class="trow"><span>שורה 220 — סה"כ רכוש פרטי נטו (200 פחות 210)</span><span class="tamt">${fmt(t220)} ₪</span></div>
 </div>
 
 <!-- PART B -->
-<div class="part-hdr">חלק ב — השקעה בעסקים בהם נערך מאזן</div>
-
+<div class="phdr">חלק ב'- השקעה בעסקים בהם נערך מאזן</div>
 <div class="fsec">
-  <div class="sec-hdr">.1 השקעה בעסק</div>
-  ${entityGrid([['שם העסק','pb-bus-name'],['מס\' עוסק','pb-bus-id'],['סוג העסק','pb-bus-type'],['מדינה','pb-bus-country'],['חלקי ב-%','pb-bus-pct']])}
-  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:28mm">סכום - ₪</th></tr></thead>
-  <tbody>${pbB1}</tbody></table>
+  <div class="sttl"><b>.1 השקעה בעסק</b></div>
+  ${egrid([['שם העסק','pb-bus-name'],['מס\' עוסק','pb-bus-id'],['סוג','pb-bus-type'],['מדינה','pb-bus-country'],['חלקי ב-%','pb-bus-pct']])}
+  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:26mm">סכום - ₪</th></tr></thead><tbody>${b1}</tbody></table>
 </div>
-
 <div class="fsec">
-  <div class="sec-hdr">.2 השקעה בשותפות</div>
-  ${entityGrid([['שם השותפות','pb-par-name'],['מספר שותפות','pb-par-id'],['מדינה','pb-par-country'],['חלקי ב-%','pb-par-pct']])}
-  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:28mm">סכום - ₪</th></tr></thead>
-  <tbody>${pbB2}</tbody></table>
+  <div class="sttl"><b>.2 השקעה בשותפות</b></div>
+  ${egrid([['שם השותפות','pb-par-name'],['מספר שותפות','pb-par-id'],['מדינה','pb-par-country'],['חלקי ב-%','pb-par-pct']])}
+  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:26mm">סכום - ₪</th></tr></thead><tbody>${b2}</tbody></table>
 </div>
-
 <div class="fsec">
-  <div class="sec-hdr">.3 השקעה בחברה, אגודה שיתופית ותאגיד אחר</div>
-  ${entityGrid([['שם החברה/תאגיד','pb-co-name'],['מספר ח.פ./רישום','pb-co-id'],['סוג','pb-co-type'],['מדינה','pb-co-country'],['חלקי ב-%','pb-co-pct']])}
-  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:28mm">סכום - ₪</th></tr></thead>
-  <tbody>${pbB3}</tbody></table>
+  <div class="sttl"><b>.3 השקעה בחברה, אגודה שיתופית ותאגיד אחר</b></div>
+  ${egrid([['שם החברה/תאגיד','pb-co-name'],['מספר ח.פ.','pb-co-id'],['סוג','pb-co-type'],['מדינה','pb-co-country'],['חלקי ב-%','pb-co-pct']])}
+  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:26mm">סכום - ₪</th></tr></thead><tbody>${b3}</tbody></table>
 </div>
 
 <!-- PART C -->
-<div class="part-hdr">חלק ג — רכוש והתחייבויות בעסק שלא נערך בו מאזן (כולל שותפויות)</div>
+<div class="phdr">חלק ג'- רכוש והתחייבויות בעסק שלא נערך בו מאזן (כולל שותפויות)</div>
 <div class="fsec">
-  ${entityGrid([['שם העסק','pc-name'],['מס\' עוסק/רישום','pc-id'],['סוג','pc-type'],['מדינה','pc-country'],['חלקי ב-%','pc-pct']])}
-  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:28mm">סכום - ₪</th></tr></thead>
-  <tbody>${pbC}</tbody></table>
+  ${egrid([['שם העסק','pc-name'],['מס\' עוסק/רישום','pc-id'],['סוג','pc-type'],['מדינה','pc-country'],['חלקי ב-%','pc-pct']])}
+  <table><thead><tr><th style="width:12mm">שורה</th><th>תיאור</th><th style="width:26mm">סכום - ₪</th></tr></thead><tbody>${cRows}</tbody></table>
 </div>
 
-<!-- ROW 800 -->
-<div class="grand-tot">
+<div class="gtot">
   <span>שורה 800 — סה"כ נכסים נטו (עסקי ופרטי) — 220 + 460 + 770</span>
   <span>${gt('pc800')||'0'} ₪</span>
 </div>
 
-<!-- SIGNATURES -->
-<div class="sig-area">
-  <div class="sig-box">חתימת המצהיר/ה ותאריך</div>
-  <div class="sig-box">חתימת רואה החשבון וחותמת</div>
+<div class="sigs">
+  <div class="sig">חתימת המצהיר/ה ותאריך</div>
+  <div class="sig">חתימת רואה החשבון וחותמת</div>
 </div>
-
-<div class="form-footer">אייל רז ושות׳ — רואי חשבון &nbsp;·&nbsp; ACCOUNTING, TAX &amp; BEYOND &nbsp;·&nbsp; SINCE 2005 &nbsp;·&nbsp; eyal@erh.co.il</div>
+<div class="fftr">אייל רז ושות׳ — רואי חשבון &nbsp;·&nbsp; ACCOUNTING, TAX &amp; BEYOND &nbsp;·&nbsp; SINCE 2005 &nbsp;·&nbsp; eyal@erh.co.il &nbsp;·&nbsp; שנת מס: ${year}</div>
 </div></body></html>`;
 
-  const w=window.open('','_blank','width=980,height=860,scrollbars=yes');
-  w.document.write(html);
-  w.document.close();
+  const w=window.open('','_blank','width=1000,height=900,scrollbars=yes');
+  w.document.write(html);w.document.close();
 }
 
 
