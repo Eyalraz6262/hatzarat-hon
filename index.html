@@ -1462,13 +1462,13 @@ body{font-family:Arial,'Arial Hebrew',Helvetica,sans-serif;font-size:9pt;color:#
 .mf{border-bottom:1px solid #000;min-width:35mm;display:inline-block;height:13px;}
 /* HEADER 3-column grid: stamp(left) | title(center) | logo(right) */
 /* We use LTR grid so column order matches physical left/right */
-.fhdr{display:grid;grid-template-columns:42mm 1fr 38mm;gap:0;direction:ltr;margin-bottom:3mm;align-items:start;}
-.stamp{border:1px solid #555;padding:2mm;text-align:center;font-size:8pt;}
-.stamp-area{border:1px solid #aaa;height:18mm;margin:1.5mm 0;}
+.fhdr{display:grid;grid-template-columns:42mm 1fr 38mm;gap:0;direction:ltr;margin-bottom:3mm;align-items:stretch;}
+.stamp{border:1px solid #000;padding:2mm 2mm 1mm;text-align:center;font-size:8pt;height:100%;}
+.stamp-area{border:1px solid #aaa;height:22mm;margin:1.5mm 0;}
 .stamp-date{font-size:7.5pt;color:#555;margin-top:1mm;}
 .fttl{text-align:center;padding:0 3mm;direction:rtl;}
-.ftitle{font-size:18pt;font-weight:900;letter-spacing:1px;}
-.fsub{font-size:9pt;margin-top:2mm;}
+.ftitle{font-size:22pt;font-weight:900;letter-spacing:4px;}
+.fsub{font-size:9pt;margin-top:2mm;border-bottom:1.5px solid #000;padding-bottom:2mm;}
 .fdate{border-bottom:1px solid #000;width:45mm;display:inline-block;height:13px;margin-right:2mm;}
 .flogo{text-align:left;padding-right:0;direction:rtl;}
 .flogo-num{font-size:11pt;font-weight:900;margin-bottom:2mm;}
@@ -1542,8 +1542,8 @@ tfoot td{border:1px solid #000;font-weight:700;padding:1.5mm;background:#e8e8e8;
 <!-- META BAR -->
 <div class="pgmeta">
   <span style="font-weight:700;">1219</span>
+  <span>מספר תיק <span class="mf" style="min-width:50mm;"></span></span>
   <span>עמוד 1 מתוך 7</span>
-  <span>מספר תיק <span class="mf"></span></span>
 </div>
 
 <!-- HEADER: stamp(left) | title(center) | logo(right) — LTR grid -->
