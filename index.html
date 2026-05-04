@@ -564,6 +564,10 @@ select option { color: #111 !important; background: #fff !important; }
       <input type="text" id="db-load-client" placeholder="שם כפי שנשמר בדרופבוקס"/>
     </div>
     <div class="f">
+      <label>שנת הצהרה</label>
+      <input type="number" id="db-load-year" placeholder="2024" style="max-width:110px;"/>
+    </div>
+    <div class="f">
       <label>מייל לקבלת התראות</label>
       <input type="email" id="accountant-email" placeholder="רו@חשבון.co.il"/>
     </div>
@@ -2071,8 +2075,11 @@ async function loadClient(){
   if(!dbToken){toast('נא לחבר Dropbox תחילה','er');return;}
   const clientName=document.getElementById('db-load-client').value.trim();
   if(!clientName){toast('נא להזין שם לקוח','er');return;}
+  const year=document.getElementById('db-load-year')?.value.trim()||new Date().getFullYear()-1;
   const base=document.getElementById('db-folder').value.trim()||'/הצהרת הון - לקוחות';
+  const clientPath=`${base}/${clientName}/${year}`;
   toast('📥 טוען נתוני לקוח...','nfo');
+
   async function listFolder(p){
     const r=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
       method:'POST',
@@ -2090,46 +2097,67 @@ async function loadClient(){
     if(!r.ok)return null;
     return r.json();
   }
+
   try{
-    // 1. Try direct: base/clientName/summary.json
-    let d=await listFolder(`${base}/${clientName}`);
+    // Try to find JSON summary
+    const d=await listFolder(clientPath);
     let jsonEntry=d?.entries?.find(e=>e['.tag']==='file'&&e.name.endsWith('.json'));
-    // 2. If not found, look inside year subfolders (newest first)
-    if(!jsonEntry&&d?.entries){
-      const yearFolders=d.entries
-        .filter(e=>e['.tag']==='folder'&&/^\d{4}$/.test(e.name))
-        .sort((a,b)=>b.name-a.name);
-      for(const yf of yearFolders){
-        const yd=await listFolder(yf.path_lower);
-        jsonEntry=yd?.entries?.find(e=>e['.tag']==='file'&&e.name.endsWith('.json'));
-        if(jsonEntry)break;
-      }
-      // 3. If no year folder, try any subfolder
-      if(!jsonEntry){
-        const subFolders=d.entries.filter(e=>e['.tag']==='folder');
-        for(const sf of subFolders){
-          const sd=await listFolder(sf.path_lower);
-          jsonEntry=sd?.entries?.find(e=>e['.tag']==='file'&&e.name.endsWith('.json'));
-          if(jsonEntry)break;
-        }
-      }
-    }
+
     if(jsonEntry){
       const data=await downloadJson(jsonEntry.path_lower);
-      if(data){populateFromJson(data,clientName,base);toast('✅ נתוני לקוח נטענו','ok');}
-      else toast('❌ שגיאה בקריאת הקובץ','er');
+      if(data){populateFromJson(data,clientName,base);}
+    }
+
+    // Pre-fill client name & year into form fields
+    const parts=clientName.trim().split(' ');
+    const lastEl=document.getElementById('c-last');
+    const firstEl=document.getElementById('c-first');
+    const yearEl=document.getElementById('c-year');
+    if(lastEl&&!lastEl.value&&parts[0])lastEl.value=parts[0];
+    if(firstEl&&!firstEl.value&&parts[1])firstEl.value=parts.slice(1).join(' ');
+    if(yearEl&&!yearEl.value)yearEl.value=year;
+
+    // Load actual files from Dropbox for each row
+    const allRows=[10,20,30,40,50,60,70,80,90,100,110,120,130,140];
+    let filesLoaded=0;
+    await Promise.all(allRows.map(async r=>{
+      const rowPath=`${clientPath}/שורה ${r}`;
+      const rd=await listFolder(rowPath);
+      if(!rd?.entries)return;
+      const files=rd.entries.filter(e=>e['.tag']==='file');
+      if(!files.length)return;
+      filesLoaded+=files.length;
+      // Show files in the section's file list
+      const fl=document.getElementById('fl-'+r);
+      if(!fl)return;
+      // Open the section
+      const body=document.getElementById('body-'+r);
+      const chv=document.getElementById('chv-'+r);
+      const hdr=document.querySelector('#sec-'+r+' .sec-hdr');
+      if(body&&!body.classList.contains('open')){body.classList.add('open');if(chv)chv.classList.add('open');if(hdr)hdr.classList.add('open');}
+      // Render file entries
+      files.forEach(f=>{
+        if(fl.querySelector(`[data-dbpath="${f.path_lower}"]`))return;// already shown
+        const div=document.createElement('div');
+        div.className='fi';
+        div.dataset.dbpath=f.path_lower;
+        const ext=(f.name.split('.').pop()||'').toLowerCase();
+        const icon=ext==='pdf'?'📄':['jpg','jpeg','png','gif'].includes(ext)?'🖼️':['doc','docx'].includes(ext)?'📝':'📎';
+        div.innerHTML=`<span>${icon}</span><span class="fn">${f.name}</span><a href="https://www.dropbox.com/home${f.path_lower}" target="_blank" style="margin-right:auto;font-size:.72rem;color:var(--gold);text-decoration:none;">פתח ↗</a>`;
+        fl.appendChild(div);
+      });
+      markDone(r);
+    }));
+
+    // Set Dropbox folder link per row
+    populateDropboxLinks(clientName+'/'+year,base);
+
+    if(filesLoaded>0){
+      toast(`✅ נטענו ${filesLoaded} קבצים מ-Dropbox`,'ok');
+    } else if(jsonEntry){
+      toast('✅ נתוני לקוח נטענו','ok');
     } else {
-      // No JSON — still set Dropbox folder links so accountant can browse files
-      populateDropboxLinks(clientName,base);
-      // Pre-fill client name into form fields
-      const parts=clientName.trim().split(' ');
-      const lastEl=document.getElementById('c-last');
-      const firstEl=document.getElementById('c-first');
-      if(lastEl&&parts[0])lastEl.value=parts[0];
-      if(firstEl&&parts[1])firstEl.value=parts.slice(1).join(' ');
-      const loadEl=document.getElementById('db-load-client');
-      if(loadEl)loadEl.dataset.m=1;
-      toast('📁 קישורי Dropbox נטענו — אין קובץ שאלון','nfo');
+      toast('📁 תיקיית לקוח נמצאה — אין קבצים עדיין','nfo');
     }
   }catch(e){toast('❌ שגיאה בטעינה: '+e.message,'er');}
 }
