@@ -380,179 +380,112 @@ input[type=file]{display:none;}
   .f input,.f select,.f textarea,.note-wrap textarea{background:#f5f5f5!important;color:#000!important;border-color:#ccc!important;}
 }
 
+
 /* ══════════════════════════════════════════
-   B&W ZONE — form sections (real estate ↓)
+   FORM SECTIONS — clean light style (like Part B/C)
    ══════════════════════════════════════════ */
-.bw-zone{background:transparent;}
 
 /* Section card */
-.bw-zone .sec{
-  background:#fff;
-  border:1px solid #ccc;
-  box-shadow:0 1px 4px rgba(0,0,0,.08);
-  border-radius:8px;
-  margin-bottom:8px;
+.bw-zone .sec {
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  border-radius: 8px;
+  margin-bottom: 8px;
 }
-.bw-zone .sec:hover{border-color:#999;}
+.bw-zone .sec:hover { border-color: rgba(0,0,0,0.22); }
 
 /* Section header */
-.bw-zone .sec-hdr{
-  background:#f0f0f0;
-  border-bottom:1px solid #ddd;
-  padding:11px 16px;
+.bw-zone .sec-hdr {
+  background: rgba(255,255,255,0.5);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
 }
-.bw-zone .sec-hdr:hover{background:#e8e8e8;}
-.bw-zone .sec-lbl{color:#111 !important;font-size:.9rem;}
-.bw-zone .sec-sub{color:#555 !important;}
-.bw-zone .sec-icon{background:#e0e0e0 !important;color:#333 !important;}
-.bw-zone .sec-chev{color:#555 !important;}
+.bw-zone .sec-hdr:hover { background: rgba(255,255,255,0.7); }
+.bw-zone .sec-lbl   { color: #1a1a2e !important; }
+.bw-zone .sec-sub   { color: #444 !important; }
+.bw-zone .sec-icon  { background: rgba(200,134,10,.15) !important; }
+.bw-zone .sec-chev  { color: #555 !important; }
 
-/* Status badges */
-.bw-zone .sec-status{filter:saturate(0.4);}
+/* docs-box */
+.bw-zone .docs-box  { background: rgba(200,134,10,.07) !important; border-color: rgba(200,134,10,.25) !important; }
+.bw-zone .docs-box li { color: #333 !important; }
 
-/* Inner content */
-.bw-zone .sec-body{padding:12px 16px;background:#fff;}
-
-/* Notes */
-.bw-zone .note-wrap label{color:#444 !important;font-size:.78rem;}
-.bw-zone .note-wrap textarea{
-  background:#fff !important;color:#111 !important;
-  border:1px solid #bbb !important;border-radius:6px;
-}
-.bw-zone .note-wrap textarea:focus{border-color:#555 !important;box-shadow:0 0 0 2px rgba(0,0,0,.1) !important;}
-.bw-zone .client-note-ro{background:#f5f5f5 !important;color:#333 !important;border:1px solid #ddd !important;}
-.bw-zone .client-note-ro .lbl{color:#555 !important;}
-
-/* Upload zone */
-.bw-zone .upload-zone{
-  border-color:#bbb !important;
-  background:#f8f8f8 !important;
-}
-.bw-zone .upload-zone:hover,.bw-zone .upload-zone.drag{
-  border-color:#555 !important;background:#eee !important;
-}
-.bw-zone .ul-btn{background:#444 !important;color:#fff !important;}
-.bw-zone .ul-btn:hover{background:#222 !important;}
-.bw-zone .uz-hint{color:#666 !important;}
-.bw-zone .fi{background:#f5f5f5 !important;border-color:#ddd !important;color:#333 !important;}
-.bw-zone .fn{color:#333 !important;}
-.bw-zone .fdel{color:#c00 !important;}
-.bw-zone .fann{color:#666 !important;}
-
-/* Pro fields */
-.bw-zone .pro-fields-wrap{
-  background:#f9f9f9 !important;
-  border:1px solid #ddd !important;
-}
-.bw-zone .pro-fields-wrap h4{color:#333 !important;}
-.bw-zone .pro-item{
-  background:#fff !important;
-  border:1px solid #ddd !important;
-}
-.bw-zone .pro-item-num{background:#555 !important;color:#fff !important;}
-.bw-zone .f label{color:#555 !important;}
-.bw-zone .f input,.bw-zone .f select,.bw-zone .f textarea{
-  background:#fff !important;color:#111 !important;
-  border:1px solid #bbb !important;
-}
-.bw-zone .f input:focus,.bw-zone .f select:focus,.bw-zone .f textarea:focus{
-  border-color:#555 !important;box-shadow:0 0 0 2px rgba(0,0,0,.1) !important;
-}
-.bw-zone .f select option{background:#fff !important;color:#111 !important;}
-
-/* Pro row buttons */
-.bw-zone .add-pro-row{
-  border-color:#aaa !important;color:#333 !important;
-  background:transparent !important;
-}
-.bw-zone .add-pro-row:hover{background:#f0f0f0 !important;}
-.bw-zone .rm-pro{color:#c00 !important;}
-.bw-zone .rm-pro:hover{background:#fee !important;}
-
-/* Dropbox link button */
-.bw-zone .db-link-btn{
-  background:#f0f0f0 !important;color:#333 !important;
-  border-color:#bbb !important;
-}
-.bw-zone .db-link-btn:hover{background:#e0e0e0 !important;}
-
-/* Pro table (tfoot sum row) */
-.bw-zone .pro-tbl tfoot td{background:#e8e8e8 !important;color:#111 !important;}
-.bw-zone .pro-tbl thead th{background:#f0f0f0 !important;color:#111 !important;border-color:#ccc !important;}
-.bw-zone .pro-tbl td{border-color:#ddd !important;color:#111 !important;}
-
-/* Totals bars */
-.bw-zone .total-bar.tb-assets{background:#222 !important;color:#fff !important;}
-.bw-zone .total-bar.tb-liab{background:#222 !important;color:#fff !important;border-color:#000 !important;}
-.bw-zone .total-bar.tb-net{background:#222 !important;color:#fff !important;border-color:#000 !important;}
-
-/* Divider */
-.bw-zone .divider{border-color:#bbb !important;}
-.bw-zone .divider span{background:#f0f0f0 !important;color:#333 !important;}
-
-/* Part B / Part C headers */
-.bw-zone .part-hdr,.bw-zone .phdr-ui{
-  background:#e8e8e8 !important;color:#000 !important;
-  border:1px solid #bbb !important;
+/* notes */
+.bw-zone .note-wrap label   { color: #555 !important; }
+.bw-zone .note-wrap textarea {
+  background: rgba(255,255,255,0.9) !important;
+  color: #111 !important;
+  border: 1px solid rgba(0,0,0,0.18) !important;
 }
 
-/* frow inside bw-zone */
-.bw-zone .frow{background:#f5f5f5 !important;border-color:#ddd !important;}
-.bw-zone .frow label{color:#333 !important;}
-.bw-zone .frow input,.bw-zone .frow select{
-  background:#fff !important;color:#111 !important;
+/* upload */
+.bw-zone .upload-zone {
+  background: rgba(255,255,255,0.5) !important;
+  border-color: rgba(0,0,0,0.18) !important;
 }
+.bw-zone .ul-btn { background: #555 !important; color: #fff !important; }
+.bw-zone .uz-hint { color: #666 !important; }
+.bw-zone .fi { background: rgba(255,255,255,0.7) !important; border-color: rgba(0,0,0,0.12) !important; color: #222 !important; }
+.bw-zone .fn { color: #222 !important; }
 
-/* Card headers inside bw-zone */
-.bw-zone .card-hdr{color:#333 !important;border-color:#ddd !important;}
-
-
-/* ── All inputs in B&W zone: force dark text ── */
-.bw-zone input,
-.bw-zone select,
-.bw-zone textarea,
+/* pro table */
+.bw-zone .pro-tbl thead tr { background: var(--gold) !important; color: #111 !important; }
+.bw-zone .pro-tbl thead th { color: #111 !important; }
+.bw-zone .pro-tbl tbody tr { background: rgba(255,255,255,0.6) !important; }
+.bw-zone .pro-tbl tbody tr:nth-child(even) { background: rgba(255,255,255,0.85) !important; }
+.bw-zone .pro-tbl tbody tr:hover { background: rgba(200,134,10,0.08) !important; }
+.bw-zone .pro-tbl td { color: #111 !important; border-color: rgba(0,0,0,0.1) !important; }
 .bw-zone .pro-tbl td input,
 .bw-zone .pro-tbl td select {
+  background: rgba(255,255,255,0.95) !important;
   color: #111 !important;
-  background: #fff !important;
+  border: 1px solid rgba(0,0,0,0.15) !important;
 }
-.bw-zone .pro-tbl tbody tr {
-  background: #fff !important;
+.bw-zone .pro-tbl tfoot tr.sum-row { background: rgba(200,134,10,0.18) !important; }
+.bw-zone .pro-tbl td.sum-label { color: var(--gold) !important; }
+.bw-zone .pro-tbl td.sum-val   { color: #111 !important; }
+.bw-zone .pro-tbl td.row-num   { color: var(--gold) !important; }
+
+/* pro fields wrap */
+.bw-zone .pro-fields-wrap {
+  background: rgba(255,255,255,0.5) !important;
+  border-color: rgba(200,134,10,0.25) !important;
 }
-.bw-zone .pro-tbl tbody tr:nth-child(even) {
-  background: #f8f8f8 !important;
+.bw-zone .pro-fields-wrap h4 { color: var(--gold) !important; }
+.bw-zone .pro-item {
+  background: rgba(255,255,255,0.7) !important;
+  border-color: rgba(0,0,0,0.1) !important;
 }
-.bw-zone .pro-tbl tbody tr:hover {
-  background: #f0f0f0 !important;
-}
-.bw-zone .pro-tbl td input:focus,
-.bw-zone .pro-tbl td select:focus {
-  box-shadow: 0 0 0 2px rgba(0,0,0,.2) !important;
-}
-.bw-zone .pro-tbl thead tr {
-  background: #e8e8e8 !important;
+.bw-zone .f label  { color: #444 !important; }
+.bw-zone .f input,
+.bw-zone .f select,
+.bw-zone .f textarea {
+  background: rgba(255,255,255,0.95) !important;
   color: #111 !important;
+  border: 1px solid rgba(0,0,0,0.18) !important;
 }
-.bw-zone .pro-tbl td.row-num { color: #333 !important; }
-.bw-zone .pro-tbl td.sum-label { color: #333 !important; }
-.bw-zone .pro-tbl td.sum-val { color: #111 !important; }
-.bw-zone .pro-tbl tfoot tr.sum-row { background: #e0e0e0 !important; }
+.bw-zone .add-pro-row { border-color: rgba(200,134,10,0.4) !important; color: var(--gold) !important; }
+.bw-zone .add-pro-row:hover { background: rgba(200,134,10,0.08) !important; }
+.bw-zone .rm-pro { color: #c00 !important; }
+.bw-zone .db-link-btn { background: rgba(200,134,10,0.08) !important; color: var(--gold) !important; border-color: rgba(200,134,10,0.25) !important; }
 
+/* divider */
+.bw-zone .divider { border-color: rgba(0,0,0,0.15) !important; }
+.bw-zone .divider span { background: #e8e0f5 !important; color: #333 !important; }
 
-/* rows 210, 220 = same dark style as 200 */
-.total-bar.tb-liab, .total-bar.tb-net {
-  background:#222 !important;
-  color:#fff !important;
-  border-color:#000 !important;
-}
-.total-bar.tb-liab .tb-label,
-.total-bar.tb-net .tb-label,
-.total-bar.tb-liab .tb-val,
-.total-bar.tb-net .tb-val {
-  color:#fff !important;
-}
+/* totals */
+.bw-zone .total-bar.tb-assets,
+.bw-zone .total-bar.tb-liab,
+.bw-zone .total-bar.tb-net { background: #1a1a2e !important; color: #fff !important; border-color: #000 !important; }
+.bw-zone .total-bar span { color: #fff !important; }
 
+/* frow */
+.bw-zone .frow { background: rgba(255,255,255,0.5) !important; border-color: rgba(0,0,0,0.1) !important; }
+.bw-zone .frow label { color: #222 !important; }
+.bw-zone .frow input,
+.bw-zone .frow select { background: rgba(255,255,255,0.9) !important; color: #111 !important; }
 
+/* ── FORCE dark text on ALL inputs site-wide ── */
 /* ── FORCE black text on ALL inputs / selects / textareas site-wide ── */
 input, select, textarea {
   color: #111 !important;
