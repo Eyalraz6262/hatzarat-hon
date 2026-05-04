@@ -561,6 +561,27 @@ input::placeholder { color: #888 !important; }
 textarea::placeholder { color: #888 !important; }
 select option { color: #111 !important; background: #fff !important; }
 
+
+/* ── docs-box in B&W zone: dark text ── */
+.bw-zone .docs-box {
+  background: #f5f5f0 !important;
+  border-color: #ccc !important;
+}
+.bw-zone .docs-box h4 { color: #555 !important; }
+.bw-zone .docs-box li { color: #333 !important; }
+
+/* Fix any other rgba-white text inside bw-zone */
+.bw-zone .sec-body,
+.bw-zone .sec-body * {
+  color: inherit;
+}
+.bw-zone { color: #111; }
+.bw-zone p, .bw-zone li, .bw-zone span:not(.pro-item-num):not(.tb-val):not(.tb-label) {
+  color: #333 !important;
+}
+/* but keep total bar text white */
+.bw-zone .total-bar span { color: #fff !important; }
+
 </style>
 </head>
 <body>
