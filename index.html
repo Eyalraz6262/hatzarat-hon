@@ -2128,7 +2128,17 @@ async function loadClient(){
       if(data){populateFromJson(data,clientName,base);toast('✅ נתוני לקוח נטענו','ok');}
       else toast('❌ שגיאה בקריאת הקובץ','er');
     } else {
-      toast('⚠️ לא נמצא קובץ JSON ללקוח זה','er');
+      // No JSON — still set Dropbox folder links so accountant can browse files
+      populateDropboxLinks(clientName,base);
+      // Pre-fill client name into form fields
+      const parts=clientName.trim().split(' ');
+      const lastEl=document.getElementById('c-last');
+      const firstEl=document.getElementById('c-first');
+      if(lastEl&&parts[0])lastEl.value=parts[0];
+      if(firstEl&&parts[1])firstEl.value=parts.slice(1).join(' ');
+      const loadEl=document.getElementById('db-load-client');
+      if(loadEl)loadEl.dataset.m=1;
+      toast('📁 קישורי Dropbox נטענו — אין קובץ שאלון','nfo');
     }
   }catch(e){toast('❌ שגיאה בטעינה: '+e.message,'er');}
 }
@@ -2160,6 +2170,19 @@ function populateFromJson(data,clientName,base){
       }
     });
   }
+}
+function populateDropboxLinks(clientName,base){
+  const year=document.getElementById('c-year')?.value.trim()||new Date().getFullYear();
+  const allRows=[10,20,30,40,50,60,70,80,90,100,110,120,130,140];
+  allRows.forEach(r=>{
+    const dbLink=document.getElementById('dbl-'+r);
+    if(dbLink){
+      const folder=`${base}/${clientName}`;
+      dbLink.href=`https://www.dropbox.com/home${folder}`;
+      dbLink.textContent=`📁 פתח תיקיית Dropbox — ${clientName}`;
+      dbLink.style.display='inline-flex';
+    }
+  });
 }
 function clientFolder(){
   const last=document.getElementById('c-last')?.value.trim();
