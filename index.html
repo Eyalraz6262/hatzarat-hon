@@ -1160,17 +1160,7 @@ function toggleMode(){
         for(let i=0;i<n;i++) addProRow(r);
       }
     });
-    // Auto-expand ALL sections so everything is visible immediately
-    ROWS.forEach(r=>{
-      const b=document.getElementById('body-'+r);
-      const c=document.getElementById('chv-'+r);
-      const h=document.querySelector('#sec-'+r+' .sec-hdr');
-      if(b&&!b.classList.contains('open')){
-        b.classList.add('open');
-        if(c)c.classList.add('open');
-        if(h)h.classList.add('open');
-      }
-    });
+
   } else {
     // Collapse all sections when returning to client mode
     ROWS.forEach(r=>{
