@@ -483,8 +483,8 @@ input[type=file]{display:none;}
 
 /* Totals bars */
 .bw-zone .total-bar.tb-assets{background:#222 !important;color:#fff !important;}
-.bw-zone .total-bar.tb-liab{background:#fee2e2 !important;color:#7f1d1d !important;border-color:#fca5a5 !important;}
-.bw-zone .total-bar.tb-net{background:#dcfce7 !important;color:#14532d !important;border-color:#86efac !important;}
+.bw-zone .total-bar.tb-liab{background:#222 !important;color:#fff !important;border-color:#000 !important;}
+.bw-zone .total-bar.tb-net{background:#222 !important;color:#fff !important;border-color:#000 !important;}
 
 /* Divider */
 .bw-zone .divider{border-color:#bbb !important;}
@@ -505,6 +505,52 @@ input[type=file]{display:none;}
 
 /* Card headers inside bw-zone */
 .bw-zone .card-hdr{color:#333 !important;border-color:#ddd !important;}
+
+
+/* ── All inputs in B&W zone: force dark text ── */
+.bw-zone input,
+.bw-zone select,
+.bw-zone textarea,
+.bw-zone .pro-tbl td input,
+.bw-zone .pro-tbl td select {
+  color: #111 !important;
+  background: #fff !important;
+}
+.bw-zone .pro-tbl tbody tr {
+  background: #fff !important;
+}
+.bw-zone .pro-tbl tbody tr:nth-child(even) {
+  background: #f8f8f8 !important;
+}
+.bw-zone .pro-tbl tbody tr:hover {
+  background: #f0f0f0 !important;
+}
+.bw-zone .pro-tbl td input:focus,
+.bw-zone .pro-tbl td select:focus {
+  box-shadow: 0 0 0 2px rgba(0,0,0,.2) !important;
+}
+.bw-zone .pro-tbl thead tr {
+  background: #e8e8e8 !important;
+  color: #111 !important;
+}
+.bw-zone .pro-tbl td.row-num { color: #333 !important; }
+.bw-zone .pro-tbl td.sum-label { color: #333 !important; }
+.bw-zone .pro-tbl td.sum-val { color: #111 !important; }
+.bw-zone .pro-tbl tfoot tr.sum-row { background: #e0e0e0 !important; }
+
+
+/* rows 210, 220 = same dark style as 200 */
+.total-bar.tb-liab, .total-bar.tb-net {
+  background:#222 !important;
+  color:#fff !important;
+  border-color:#000 !important;
+}
+.total-bar.tb-liab .tb-label,
+.total-bar.tb-net .tb-label,
+.total-bar.tb-liab .tb-val,
+.total-bar.tb-net .tb-val {
+  color:#fff !important;
+}
 
 </style>
 </head>
