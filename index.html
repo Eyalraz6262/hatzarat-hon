@@ -1974,10 +1974,14 @@ async function generateClientLink(){
   if(spid)obj.si=spid;
   const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
   const longLink=`${base}#c=${encoded}`;
-  // Try TinyURL to shorten
+  // Try TinyURL with custom alias: year-id (e.g. tinyurl.com/2024-123456789)
   let finalLink=longLink;
   try{
-    const res=await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longLink)}`);
+    const alias=year&&id?`${year}-${id}`:id?id:null;
+    const apiUrl=alias
+      ?`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longLink)}&alias=${alias}`
+      :`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longLink)}`;
+    const res=await fetch(apiUrl);
     if(res.ok){const txt=await res.text();if(txt.trim().startsWith('https'))finalLink=txt.trim();}
   }catch(e){}
   document.getElementById('gen-result').value=finalLink;
