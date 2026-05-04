@@ -1884,6 +1884,8 @@ function recalc(){
   document.getElementById('t200').textContent=fmt(t200);
   document.getElementById('t210').textContent=fmt(t210);
   document.getElementById('t220').textContent=fmt(t220);
+  // row 800 depends on t220 — recalc Part C totals
+  if(typeof recalcC==='function')recalcC();
 }
 function fmt(n){return Math.round(n).toLocaleString('he-IL');}
 
