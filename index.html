@@ -2081,26 +2081,55 @@ async function loadClient(){
   const clientName=document.getElementById('db-load-client').value.trim();
   if(!clientName){toast('נא להזין שם לקוח','er');return;}
   const base=document.getElementById('db-folder').value.trim()||'/הצהרת הון - לקוחות';
-  const path=`${base}/${clientName}`;
   toast('📥 טוען נתוני לקוח...','nfo');
-  // Try to find and load summary JSON
-  try{
-    const res=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
+  async function listFolder(p){
+    const r=await fetch('https://api.dropboxapi.com/2/files/list_folder',{
       method:'POST',
       headers:{'Authorization':'Bearer '+dbToken,'Content-Type':'application/json'},
-      body:JSON.stringify({path})
+      body:JSON.stringify({path:p})
     });
-    const d=await res.json();
-    const jsonFile=d.entries?.find(e=>e.name.endsWith('.json'));
-    if(jsonFile){
-      const dl=await fetch('https://content.dropboxapi.com/2/files/download',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':dbArg({path:jsonFile.path_lower})}
-      });
-      const data=await dl.json();
-      populateFromJson(data,clientName,base);
-      toast('✅ נתוני לקוח נטענו','ok');
-    } else {toast('⚠️ לא נמצא קובץ JSON ללקוח זה','er');}
+    if(!r.ok)return null;
+    return r.json();
+  }
+  async function downloadJson(p){
+    const r=await fetch('https://content.dropboxapi.com/2/files/download',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+dbToken,'Dropbox-API-Arg':dbArg({path:p})}
+    });
+    if(!r.ok)return null;
+    return r.json();
+  }
+  try{
+    // 1. Try direct: base/clientName/summary.json
+    let d=await listFolder(`${base}/${clientName}`);
+    let jsonEntry=d?.entries?.find(e=>e['.tag']==='file'&&e.name.endsWith('.json'));
+    // 2. If not found, look inside year subfolders (newest first)
+    if(!jsonEntry&&d?.entries){
+      const yearFolders=d.entries
+        .filter(e=>e['.tag']==='folder'&&/^\d{4}$/.test(e.name))
+        .sort((a,b)=>b.name-a.name);
+      for(const yf of yearFolders){
+        const yd=await listFolder(yf.path_lower);
+        jsonEntry=yd?.entries?.find(e=>e['.tag']==='file'&&e.name.endsWith('.json'));
+        if(jsonEntry)break;
+      }
+      // 3. If no year folder, try any subfolder
+      if(!jsonEntry){
+        const subFolders=d.entries.filter(e=>e['.tag']==='folder');
+        for(const sf of subFolders){
+          const sd=await listFolder(sf.path_lower);
+          jsonEntry=sd?.entries?.find(e=>e['.tag']==='file'&&e.name.endsWith('.json'));
+          if(jsonEntry)break;
+        }
+      }
+    }
+    if(jsonEntry){
+      const data=await downloadJson(jsonEntry.path_lower);
+      if(data){populateFromJson(data,clientName,base);toast('✅ נתוני לקוח נטענו','ok');}
+      else toast('❌ שגיאה בקריאת הקובץ','er');
+    } else {
+      toast('⚠️ לא נמצא קובץ JSON ללקוח זה','er');
+    }
   }catch(e){toast('❌ שגיאה בטעינה: '+e.message,'er');}
 }
 function populateFromJson(data,clientName,base){
