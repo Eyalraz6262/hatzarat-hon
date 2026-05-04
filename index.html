@@ -1908,10 +1908,19 @@ function fmt(n){return Math.round(n).toLocaleString('he-IL');}
 function readUrlParams(){
   const hash=window.location.hash.replace(/^#/,'');
   if(!hash)return;
-  const p=Object.fromEntries(hash.split('&').map(s=>{
-    const [k,...v]=s.split('=');
-    return[k,decodeURIComponent(v.join('='))];
-  }));
+  let p={};
+  if(hash.startsWith('c=')){
+    try{
+      const decoded=decodeURIComponent(escape(atob(hash.slice(2))));
+      const obj=JSON.parse(decoded);
+      p={name:obj.n||'',id:obj.i||'',year:obj.y||'',sp:obj.s||'',spid:obj.si||''};
+    }catch(e){return;}
+  } else {
+    p=Object.fromEntries(hash.split('&').map(s=>{
+      const [k,...v]=s.split('=');
+      return[k,decodeURIComponent(v.join('='))];
+    }));
+  }
   if(p.name){
     const el=document.getElementById('c-last');
     if(el){el.value=p.name;el.dispatchEvent(new Event('input'));}
@@ -1949,7 +1958,7 @@ function readUrlParams(){
 // ═══════════════════════════════════════════════════
 // GENERATE LINK HELPER (pro mode)
 // ═══════════════════════════════════════════════════
-function generateClientLink(){
+async function generateClientLink(){
   const name=document.getElementById('gen-name')?.value.trim()||'';
   const id=document.getElementById('gen-id')?.value.trim()||'';
   const year=document.getElementById('gen-year')?.value.trim()||new Date().getFullYear()-1;
@@ -1957,15 +1966,23 @@ function generateClientLink(){
   const spid=document.getElementById('gen-spid')?.value.trim()||'';
   if(!name){toast('הכנס שם לקוח','er');return;}
   const base=window.location.href.split('#')[0];
-  let params=`name=${encodeURIComponent(name)}`;
-  if(id)params+=`&id=${encodeURIComponent(id)}`;
-  if(year)params+=`&year=${encodeURIComponent(year)}`;
-  if(sp)params+=`&sp=${encodeURIComponent(sp)}`;
-  if(spid)params+=`&spid=${encodeURIComponent(spid)}`;
-  const link=`${base}#${params}`;
-  document.getElementById('gen-result').value=link;
+  // Compact base64 payload (short keys)
+  const obj={n:name};
+  if(id)obj.i=id;
+  if(year)obj.y=year;
+  if(sp)obj.s=sp;
+  if(spid)obj.si=spid;
+  const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+  const longLink=`${base}#c=${encoded}`;
+  // Try TinyURL to shorten
+  let finalLink=longLink;
+  try{
+    const res=await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longLink)}`);
+    if(res.ok){const txt=await res.text();if(txt.trim().startsWith('https'))finalLink=txt.trim();}
+  }catch(e){}
+  document.getElementById('gen-result').value=finalLink;
   document.getElementById('gen-result-wrap').style.display='block';
-  navigator.clipboard?.writeText(link).then(()=>toast('📋 קישור הועתק ללוח','ok'));
+  navigator.clipboard?.writeText(finalLink).then(()=>toast('📋 קישור הועתק ללוח','ok'));
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
