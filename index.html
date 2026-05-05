@@ -647,15 +647,19 @@ select option { color: #111 !important; background: #fff !important; }
 
   <div class="card">
     <div class="card-hdr">👤 פרטים אישיים</div>
-    <div class="frow"><label>שם מלא <span class="req">*</span></label><input type="text" id="c-last" placeholder="שם משפחה ושם פרטי" oninput="syncClient()"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="frow"><label>שם משפחה <span class="req">*</span></label><input type="text" id="c-last" placeholder="שם משפחה" oninput="syncClient()"/></div>
+      <div class="frow"><label>שם פרטי <span class="req">*</span></label><input type="text" id="c-first" placeholder="שם פרטי" oninput="syncClient()"/></div>
+    </div>
     <div class="frow"><label>מספר זהות <span class="req">*</span></label><input type="text" id="c-id" placeholder="מספר ת.ז."/></div>
     <div class="frow"><label>טלפון <span class="req">*</span></label><input type="tel" id="c-phone" placeholder="050-0000000"/></div>
     <div class="frow"><label>דואר אלקטרוני <span class="req">*</span></label><input type="email" id="c-email" placeholder="example@gmail.com"/></div>
-    <div class="frow"><label>שם בן/בת הזוג</label><input type="text" id="c-sp-last" placeholder="שם מלא של בן/בת הזוג"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="frow"><label>שם משפחה בן/בת הזוג</label><input type="text" id="c-sp-last" placeholder="שם משפחה"/></div>
+      <div class="frow"><label>שם פרטי בן/בת הזוג</label><input type="text" id="c-sp-first" placeholder="שם פרטי"/></div>
+    </div>
     <div class="frow"><label>ת.ז. בן/בת הזוג</label><input type="text" id="c-sp-id" placeholder="מספר ת.ז."/></div>
     <div class="frow"><label>שנת ההצהרה <span class="req">*</span></label><input type="number" id="c-year" placeholder="2024" min="2000" max="2099"/></div>
-    <!-- hidden compat fields -->
-    <input type="hidden" id="c-first"/><input type="hidden" id="c-sp-first"/>
   </div>
 
   <div class="prog-card">
@@ -1494,6 +1498,8 @@ function printForm(){
   const spFirst=gv('c-sp-first')||(genSpParts.slice(1).join(' ')||'');
   const spId=gv('c-sp-id')||gv('gen-spid');
   const year=gv('c-year')||gv('gen-year')||String(new Date().getFullYear()-1);
+  // phone / email for cover
+  const phone=gv('c-phone'); const email=gv('c-email');
 
   /* ── collect Part A data ── */
   let t200=0, t210=0;
