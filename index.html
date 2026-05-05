@@ -1484,9 +1484,16 @@ function printForm(){
     return gt(id);}
   const fmt=v=>v?Math.round(v).toLocaleString('he-IL'):'';
 
-  const last=gv('c-last'); const first=gv('c-first'); const cid=gv('c-id');
-  const spLast=gv('c-sp-last'); const spFirst=gv('c-sp-first'); const spId=gv('c-sp-id');
-  const year=gv('c-year')||String(new Date().getFullYear()-1);
+  // Read client fields — fallback to link-generator fields if empty
+  const genName=gv('gen-name'); const genParts=genName.split(' ');
+  const genSp=gv('gen-sp'); const genSpParts=genSp.split(' ');
+  const last=gv('c-last')||(genParts[0]||'');
+  const first=gv('c-first')||(genParts.slice(1).join(' ')||'');
+  const cid=gv('c-id')||gv('gen-id');
+  const spLast=gv('c-sp-last')||(genSpParts[0]||'');
+  const spFirst=gv('c-sp-first')||(genSpParts.slice(1).join(' ')||'');
+  const spId=gv('c-sp-id')||gv('gen-spid');
+  const year=gv('c-year')||gv('gen-year')||String(new Date().getFullYear()-1);
 
   /* ── collect Part A data ── */
   let t200=0, t210=0;
