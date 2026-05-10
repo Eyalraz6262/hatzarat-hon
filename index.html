@@ -1109,7 +1109,7 @@ const PRO_FIELDS={
 // ═══════════════════════════════════════════════════
 let isProMode=false;
 const pendingFiles={}; // row -> [{file, id}]
-let dbToken=localStorage.getItem('db_access_token')||'sl.u.AGfke8R_59OY4kPOhsQLgnUlthaR-bcFaQitIyOA1Ap_Y9UFmUIThwfekPkcTepiRqrhI72uyPp8uvLC-mkVy0rc3QPiS5pWsscJZqD7az1WOH2f_deH1D8RD7_YkoFul9v48oxP2EbcJKyN47EuU8it5C57bkz7BXGxCf7eSXLaXZi3ch--xRk8tvzgVFivaiEpAyuNaUrGySybiH6x9BRtryJXCsjbzTfKkIFeXGWye7wReetCqxgHk5IlaSHThh5ML_pld7FoSJXuXcON4hqxM2yMEuEXoAPLx3Xfb-dSZ1hXk11cAsBVKZa75sDqJqqhL8gq6FaNnuojhdYeIIWjqHrVWAZFgkiOJpSiJyg04Q528odRJfZkT3GXWlw3uYgUsutUUNJzJwug8rrixTF-IXu053TnepbWTDtpP4YMqRI_gGz183E-iPd1D03iOU0J2Wh60i7EySK7-Pjf2BFG712EYwl_IxuXE5x8uheqpsLY2kCBGUvZCS7TWk3TRrRom5AHtd-329j7rQCMXgV6i383EHjfhdBeVForCa4kt3cjb_Py4owJOO1OjrZySWf0iHZGSInQaw2KTExtV8h66fS52x5xQiWfgdKxWjgLQwpYUV-pywhF8NHrKtZgjfBIz3k7WzZi0bs15LKPzesCT2a6HjWRVkBVNamHADmmJibQDWIJeNojqfXTa-_GCVUntk__160EeCpOkteAaM7_5cWWMYwg-f3h0hXjyoT0xCvfwRpi9FUJrtQ-5hcp1YUV11YBKM2F0fuae0byRXljJbooFpyz1lohDo0xSd_i3sncXWbR-Pkq5xVh1_wissigbsQHi2wocxm5cKhKnwJuqTN1ZsKy7qjhdGYh1htXINPfoAIO54pFpQ7JF0ol7DCunZZWL1v3dBSOOHKbMPffjMcqYgzHLlllvlJjIePITzC2exBSV4EUM3GNmUHaky2UDVDP2R0P3ChgT3Dhy2sM4WA_jAvXPy2eL1fTJX8DGy2ODUzb0SPG7SLM1TbiYuMXMzW1PgkybIohtN3vIfXU3MK1PxPd-wzth8SyK6GXubQV0UzECnE6MAg4UVAFbR1ywOnhRH0fl7dT5A6JK18_ur7lGHNJXNk0hIfPekeoCXBrEggCk-33VYdcjLKRQTdtThHJnR-26PONWEl9rJ-PSYfrjPdlXxQOLYHxCd5eH9pG4zTo_U27sw3vW19fyjZrB16aSQ3qmYCVoU1j6FUSn5AWpxLZWtX2rG9QB6PjGzIDVDiRNgiWWfEFFreZl5DIl2Y8OMVYdeO9oYVXKKcU-4YNXHHZSUsaEIu1p8huMg';
+let dbToken=localStorage.getItem('db_access_token')||'';
 const done=new Set();
 let proRowCtrs={};
 ROWS.forEach(r=>proRowCtrs[r]=0);
@@ -1953,6 +1953,18 @@ function readUrlParams(){
     const el=document.getElementById('c-sp-id');
     if(el)el.value=p.spid;
   }
+  // If refresh token included, store it and auto-connect Dropbox
+  if(p.rt){
+    localStorage.setItem('db_refresh_token',p.rt);
+    localStorage.removeItem('db_access_token');
+    localStorage.removeItem('db_token_expiry');
+    if(typeof refreshDropboxToken==='function')refreshDropboxToken();
+  }
+  if(p.dbf){
+    const dbf=document.getElementById('db-folder');
+    if(dbf)dbf.value=p.dbf;
+    localStorage.setItem('db_folder',p.dbf);
+  }
   // If params came in, show a welcome banner
   if(p.name){
     const banner=document.getElementById('client-welcome');
@@ -1980,6 +1992,11 @@ async function generateClientLink(){
   if(year)obj.y=year;
   if(sp)obj.s=sp;
   if(spid)obj.si=spid;
+  // Include refresh token so client can upload to accountant's Dropbox
+  const rt=localStorage.getItem('db_refresh_token');
+  if(rt)obj.rt=rt;
+  const dbFolder=(document.getElementById('db-folder')?.value||'').trim()||'/הצהרת הון - לקוחות';
+  if(dbFolder)obj.dbf=dbFolder;
   const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
   const longLink=`${base}#c=${encoded}`;
   // Try TinyURL with custom alias: year-id (e.g. tinyurl.com/2024-123456789)
