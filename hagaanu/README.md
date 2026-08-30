@@ -1,0 +1,234 @@
+# הגענו? — Hagaanu
+
+> **תישן. אנחנו נעיר אותך.**
+
+אפליקציית מובייל שמעירה אותך לפני התחנה. בוחרים יעד על המפה, בוחרים מרחק,
+לוחצים "תעיר אותי כאן", נועלים את הטלפון — וכשמתקרבים ליעד היא מעירה.
+
+---
+
+## למה React Native + Expo (prebuild), ולא Flutter או Expo Go
+
+ההחלטה נקבעה **רק** לפי אמינות ה‑background execution, כפי שביקשת:
+
+| דרישה | מה בחרנו | למה |
+|---|---|---|
+| Geofencing | `expo-location` → `CLLocationManager` (iOS) / `GeofencingClient` (Android) | עטיפה דקה מעל ה‑API הרשמי של כל פלטפורמה. לא polling, לא פתרון עוקף. |
+| Background location | `expo-location` + foreground service באנדרואיד | הדרך הרשמית והיחידה שעובדת מעבר למגבלות Android 8+. |
+| Local notifications | `expo-notifications` | תמיכה מלאה בערוצים, ב‑`AudioUsage.ALARM` ובצלילים מותאמים. |
+| מפה | `react-native-maps` | הספרייה הבוגרת בתחום; Apple Maps ב‑iOS (ללא מפתח), Google Maps באנדרואיד. |
+
+**חשוב: זה לא Expo Go.** הפרויקט משתמש ב‑Continuous Native Generation — הרצת
+`npx expo prebuild` מייצרת פרויקטי `ios/` ו‑`android/` אמיתיים, ואפשר לפתוח אותם
+ב‑Xcode / Android Studio ולערוך קוד נייטיב. אין כאן שום מגבלה של Expo Go:
+Geofencing, background modes ו‑foreground services עובדים במלואם, והתוצר הוא
+`.ipa` / `.aab` שנשלחים ל‑App Store ול‑Google Play.
+
+מה שקיבלנו מ‑Expo הוא ניהול הקונפיגורציה הנייטיבית מקובץ אחד (`app.config.ts`)
+במקום עריכה ידנית של `Info.plist` ו‑`AndroidManifest.xml`.
+
+Flutter היה עובד גם — אבל הפתרונות הבשלים ביותר שם ל‑geofencing
+(`flutter_background_geolocation`) הם בתשלום לרישיון מסחרי, ואין יתרון תפקודי
+שמצדיק את זה כאן.
+
+---
+
+## 🔑 מה אתה צריך ליצור: מפתח Google Maps ל‑Android
+
+**זה הדבר החיצוני היחיד שהפרויקט צריך.** ב‑iOS משתמשים ב‑Apple Maps — אין מפתח,
+אין חשבון, אין חיוב. באנדרואיד אין חלופה מובנית, ולכן צריך מפתח Google Maps.
+
+### שלב אחר שלב
+
+1. היכנס ל‑<https://console.cloud.google.com/>
+2. צור פרויקט חדש (או בחר קיים).
+3. **APIs & Services → Library** → חפש **"Maps SDK for Android"** → **Enable**.
+   *(אין צורך ב‑Maps SDK for iOS, ואין צורך ב‑Places API.)*
+4. **APIs & Services → Credentials → Create Credentials → API key**.
+5. לחץ על המפתח שנוצר והגבל אותו (חשוב):
+   * **Application restrictions** → **Android apps**
+   * **Add** → Package name: `com.hagaanu.app`
+   * SHA‑1: הרץ `npx eas credentials` (או `keytool -list -v -keystore ...`) וקח
+     את ה‑SHA‑1 של ה‑keystore.
+   * **API restrictions** → **Restrict key** → בחר רק **Maps SDK for Android**.
+6. העתק את המפתח.
+
+### איפה להכניס אותו
+
+```bash
+cp .env.example .env
+```
+
+ואז ב‑`.env`:
+
+```
+GOOGLE_MAPS_ANDROID_API_KEY=AIza...המפתח_שלך
+```
+
+הקובץ `.env` נמצא ב‑`.gitignore` ולא ייכנס ל‑git. `app.config.ts` קורא ממנו.
+ל‑builds בענן (EAS) הגדר את אותו משתנה כ‑secret:
+
+```bash
+npx eas secret:create --name GOOGLE_MAPS_ANDROID_API_KEY --value "AIza..."
+```
+
+**עד שתכניס מפתח, המפה באנדרואיד תופיע ריקה/אפורה.** כל שאר האפליקציה — כולל
+הגאופנס וההתראה — עובדת בלעדיו. ב‑iOS הכול עובד ללא מפתח.
+
+---
+
+## הרצה
+
+```bash
+npm install
+
+# מייצר את פרויקטי ios/ ו-android/ מתוך app.config.ts
+npx expo prebuild --clean
+
+# Android: מכשיר פיזי מחובר ב-USB, או אמולטור
+npx expo run:android
+
+# iOS: דורש macOS + Xcode
+npx expo run:ios
+```
+
+> **חובה לבדוק על מכשיר פיזי.** גאופנסינג באמולטור/סימולטור מתנהג אחרת מאוד,
+> וההתנהגות ברקע (Doze, force‑quit, מסך נעול) לא ניתנת לבדיקה אמינה שם.
+
+לאחר ההתקנה הראשונה אפשר לעבוד מול Metro רגיל:
+
+```bash
+npx expo start --dev-client
+```
+
+### Build לחנויות
+
+```bash
+npm i -g eas-cli
+eas login
+eas init
+eas build --platform android --profile production   # .aab ל-Google Play
+eas build --platform ios --profile production       # .ipa ל-App Store
+```
+
+---
+
+## איך לבדוק שהכול עובד
+
+### 1. הרשאות (30 שניות)
+
+פתח את האפליקציה בפעם הראשונה. אתה אמור לראות **שלושה מסכי הסבר ברצף**, כל אחד
+מסביר בעברית למה צריך את ההרשאה *לפני* שהדיאלוג של המערכת קופץ:
+מיקום → התראות → מיקום ברקע.
+
+במסך השלישי בחר **"תמיד" / "אפשר תמיד"**. (אפשר גם ללחוץ "לא עכשיו" — אז תראה
+באנר אזהרה כתום במסך הראשי, וזו התנהגות מכוונת.)
+
+### 2. הזרימה הראשית (פחות מ‑10 שניות)
+
+1. המפה נפתחת על המיקום שלך.
+2. לחץ על נקודה במפה — או חפש כתובת בשורת החיפוש למעלה.
+3. Marker מופיע, ועיגול כחול מסביבו.
+4. שנה את המרחק (300 מ׳ / 500 מ׳ / 1 ק״מ / 2 ק״מ / מותאם) — **העיגול משנה גודל**.
+5. לחץ **"תעיר אותי כאן"** → הטלפון רוטט קלות והכרטיס מתחלף ל‑**😴 אפשר לישון**.
+
+### 3. שההתראה באמת עובדת ברקע
+
+**הדרך המהירה (build פיתוח):** במצב "אפשר לישון" יש כפתור
+**"⚙︎ סימולציית הגעה (dev)"** בתחתית הכרטיס. הוא מפעיל את *כל* מסלול ההגעה —
+Notification, צליל, רטט, מסך "הגענו!". הכפתור לא קיים ב‑build ייצור.
+
+**הבדיקה האמיתית (חובה לפני שחרור):**
+
+1. הגדר יעד ~1 ק״מ מהבית שלך עם רדיוס **300 מ׳**.
+2. לחץ "תעיר אותי כאן".
+3. **נעל את הטלפון והכנס אותו לכיס.**
+4. צא להליכה/נסיעה לכיוון היעד.
+5. כשתיכנס לרדיוס — הטלפון אמור לצלצל ולרטוט, והמסך להידלק עם **"הגענו! 🚨"**.
+
+צפה לעיכוב של עד כמה דקות ב‑geofence עצמו — שכבת ה‑backstop אמורה לתפוס
+את זה קודם. ראה `docs/PLATFORM-LIMITS.md`.
+
+**מעקב אחרי לוגים:**
+
+```bash
+# Android
+adb logcat | grep hagaanu
+
+# iOS — Console.app של macOS, סינון לפי "hagaanu"
+```
+
+כל אירוע רקע מודפס עם prefix `[hagaanu:geofence]` / `[hagaanu:location]`.
+
+### 4. ביטול
+
+לחץ **"בטל התראה"** → דיאלוג אישור → הכול נכבה: geofence, מעקב מיקום,
+ההתראה הקבועה.
+
+---
+
+## מבנה הפרויקט
+
+הפרדה מלאה בין שכבות, כמו שביקשת:
+
+```
+src/
+├── constants/config.ts        כל קבועי הכוונון (רדיוסים, מדרגות דגימה, שמות tasks)
+├── types/                     טיפוסי הליבה
+├── i18n/                      t() + he.ts / en.ts — כל טקסט עובר דרך כאן
+├── theme/                     צבעים, מרווחים, טיפוגרפיה, סגנון מפה כהה
+├── utils/geo.ts               haversine, פורמט מרחק, חישוב region
+│
+├── services/                  ← כל הלוגיקה שאינה UI
+│   ├── permissions/           בקשות הרשאה + מיפוי ל-granted/denied/blocked
+│   ├── location/
+│   │   ├── LocationService    מיקום foreground + זרם רקע + מדרגות סוללה
+│   │   └── GeocodingService   חיפוש כתובות והמרה הפוכה
+│   ├── geofencing/
+│   │   ├── GeofencingService  עטיפה על region monitoring של מערכת ההפעלה
+│   │   └── backgroundTasks    ⚠️ הגדרות TaskManager — ראה הערה למטה
+│   ├── notifications/         ערוצים, ההתראה המעירה, התראת סטטוס
+│   ├── alarm/
+│   │   ├── AlarmService       צליל + רטט
+│   │   └── ArrivalCoordinator ← המקום היחיד שמחליט "הגענו"
+│   └── storage/AlarmStorage   ההתראה הפעילה על הדיסק
+│
+├── state/                     zustand: useAlarmStore, usePermissionsStore
+├── hooks/                     מעקב מיקום foreground, גשר אירועי רקע → React
+├── components/                ui/ (פרימיטיבים), map/, sheets/
+└── screens/                   Home, Alarm, Permissions
+```
+
+### הערה חשובה על `backgroundTasks.ts`
+
+`TaskManager.defineTask` **חייב** לרוץ ב‑scope הגלובלי, ולכן הוא מיובא מ‑`index.ts`
+לפני `registerRootComponent`. מערכת ההפעלה עשויה להריץ JS context חדש לגמרי כדי
+למסור אירוע geofence כשאין שום UI טעון — ואם ה‑task לא הוגדר עדיין, האירוע נאבד.
+זו הסיבה הקלאסית ל־"עובד בפורגראונד אבל אף פעם לא כשהטלפון נעול".
+
+### למה שתי שכבות זיהוי
+
+`ArrivalCoordinator` מקבל קריאות משני מקורות — ה‑geofence של מערכת ההפעלה
+(חסכוני, מעיר תהליך סגור) וזרם המיקום ברקע (תופס מה שה‑geofence מפספס או מאחר).
+הראשון ששולף עוצר את השני. הפירוט המלא ב‑`docs/PLATFORM-LIMITS.md`.
+
+---
+
+## מגבלות — קרא את זה
+
+`docs/PLATFORM-LIMITS.md` מפרט בדיוק מה כל פלטפורמה מאפשרת ומה לא: השהיית
+geofence, מה קורה עם מתג ההשתקה של iOS, למה Critical Alerts דורש אישור מאפל,
+ומתי ההתראה *לא* תעבוד. **אין באפליקציה הבטחה שהמערכת לא עומדת מאחוריה.**
+
+---
+
+## מה עוד לא נבנה (בכוונה)
+
+לפי סדר העבודה שסיכמנו, ה‑MVP עוצר כאן. השלב הבא:
+
+* יעדים שמורים (🏠 בית, 💼 עבודה, 🚆 תחנה, ⭐ מועדפים)
+* מסך הגדרות: בחירת צליל, רטט on/off, רדיוס ברירת מחדל, מצב כהה, שפה
+* מסך הדרכה לביטול אופטימיזציית סוללה באנדרואיד
+* אנגלית (התשתית מוכנה — `src/i18n/translations/en.ts` כבר קיים ומלא)
+
+אין הרשמה, חשבונות, מנויים, תשלומים, פרסומות, צ׳אט או AI — ולא אמורים להיות.
