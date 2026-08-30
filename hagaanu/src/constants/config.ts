@@ -76,3 +76,48 @@ export const CHANNEL_VIBRATION_PATTERN = [0, 500, 300, 500, 300, 800];
 
 /** Bundled alarm sound. Must stay in sync with the `sounds` array in app.config.ts. */
 export const ALARM_SOUND_FILE = 'alarm.wav';
+
+/**
+ * Israel-specific geography.
+ *
+ * v1 ships for Israeli public transport, so the map and the address search are
+ * anchored to the country rather than to a global default. Both constants live
+ * here so widening to another country later is a data change, not a code change.
+ */
+
+/**
+ * Where the map opens before the first location fix arrives.
+ *
+ * Without this react-native-maps starts on an arbitrary world view, and an
+ * Israeli user opening the app in a tunnel or with a slow GPS lock would see
+ * the Atlantic. Framed from the Galilee down to Eilat.
+ */
+export const FALLBACK_REGION = {
+  latitude: 31.5,
+  longitude: 34.95,
+  latitudeDelta: 4.4,
+  longitudeDelta: 3.0,
+};
+
+/**
+ * Coarse regional filter used to rank address search results.
+ *
+ * It spans Metula in the north to Eilat in the south, and the coast to the
+ * eastern Golan. Its job is to stop "הרצל" from surfacing a street in Vienna —
+ * not to trace a border. A rectangle drawn around a country this narrow will
+ * always take in a strip of its immediate neighbours (Amman is 35 km from
+ * Jerusalem), and that is fine: those results are plausible destinations to see,
+ * whereas a European match never is.
+ *
+ * Erring wide is deliberate — a false negative here means a real address the
+ * user typed just doesn't appear. Results outside the box are only dropped when
+ * something inside it matched (see GeocodingService.search).
+ */
+export const ISRAEL_BOUNDS = {
+  minLatitude: 29.4,
+  maxLatitude: 33.4,
+  minLongitude: 34.2,
+  // Clears Majdal Shams and the Hermon slopes (~35.79), the easternmost places
+  // public transport actually reaches.
+  maxLongitude: 35.85,
+};

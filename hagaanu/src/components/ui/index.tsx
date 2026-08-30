@@ -10,7 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, radii, shadow, spacing, typography } from '../../theme';
+import { colors, fonts, radii, shadow, spacing, typography } from '../../theme';
 import { isRTL } from '../../i18n';
 
 /**
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   chipLabelSelected: {
     color: colors.text,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   card: {
     backgroundColor: colors.surface,
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   pillLabel: {
     ...typography.caption,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 
+import { ISRAEL_BOUNDS } from '../../constants/config';
 import { t } from '../../i18n';
 import type { Destination, LatLng } from '../../types';
 import { log } from '../../utils/logger';
@@ -15,6 +16,16 @@ import { log } from '../../utils/logger';
  * only this file.
  */
 
+/** True when a coordinate falls inside the country the app currently serves. */
+function isInServiceArea(coords: LatLng): boolean {
+  return (
+    coords.latitude >= ISRAEL_BOUNDS.minLatitude &&
+    coords.latitude <= ISRAEL_BOUNDS.maxLatitude &&
+    coords.longitude >= ISRAEL_BOUNDS.minLongitude &&
+    coords.longitude <= ISRAEL_BOUNDS.maxLongitude
+  );
+}
+
 function labelFromAddress(address: Location.LocationGeocodedAddress): string {
   const parts = [
     address.name && address.name !== address.street ? address.name : null,
@@ -24,7 +35,12 @@ function labelFromAddress(address: Location.LocationGeocodedAddress): string {
 
   // Deduplicate — platform geocoders often repeat the street as `name`.
   const unique = parts.filter((part, index) => parts.indexOf(part) === index);
-  return unique.join(', ');
+
+  // Every result is in Israel, so the country name is pure noise in a label
+  // that has to fit on one line of a phone screen.
+  return unique
+    .filter((part) => !/^(ישראל|Israel)$/i.test(part.trim()))
+    .join(', ');
 }
 
 export type SearchResult = Destination;
@@ -38,9 +54,18 @@ export const GeocodingService = {
     const matches = await Location.geocodeAsync(trimmed);
     if (!matches.length) return [];
 
+    // Prefer results inside Israel. A query like "הרצל" matches streets in a
+    // dozen countries, and the user is on a train here — but if nothing local
+    // matched at all we return what we got rather than showing "no results",
+    // so someone planning a trip abroad is not silently blocked.
+    const local = matches.filter((match) =>
+      isInServiceArea({ latitude: match.latitude, longitude: match.longitude })
+    );
+    const ranked = local.length > 0 ? local : matches;
+
     // The platform geocoder returns coordinates only, so re-resolve each hit to
     // a printable label. Cap the fan-out: five results is plenty for a sheet.
-    const top = matches.slice(0, 5);
+    const top = ranked.slice(0, 5);
     return Promise.all(
       top.map(async (match) => {
         const coords: LatLng = { latitude: match.latitude, longitude: match.longitude };

@@ -8,6 +8,7 @@ import * as SystemUI from 'expo-system-ui';
 import { AlarmScreen } from './src/screens/AlarmScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { PermissionsScreen } from './src/screens/PermissionsScreen';
+import { useAppFonts } from './src/hooks/useAppFonts';
 import { useArrivalListener } from './src/hooks/useArrivalListener';
 import { useForegroundArrivalCheck } from './src/hooks/useForegroundArrivalCheck';
 import { NotificationService } from './src/services/notifications/NotificationService';
@@ -40,6 +41,8 @@ export default function App() {
   const hydrate = useAlarmStore((state) => state.hydrate);
   const dismissAlarm = useAlarmStore((state) => state.dismissAlarm);
 
+  const fontsReady = useAppFonts();
+
   useArrivalListener();
   useForegroundArrivalCheck();
 
@@ -59,14 +62,19 @@ export default function App() {
         log.error('app', 'boot failed', error);
       } finally {
         setBooted(true);
-        await SplashScreen.hideAsync();
       }
     })();
   }, [refreshPermissions, hydrate]);
 
+  const ready = booted && permissionsReady && fontsReady;
+
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
+
   const onDismissAlarm = useCallback(() => void dismissAlarm(), [dismissAlarm]);
 
-  if (!booted || !permissionsReady) {
+  if (!ready) {
     return <View style={styles.boot} />;
   }
 

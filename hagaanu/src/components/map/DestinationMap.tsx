@@ -14,7 +14,8 @@ export type DestinationMapHandle = {
 };
 
 type Props = {
-  initialRegion: Region | undefined;
+  /** Always set — falls back to a country-wide view of Israel before the first fix. */
+  initialRegion: Region;
   destination: Destination | null;
   radiusM: number;
   /** Whether the destination pin can still be moved (false once armed). */

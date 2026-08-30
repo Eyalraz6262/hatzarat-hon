@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { Region } from 'react-native-maps';
 
 import { DestinationMap, type DestinationMapHandle } from '../components/map/DestinationMap';
@@ -9,6 +9,7 @@ import { SearchBar } from '../components/map/SearchBar';
 import { ActiveSheet } from '../components/sheets/ActiveSheet';
 import { SetupSheet } from '../components/sheets/SetupSheet';
 import { rowDirection, textAlign } from '../components/ui';
+import { FALLBACK_REGION } from '../constants/config';
 import { t, type TranslationKey } from '../i18n';
 import { useLocationTracking } from '../hooks/useLocationTracking';
 import { GeocodingService } from '../services/location/GeocodingService';
@@ -48,16 +49,21 @@ export function HomeScreen() {
   const mapRef = useRef<DestinationMapHandle>(null);
   // The map's starting region is captured once: re-deriving it from a moving
   // position prop would fight the user every time they pan.
-  const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
+  const [initialRegion, setInitialRegion] = useState<Region>(FALLBACK_REGION);
   // The docked card's height changes with its content (empty prompt vs. armed
   // stats), so the "my location" button is positioned from a measured value
   // rather than a guessed constant.
   const [sheetHeight, setSheetHeight] = useState(0);
 
+  // Swap the country-wide fallback for the user's surroundings as soon as the
+  // first fix lands — but only once, so later fixes don't yank a panned map back.
+  const framedOnUser = useRef(false);
   useEffect(() => {
-    if (initialRegion || !position) return;
+    if (framedOnUser.current || !position) return;
+    framedOnUser.current = true;
     setInitialRegion({ ...position.coords, latitudeDelta: 0.03, longitudeDelta: 0.03 });
-  }, [position, initialRegion]);
+    mapRef.current?.focusUser(position.coords);
+  }, [position]);
 
   const armed = status === 'armed';
 

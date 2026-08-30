@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { GeocodingService, type SearchResult } from '../../services/location/GeocodingService';
 import { isRTL, t } from '../../i18n';

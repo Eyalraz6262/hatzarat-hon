@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { t, type TranslationKey } from '../i18n';
 import { PermissionsService } from '../services/permissions/PermissionsService';

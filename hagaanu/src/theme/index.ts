@@ -59,13 +59,33 @@ export const radii = {
   pill: 999,
 } as const;
 
+/**
+ * Assistant — a Hebrew-first typeface (SIL OFL, safe to ship commercially).
+ *
+ * The system font renders Hebrew legibly but not beautifully: its Hebrew faces
+ * are an afterthought, the weights are uneven, and letters like ם/ס/ט lose their
+ * distinction at small sizes. Assistant was drawn for Hebrew and carries a
+ * matching Latin set, so mixed strings ("300 מ׳", "1.5 ק״מ") sit on one baseline
+ * instead of looking like two fonts fighting.
+ *
+ * Weight is expressed by picking a face, never by `fontWeight`: Android does not
+ * synthesise weights for a named family and would silently fall back.
+ */
+export const fonts = {
+  regular: 'Assistant_400Regular',
+  medium: 'Assistant_500Medium',
+  semibold: 'Assistant_600SemiBold',
+  bold: 'Assistant_700Bold',
+  extrabold: 'Assistant_800ExtraBold',
+} as const;
+
 export const typography = {
-  display: { fontSize: 34, fontWeight: '800' as const, letterSpacing: -0.5 },
-  title: { fontSize: 22, fontWeight: '700' as const },
-  subtitle: { fontSize: 17, fontWeight: '600' as const },
-  body: { fontSize: 15, fontWeight: '500' as const },
-  caption: { fontSize: 13, fontWeight: '500' as const },
-  button: { fontSize: 18, fontWeight: '700' as const },
+  display: { fontFamily: fonts.extrabold, fontSize: 34, letterSpacing: -0.5 },
+  title: { fontFamily: fonts.bold, fontSize: 22 },
+  subtitle: { fontFamily: fonts.semibold, fontSize: 17 },
+  body: { fontFamily: fonts.medium, fontSize: 15 },
+  caption: { fontFamily: fonts.medium, fontSize: 13 },
+  button: { fontFamily: fonts.bold, fontSize: 18 },
 } as const;
 
 export const shadow = {
