@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=Assistant:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #14161C; font-family: 'Assistant', system-ui, sans-serif; }
+    a { color: #FF6B1A; } a:hover { color: #E05A0F; }
+  </style>
+</helmet>
+
+<div dir="rtl" style="width: 390px; height: 844px; background: #14161C; position: relative; overflow: hidden;">
+
+  <!-- ============ map: a transit diagram, not a street map ============ -->
+  <svg width="390" height="844" viewBox="0 0 390 844" fill="none" style="position: absolute; inset: 0;" aria-hidden="true">
+    <rect width="390" height="844" fill="#14161C"></rect>
+
+    <!-- survey grid, barely there -->
+    <g stroke="#1C1F28" stroke-width="1">
+      <path d="M0 90h390M0 180h390M0 270h390M0 360h390M0 450h390M0 540h390M0 630h390M0 720h390"></path>
+      <path d="M65 0v844M130 0v844M195 0v844M260 0v844M325 0v844"></path>
+    </g>
+
+    <!-- coastline: the sea sits west, as it does for every Israeli city -->
+    <path d="M0 0 L58 0 C44 190 70 300 40 430 C18 530 46 660 30 844 L0 844 Z" fill="#101219"></path>
+
+    <!-- secondary lines -->
+    <g stroke="#2A2E3A" stroke-width="5" stroke-linecap="round">
+      <path d="M96 844 C140 690 118 560 176 470 C222 398 232 300 214 150"></path>
+      <path d="M366 214 C300 250 268 300 246 372 C222 452 150 500 62 512"></path>
+    </g>
+
+    <!-- the main line, the one the passenger is riding -->
+    <g stroke="#6B7280" stroke-width="7" stroke-linecap="round">
+      <path d="M52 806 C120 700 168 640 208 556 C252 462 300 380 342 262 C356 220 362 176 360 128"></path>
+    </g>
+
+    <!-- stations along it -->
+    <g>
+      <circle cx="208" cy="556" r="7" fill="#14161C" stroke="#9AA1AE" stroke-width="3"></circle>
+      <circle cx="300" cy="380" r="7" fill="#14161C" stroke="#9AA1AE" stroke-width="3"></circle>
+      <circle cx="356" cy="176" r="7" fill="#14161C" stroke="#9AA1AE" stroke-width="3"></circle>
+      <circle cx="176" cy="470" r="5.5" fill="#14161C" stroke="#3D4351" stroke-width="3"></circle>
+      <circle cx="246" cy="372" r="5.5" fill="#14161C" stroke="#3D4351" stroke-width="3"></circle>
+    </g>
+
+    <!-- scale bar: this diagram has a real metric scale and says so -->
+    <g>
+      <path d="M300 660v-6h56v6" stroke="#3D4351" stroke-width="1.5"></path>
+      <path d="M300 654h56" stroke="#3D4351" stroke-width="1.5"></path>
+    </g>
+    <text x="328" y="647" fill="#6B7280" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">1 KM</text>
+  </svg>
+
+  <!-- current position -->
+  <div style="position: absolute; top: 700px; right: 96px; width: 18px; height: 18px; border-radius: 50%; background: #F2EDE4; border: 3px solid #14161C; box-shadow: 0 0 0 5px rgba(242,237,228,0.14);"></div>
+
+  <!-- ============ header ============ -->
+  <div style="position: absolute; top: 0; right: 0; left: 0; padding: 26px 20px 0; display: flex; flex-direction: column; gap: 16px;">
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 30px; height: 30px; background: #FF6B1A; display: flex; align-items: center; justify-content: center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="7" stroke="#14161C" stroke-width="2.4"></circle>
+          <circle cx="12" cy="12" r="2.4" fill="#14161C"></circle>
+        </svg>
+      </div>
+      <span style="font-family: 'Heebo', sans-serif; font-weight: 900; font-size: 25px; letter-spacing: -0.04em; color: #F2EDE4;">הגענו?</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.18em; color: #6B7280; margin-inline-start: auto; padding-bottom: 2px;">LIVE</span>
+    </div>
+
+    <!-- search: a paper form field, the way a ticket machine would present it -->
+    <div style="display: flex; align-items: center; gap: 11px; height: 52px; padding: 0 16px; background: #F2EDE4;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5" stroke="#6B7280" stroke-width="1.9"></circle>
+        <path d="M16 16l4 4" stroke="#6B7280" stroke-width="1.9" stroke-linecap="round"></path>
+      </svg>
+      <span style="font-size: 15.5px; font-weight: 600; color: #8C8478;">חיפוש כתובת או תחנה</span>
+    </div>
+  </div>
+
+  <!-- recentre -->
+  <div style="position: absolute; bottom: 218px; left: 20px; width: 48px; height: 48px; background: #1C1F28; border: 1px solid #2A2E3A; display: flex; align-items: center; justify-content: center;">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" stroke="#F2EDE4" stroke-width="1.9"></circle>
+      <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="#F2EDE4" stroke-width="1.9" stroke-linecap="round"></path>
+    </svg>
+  </div>
+
+  <!-- ============ ticket stub: empty state ============ -->
+  <div style="position: absolute; right: 0; bottom: 0; left: 0; background: #F2EDE4; padding: 26px 26px 34px;">
+    <!-- tear line notches -->
+    <div style="position: absolute; top: -13px; right: -13px; width: 26px; height: 26px; border-radius: 50%; background: #14161C;"></div>
+    <div style="position: absolute; top: -13px; left: -13px; width: 26px; height: 26px; border-radius: 50%; background: #14161C;"></div>
+    <div style="position: absolute; top: 0; right: 16px; left: 16px; height: 2px; background: repeating-linear-gradient(to left, #C9C1B2 0 6px, transparent 6px 13px);"></div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: #A79E8E;">DESTINATION</span>
+      <h2 style="margin: 0; font-family: 'Heebo', sans-serif; font-weight: 900; font-size: 32px; line-height: 1.08; letter-spacing: -0.035em; color: #14161C;">איפה להעיר אתכם?</h2>
+      <p style="margin: 0; font-size: 15.5px; font-weight: 600; color: #6B7280;">חפשו כתובת או לחצו על המפה</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

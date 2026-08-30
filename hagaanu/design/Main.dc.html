@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=Assistant:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #14161C; font-family: 'Assistant', system-ui, sans-serif; }
+    a { color: #FF6B1A; } a:hover { color: #E05A0F; }
+  </style>
+</helmet>
+
+<div dir="rtl" style="width: 390px; height: 844px; background: #14161C; position: relative; overflow: hidden;">
+
+  <svg width="390" height="844" viewBox="0 0 390 844" fill="none" style="position: absolute; inset: 0;" aria-hidden="true">
+    <rect width="390" height="844" fill="#14161C"></rect>
+
+    <g stroke="#1C1F28" stroke-width="1">
+      <path d="M0 90h390M0 180h390M0 270h390M0 360h390M0 450h390M0 540h390M0 630h390M0 720h390"></path>
+      <path d="M65 0v844M130 0v844M195 0v844M260 0v844M325 0v844"></path>
+    </g>
+
+    <path d="M0 0 L58 0 C44 190 70 300 40 430 C18 530 46 660 30 844 L0 844 Z" fill="#101219"></path>
+
+    <g stroke="#2A2E3A" stroke-width="5" stroke-linecap="round">
+      <path d="M96 844 C140 690 118 560 176 470 C222 398 232 300 214 150"></path>
+      <path d="M366 214 C300 250 268 300 246 372 C222 452 150 500 62 512"></path>
+    </g>
+
+    <g stroke="#6B7280" stroke-width="7" stroke-linecap="round">
+      <path d="M52 806 C120 700 168 640 208 556 C252 462 300 380 342 262 C356 220 362 176 360 128"></path>
+    </g>
+
+    <g>
+      <circle cx="208" cy="556" r="7" fill="#14161C" stroke="#9AA1AE" stroke-width="3"></circle>
+      <circle cx="356" cy="176" r="7" fill="#14161C" stroke="#9AA1AE" stroke-width="3"></circle>
+      <circle cx="176" cy="470" r="5.5" fill="#14161C" stroke="#3D4351" stroke-width="3"></circle>
+    </g>
+
+    <!-- ============================================================
+         The alert zone, drawn as a route diagram rather than a blob:
+         a dashed survey ring, radial bearing ticks, and a dimension
+         line calling the radius — the vocabulary of a rail plan.
+         ============================================================ -->
+    <circle cx="246" cy="372" r="78" fill="#FF6B1A" fill-opacity="0.07"></circle>
+    <circle cx="246" cy="372" r="78" stroke="#FF6B1A" stroke-width="1.75" stroke-dasharray="7 6"></circle>
+
+    <g stroke="#FF6B1A" stroke-width="1.75" stroke-linecap="round">
+      <path d="M324 372h9M313.5 411l7.8 4.5M285 439.5l4.5 7.8M246 450v9M207 439.5l-4.5 7.8M178.5 411l-7.8 4.5M168 372h-9M178.5 333l-7.8-4.5M207 304.5l-4.5-7.8M246 294v-9M285 304.5l4.5-7.8M313.5 333l7.8-4.5"></path>
+    </g>
+
+    <!-- radius dimension line -->
+    <g stroke="#FF6B1A" stroke-width="1.5" stroke-linecap="round">
+      <path d="M246 372h-78"></path>
+      <path d="M168 366v12"></path>
+    </g>
+
+    <!-- destination node: the interchange marker of a transit map -->
+    <circle cx="246" cy="372" r="13" fill="#FF6B1A"></circle>
+    <circle cx="246" cy="372" r="5" fill="#14161C"></circle>
+  </svg>
+
+  <!-- radius call-out, HTML so the mixed Hebrew/numeral string sets correctly -->
+  <div style="position: absolute; top: 344px; right: 158px; display: flex; align-items: center; gap: 6px; background: #14161C; padding: 3px 8px;">
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; color: #FF6B1A; letter-spacing: 0.04em;">500</span>
+    <span style="font-family: 'Assistant', sans-serif; font-size: 11px; font-weight: 700; color: #FF6B1A;">מ׳</span>
+  </div>
+
+  <div style="position: absolute; top: 700px; right: 96px; width: 18px; height: 18px; border-radius: 50%; background: #F2EDE4; border: 3px solid #14161C; box-shadow: 0 0 0 5px rgba(242,237,228,0.14);"></div>
+
+  <!-- ============ header ============ -->
+  <div style="position: absolute; top: 0; right: 0; left: 0; padding: 26px 20px 0; display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 30px; height: 30px; background: #FF6B1A; display: flex; align-items: center; justify-content: center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="7" stroke="#14161C" stroke-width="2.4"></circle>
+          <circle cx="12" cy="12" r="2.4" fill="#14161C"></circle>
+        </svg>
+      </div>
+      <span style="font-family: 'Heebo', sans-serif; font-weight: 900; font-size: 25px; letter-spacing: -0.04em; color: #F2EDE4;">הגענו?</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.18em; color: #6B7280; margin-inline-start: auto; padding-bottom: 2px;">LIVE</span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 11px; height: 52px; padding: 0 16px; background: #F2EDE4;">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5" stroke="#6B7280" stroke-width="1.9"></circle>
+        <path d="M16 16l4 4" stroke="#6B7280" stroke-width="1.9" stroke-linecap="round"></path>
+      </svg>
+      <span style="font-size: 15.5px; font-weight: 600; color: #8C8478;">חיפוש כתובת או תחנה</span>
+    </div>
+  </div>
+
+  <!-- ============ ticket stub: set the alarm ============ -->
+  <div style="position: absolute; right: 0; bottom: 0; left: 0; background: #F2EDE4; padding: 24px 24px 30px; display: flex; flex-direction: column; gap: 22px;">
+    <div style="position: absolute; top: -13px; right: -13px; width: 26px; height: 26px; border-radius: 50%; background: #14161C;"></div>
+    <div style="position: absolute; top: -13px; left: -13px; width: 26px; height: 26px; border-radius: 50%; background: #14161C;"></div>
+    <div style="position: absolute; top: 0; right: 16px; left: 16px; height: 2px; background: repeating-linear-gradient(to left, #C9C1B2 0 6px, transparent 6px 13px);"></div>
+
+    <!-- chosen destination, laid out like a ticket's origin/destination line -->
+    <div style="display: flex; align-items: flex-start; gap: 13px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="margin-top: 3px;" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" stroke="#FF6B1A" stroke-width="2.4"></circle>
+        <circle cx="12" cy="12" r="3" fill="#FF6B1A"></circle>
+      </svg>
+      <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1; min-width: 0;">
+        <span style="font-family: 'Heebo', sans-serif; font-weight: 800; font-size: 21px; letter-spacing: -0.025em; color: #14161C;">תחנת השלום</span>
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #8C8478; letter-spacing: 0.03em;">מרחק ממך · 4.2 ק״מ</span>
+      </div>
+      <button type="button" style="border: none; background: none; padding: 4px; cursor: pointer; line-height: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="#A79E8E" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- radius, as a fare-zone selector -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: #A79E8E;">מתי להעיר?</span>
+      <div style="display: flex; border: 1.5px solid #14161C;">
+        <div style="flex-grow: 1; height: 46px; display: flex; align-items: center; justify-content: center; border-inline-start: 1.5px solid #14161C;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: #14161C;">300</span>
+        </div>
+        <div style="position: relative; flex-grow: 1; height: 46px; background: #14161C; display: flex; align-items: center; justify-content: center; border-inline-start: 1.5px solid #14161C;">
+          <div style="position: absolute; top: 0; right: 0; left: 0; height: 3px; background: #FF6B1A;"></div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: #F2EDE4;">500</span>
+        </div>
+        <div style="flex-grow: 1; height: 46px; display: flex; align-items: center; justify-content: center; border-inline-start: 1.5px solid #14161C;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: #14161C;">1000</span>
+        </div>
+        <div style="flex-grow: 1; height: 46px; display: flex; align-items: center; justify-content: center; border-inline-start: 1.5px solid #14161C;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500; color: #14161C;">2000</span>
+        </div>
+        <div style="flex-grow: 1; height: 46px; display: flex; align-items: center; justify-content: center;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" stroke="#14161C" stroke-width="2.2" stroke-linecap="round"></path>
+          </svg>
+        </div>
+      </div>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: #A79E8E;">METRES</span>
+    </div>
+
+    <button type="button" style="height: 62px; border: none; background: #FF6B1A; color: #14161C; font-family: 'Heebo', sans-serif; font-size: 21px; font-weight: 900; letter-spacing: -0.02em; cursor: pointer;">תעיר אותי כאן</button>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

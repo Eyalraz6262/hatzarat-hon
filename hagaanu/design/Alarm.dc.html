@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=Assistant:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #FF6B1A; font-family: 'Assistant', system-ui, sans-serif; }
+    a { color: #14161C; } a:hover { color: #000000; }
+  </style>
+</helmet>
+
+<!--
+  The one screen where the accent takes the whole surface. Every other screen
+  rations orange to a single mark; here it floods, so waking to it is
+  unmistakable even through closed eyes.
+-->
+<div dir="rtl" style="width: 390px; height: 844px; background: #FF6B1A; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 40px 26px 40px;">
+
+  <!-- hazard ticks along the top edge, borrowed from platform-edge markings -->
+  <div style="position: absolute; top: 0; right: 0; left: 0; height: 14px; background: repeating-linear-gradient(115deg, #14161C 0 9px, transparent 9px 22px);"></div>
+
+  <div style="display: flex; align-items: center; gap: 10px; padding-top: 22px;">
+    <div style="width: 8px; height: 8px; background: #14161C;"></div>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; color: #14161C;">ALARM · 05:42</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: -30px;">
+
+    <!-- a station node broadcasting: the map's own vocabulary, amplified -->
+    <svg width="168" height="168" viewBox="0 0 168 168" fill="none" style="margin-bottom: 22px;" aria-hidden="true">
+      <circle cx="84" cy="84" r="16" fill="#14161C"></circle>
+      <circle cx="84" cy="84" r="34" stroke="#14161C" stroke-width="5" stroke-opacity="0.72"></circle>
+      <circle cx="84" cy="84" r="54" stroke="#14161C" stroke-width="4" stroke-opacity="0.42"></circle>
+      <circle cx="84" cy="84" r="76" stroke="#14161C" stroke-width="3" stroke-opacity="0.2"></circle>
+    </svg>
+
+    <h1 style="margin: 0; font-family: 'Heebo', sans-serif; font-weight: 900; font-size: 78px; line-height: 0.9; letter-spacing: -0.055em; color: #14161C;">הגענו!</h1>
+
+    <p style="margin: 14px 0 0; font-family: 'Heebo', sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: #14161C;">הגיע הזמן להתעורר</p>
+
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 20px; border-top: 1.5px solid rgba(20,22,28,0.28); padding-top: 14px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(20,22,28,0.62);">יעד</span>
+      <span style="font-family: 'Assistant', sans-serif; font-size: 16px; font-weight: 700; color: #14161C;">תחנת השלום</span>
+    </div>
+  </div>
+
+  <button type="button" style="height: 76px; border: none; background: #14161C; color: #FF6B1A; font-family: 'Heebo', sans-serif; font-size: 26px; font-weight: 900; letter-spacing: -0.03em; cursor: pointer;">אני ער</button>
+</div>
+</x-dc>
+</body>
+</html>

@@ -40,3 +40,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Seeded design-canvas build output (~2.5MB). Regenerated from the
+# .dc.html sources in design/; the published canvas is the shared copy.
+design/*-screens.html
