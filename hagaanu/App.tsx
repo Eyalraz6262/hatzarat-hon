@@ -7,9 +7,12 @@ import * as SystemUI from 'expo-system-ui';
 
 import { AlarmScreen } from './src/screens/AlarmScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { PassScreen } from './src/screens/PassScreen';
 import { PermissionsScreen } from './src/screens/PermissionsScreen';
+import { ArrivalCoordinator } from './src/services/alarm/ArrivalCoordinator';
 import { useAppFonts } from './src/hooks/useAppFonts';
 import { useArrivalListener } from './src/hooks/useArrivalListener';
+import { useLocationTracking } from './src/hooks/useLocationTracking';
 import { useForegroundArrivalCheck } from './src/hooks/useForegroundArrivalCheck';
 import { NotificationService } from './src/services/notifications/NotificationService';
 import { useAlarmStore } from './src/state/useAlarmStore';
@@ -38,11 +41,18 @@ export default function App() {
 
   const status = useAlarmStore((state) => state.status);
   const destination = useAlarmStore((state) => state.destination);
+  const radiusM = useAlarmStore((state) => state.radiusM);
+  const distanceM = useAlarmStore((state) => state.distanceM);
   const hydrate = useAlarmStore((state) => state.hydrate);
+  const cancel = useAlarmStore((state) => state.cancel);
   const dismissAlarm = useAlarmStore((state) => state.dismissAlarm);
 
   const fontsReady = useAppFonts();
 
+  // Tracking lives here, not in a screen: HomeScreen unmounts the moment the
+  // alarm is armed, and it is the only writer of `position` — which the
+  // foreground arrival check, and PassScreen's live distance, both read.
+  useLocationTracking();
   useArrivalListener();
   useForegroundArrivalCheck();
 
@@ -51,7 +61,7 @@ export default function App() {
       try {
         // Paints the window behind React with the app's own background, so a
         // cold start never flashes white before the first frame.
-        await SystemUI.setBackgroundColorAsync(colors.bg);
+        await SystemUI.setBackgroundColorAsync(colors.ink);
 
         // Channels before anything else: a geofence event arriving in the next
         // second must find the alarm channel already created.
@@ -89,8 +99,21 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <View style={styles.root}>
+        {/*
+          A plain state machine rather than a navigator: there are only four
+          destinations, and the alarm has to be able to take the screen from any
+          of them — which a stack navigator would only complicate.
+        */}
         {needsPermissions ? (
           <PermissionsScreen onSkipBackground={() => setSkippedBackground(true)} />
+        ) : status === 'armed' && destination ? (
+          <PassScreen
+            destination={destination}
+            radiusM={radiusM}
+            distanceM={distanceM}
+            onCancel={() => void cancel()}
+            onSimulateArrival={() => void ArrivalCoordinator.trigger('manual')}
+          />
         ) : (
           <HomeScreen />
         )}
@@ -106,10 +129,10 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.ink,
   },
   boot: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.ink,
   },
 });

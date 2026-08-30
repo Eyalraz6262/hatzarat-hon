@@ -1,29 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import type { Region } from 'react-native-maps';
 
-import { DestinationMap, type DestinationMapHandle } from '../components/map/DestinationMap';
-import { SearchBar } from '../components/map/SearchBar';
-import { ActiveSheet } from '../components/sheets/ActiveSheet';
-import { SetupSheet } from '../components/sheets/SetupSheet';
-import { rowDirection, textAlign } from '../components/ui';
 import { FALLBACK_REGION } from '../constants/config';
 import { t, type TranslationKey } from '../i18n';
-import { useLocationTracking } from '../hooks/useLocationTracking';
 import { GeocodingService } from '../services/location/GeocodingService';
 import { useAlarmStore } from '../state/useAlarmStore';
 import { usePermissionsStore } from '../state/usePermissionsStore';
-import { colors, radii, spacing, typography } from '../theme';
+import { colors, spacing, type } from '../theme';
 import type { LatLng } from '../types';
+import { DestinationMap, type DestinationMapHandle } from '../components/map/DestinationMap';
+import { SearchBar } from '../components/map/SearchBar';
+import { SetupSheet } from '../components/sheets/SetupSheet';
+import { BrandGlyph, LocateIcon } from '../components/icons';
+import { align, row } from '../components/ui';
 
 /**
  * The one screen that matters.
  *
- * Layout priority, top to bottom: map (biggest thing on screen), search, then a
- * docked card that is either "pick a radius and arm" or "you can sleep". There is
- * no navigation, no tab bar and no menu — the whole flow is map → radius → button.
+ * Layout priority, top to bottom: map (the biggest thing on screen), the paper
+ * search field, then a docked ticket stub carrying the radius and the button.
+ * No navigation, no tab bar, no menu — the whole flow is map → radius → arm.
  */
 export function HomeScreen() {
   const status = useAlarmStore((state) => state.status);
@@ -37,45 +35,45 @@ export function HomeScreen() {
   const setDestination = useAlarmStore((state) => state.setDestination);
   const setRadius = useAlarmStore((state) => state.setRadius);
   const arm = useAlarmStore((state) => state.arm);
-  const cancel = useAlarmStore((state) => state.cancel);
 
   const backgroundGranted = usePermissionsStore(
     (state) => state.snapshot.backgroundLocation === 'granted'
   );
   const locationServicesEnabled = usePermissionsStore((state) => state.locationServicesEnabled);
 
-  useLocationTracking();
-
   const mapRef = useRef<DestinationMapHandle>(null);
-  // The map's starting region is captured once: re-deriving it from a moving
-  // position prop would fight the user every time they pan.
-  const [initialRegion, setInitialRegion] = useState<Region>(FALLBACK_REGION);
-  // The docked card's height changes with its content (empty prompt vs. armed
-  // stats), so the "my location" button is positioned from a measured value
-  // rather than a guessed constant.
-  const [sheetHeight, setSheetHeight] = useState(0);
+  const [initialRegion] = useState<Region>(FALLBACK_REGION);
+  // The stub's height changes with its content, so the locate button is placed
+  // from a measured value rather than a guessed constant.
+  const [stubHeight, setStubHeight] = useState(0);
 
-  // Swap the country-wide fallback for the user's surroundings as soon as the
-  // first fix lands — but only once, so later fixes don't yank a panned map back.
+  // Swap the country-wide fallback for the user's surroundings on the first fix
+  // — once only, so later fixes don't yank a map the user has panned.
   const framedOnUser = useRef(false);
   useEffect(() => {
     if (framedOnUser.current || !position) return;
+    // Latch only once the command has somewhere to go. Setting the flag before
+    // the native view exists would strand the map on the country-wide fallback
+    // for the rest of the session.
+    const map = mapRef.current;
+    if (!map) return;
     framedOnUser.current = true;
-    setInitialRegion({ ...position.coords, latitudeDelta: 0.03, longitudeDelta: 0.03 });
-    mapRef.current?.focusUser(position.coords);
+    map.focusUser(position.coords);
   }, [position]);
-
-  const armed = status === 'armed';
 
   const pickPoint = useCallback(
     (coords: LatLng) => {
-      // Show the pin immediately with a placeholder label, then fill in the real
-      // address when the geocoder answers — the map must never feel laggy.
+      // Show the node immediately with a placeholder label, then fill in the
+      // real address when the geocoder answers — the map must never feel laggy.
       setDestination({ coords, label: t('errors.unknownPlace') });
       void (async () => {
         const label = await GeocodingService.describe(coords);
         const current = useAlarmStore.getState().destination;
-        if (current && current.coords.latitude === coords.latitude && current.coords.longitude === coords.longitude) {
+        if (
+          current &&
+          current.coords.latitude === coords.latitude &&
+          current.coords.longitude === coords.longitude
+        ) {
           setDestination({ coords, label });
         }
       })();
@@ -91,10 +89,6 @@ export function HomeScreen() {
     [setDestination]
   );
 
-  const recenter = useCallback(() => {
-    if (position) mapRef.current?.focusUser(position.coords);
-  }, [position]);
-
   const changeRadius = useCallback(
     (next: number) => {
       setRadius(next);
@@ -102,6 +96,10 @@ export function HomeScreen() {
     },
     [setRadius, destination]
   );
+
+  const recentre = useCallback(() => {
+    if (position) mapRef.current?.focusUser(position.coords);
+  }, [position]);
 
   const banner = useMemo<{ key: TranslationKey; tone: 'warning' | 'alert' } | null>(() => {
     if (!locationServicesEnabled) return { key: 'errors.servicesDisabled', tone: 'alert' };
@@ -111,157 +109,147 @@ export function HomeScreen() {
   }, [locationServicesEnabled, error, backgroundGranted]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <DestinationMap
         ref={mapRef}
         initialRegion={initialRegion}
         destination={destination}
         radiusM={radiusM}
-        interactive={!armed}
+        interactive={status !== 'armed'}
         onPickPoint={pickPoint}
       />
 
       <SafeAreaView style={styles.overlay} edges={['top']} pointerEvents="box-none">
-        <View style={styles.topBar} pointerEvents="box-none">
-          <View style={[styles.brandRow, { flexDirection: rowDirection() }]} pointerEvents="none">
+        <View style={styles.chrome} pointerEvents="box-none">
+          <View style={[styles.lockup, { flexDirection: row() }]} pointerEvents="none">
+            <BrandGlyph size={30} />
             <Text style={styles.brand}>{t('brand.name')}</Text>
-            <Text style={styles.slogan}>{t('brand.slogan')}</Text>
+            <Text style={styles.live}>{t('plate.live')}</Text>
           </View>
 
-          {!armed ? <SearchBar onSelect={selectSearchResult} /> : null}
+          <SearchBar onSelect={selectSearchResult} />
 
           {banner ? (
             <View
               style={[
                 styles.banner,
-                { flexDirection: rowDirection() },
-                banner.tone === 'alert' ? styles.bannerAlert : styles.bannerWarning,
+                { flexDirection: row() },
+                banner.tone === 'alert' ? styles.bannerAlert : null,
               ]}
             >
-              <Ionicons
-                name="alert-circle-outline"
-                size={18}
-                color={banner.tone === 'alert' ? colors.alert : colors.warning}
-              />
-              <Text style={[styles.bannerText, { textAlign: textAlign() }]}>{t(banner.key)}</Text>
+              <Text style={styles.bannerMark}>!</Text>
+              <Text style={[styles.bannerText, { textAlign: align() }]}>{t(banner.key)}</Text>
             </View>
           ) : null}
         </View>
 
         <View
-          style={[styles.mapControls, { paddingBottom: sheetHeight + spacing.lg }]}
+          style={[styles.controls, { paddingBottom: stubHeight + spacing.lg }]}
           pointerEvents="box-none"
         >
           <Pressable
-            onPress={recenter}
-            style={({ pressed }) => [styles.fab, pressed ? styles.fabPressed : null]}
+            onPress={recentre}
             accessibilityRole="button"
             accessibilityLabel={t('home.recenter')}
+            style={({ pressed }) => [styles.locate, pressed ? styles.locatePressed : null]}
           >
-            <Ionicons name="locate" size={22} color={colors.text} />
+            <LocateIcon size={21} color={colors.paper} />
           </Pressable>
         </View>
       </SafeAreaView>
 
       <View
-        style={styles.sheetHost}
-        onLayout={(event) => setSheetHeight(event.nativeEvent.layout.height)}
+        style={styles.stubHost}
+        onLayout={(event) => setStubHeight(event.nativeEvent.layout.height)}
       >
-        {armed && destination ? (
-          <ActiveSheet
-            destination={destination}
-            radiusM={radiusM}
-            distanceM={distanceM}
-            onCancel={() => void cancel()}
-          />
-        ) : (
-          <SetupSheet
-            destination={destination}
-            radiusM={radiusM}
-            distanceM={distanceM}
-            busy={busy}
-            onChangeRadius={changeRadius}
-            onClearDestination={() => setDestination(null)}
-            onArm={() => void arm()}
-          />
-        )}
+        <SetupSheet
+          destination={destination}
+          radiusM={radiusM}
+          distanceM={distanceM}
+          busy={busy}
+          onChangeRadius={changeRadius}
+          onClearDestination={() => setDestination(null)}
+          onArm={() => void arm()}
+        />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.ink,
   },
   overlay: {
     ...StyleSheet.absoluteFill,
     justifyContent: 'space-between',
   },
-  topBar: {
-    paddingHorizontal: spacing.lg,
+  chrome: {
+    paddingHorizontal: 20,
     paddingTop: spacing.sm,
+    gap: spacing.lg,
+  },
+  lockup: {
+    alignItems: 'center',
     gap: spacing.md,
   },
-  brandRow: {
-    alignItems: 'baseline',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xs,
-  },
   brand: {
-    ...typography.title,
-    color: colors.text,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowRadius: 8,
+    ...type.subtitle,
+    fontSize: 25,
+    color: colors.paper,
+    // The lockup sits over the map, so it needs its own contrast.
+    textShadowColor: 'rgba(20,22,28,0.85)',
+    textShadowRadius: 10,
   },
-  slogan: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowRadius: 8,
+  live: {
+    ...type.label,
+    fontSize: 9,
+    color: colors.rail,
+    marginStart: 'auto',
   },
   banner: {
     alignItems: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radii.md,
-    borderWidth: 1,
-  },
-  bannerWarning: {
-    backgroundColor: colors.warningSoft,
-    borderColor: colors.warning,
+    gap: spacing.md,
+    paddingVertical: 11,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.inkRaised,
+    borderStartWidth: 3,
+    borderStartColor: colors.signal,
   },
   bannerAlert: {
-    backgroundColor: colors.alertSoft,
-    borderColor: colors.alert,
+    borderStartColor: colors.signalDeep,
+  },
+  bannerMark: {
+    ...type.labelStrong,
+    color: colors.signal,
   },
   bannerText: {
     flex: 1,
-    ...typography.caption,
-    color: colors.text,
+    ...type.labelHeSmall,
+    lineHeight: 18,
+    color: colors.paper,
   },
-  mapControls: {
-    alignItems: 'flex-end',
-    paddingHorizontal: spacing.lg,
+  controls: {
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
   },
-  fab: {
+  locate: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.inkRaised,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.inkLine,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fabPressed: {
-    backgroundColor: colors.surfaceAlt,
+  locatePressed: {
+    backgroundColor: colors.inkLine,
   },
-  sheetHost: {
+  stubHost: {
     position: 'absolute',
-    left: 0,
-    right: 0,
+    start: 0,
+    end: 0,
     bottom: 0,
   },
 });

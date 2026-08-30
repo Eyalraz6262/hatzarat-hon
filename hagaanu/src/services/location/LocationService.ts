@@ -104,7 +104,7 @@ export const LocationService = {
       foregroundService: {
         notificationTitle: t('active.serviceTitle'),
         notificationBody: t('active.serviceBody'),
-        notificationColor: colors.accent,
+        notificationColor: colors.signal,
         killServiceOnDestroy: false,
       },
       mayShowUserSettingsDialog: false,

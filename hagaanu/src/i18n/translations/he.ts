@@ -10,6 +10,21 @@ export const he = {
     slogan: 'תישן. אנחנו נעיר אותך.',
   },
 
+  /**
+   * Latin signage labels. These are set in IBM Plex Mono, which has no Hebrew
+   * coverage — so they stay Latin in every language, like the codes on a real
+   * ticket. Do not translate them into Hebrew.
+   */
+  plate: {
+    destination: 'DESTINATION',
+    metres: 'METRES',
+    permissions: 'PERMISSIONS',
+    wakePass: 'WAKE PASS',
+    live: 'LIVE',
+    saved: 'SAVED',
+    alarm: 'ALARM',
+  },
+
   common: {
     cancel: 'ביטול',
     close: 'סגירה',
@@ -34,7 +49,7 @@ export const he = {
 
   setup: {
     destinationTitle: 'היעד שלך',
-    radiusTitle: 'מתי להעיר?',
+    radiusTitle: 'באיזה מרחק להעיר?',
     radiusHint: 'נעיר אתכם כשתיכנסו למרחק הזה מהיעד',
     custom: 'מותאם אישית',
     customTitle: 'מרחק מותאם אישית',
@@ -48,7 +63,6 @@ export const he = {
   },
 
   active: {
-    sleepEmoji: '😴',
     sleepTitle: 'אפשר לישון',
     sleepSubtitle: 'אנחנו נעיר אותך לפני היעד.',
     destination: 'יעד',
@@ -56,30 +70,32 @@ export const he = {
     alertRadius: 'ההתראה תופעל בטווח',
     statusActive: 'ההתראה פעילה',
     statusWaitingFix: 'ממתין לקליטת מיקום…',
-    cancelAlarm: 'בטל התראה',
+    cancelAlarm: 'ביטול ההתראה',
     cancelConfirmTitle: 'לבטל את ההתראה?',
     cancelConfirmBody: 'לא נעיר אתכם ביעד.',
-    cancelConfirmYes: 'כן, בטל',
+    cancelConfirmYes: 'כן, בטלו',
     notificationTitle: 'הגענו? — ההתראה פעילה',
+    notificationTitleLive: 'עוד {distance} ליעד',
     notificationBody: 'נעיר אתכם {radius} לפני {destination}.',
     serviceTitle: 'הגענו? עוקבת אחרי הנסיעה',
     serviceBody: 'נעיר אתכם כשתתקרבו ליעד.',
   },
 
   alarm: {
-    title: 'הגענו! 🚨',
+    title: 'הגענו!',
     subtitle: 'הגיע הזמן להתעורר',
     destination: 'היעד: {destination}',
     dismiss: 'אני ער',
-    notificationTitle: 'הגענו! 🚨',
+    notificationTitle: 'הגענו!',
     notificationBody: 'הגיע הזמן להתעורר — {destination}',
+    ticketCode: 'HGN·{radius}',
   },
 
   permissions: {
     locationTitle: 'צריך לראות איפה אתם',
     locationBody:
       'כדי לדעת מתי אתם מתקרבים ליעד, ״הגענו?״ צריכה גישה למיקום שלכם. אנחנו לא שומרים ולא משתפים אותו — הוא נשאר על המכשיר.',
-    locationCta: 'אישור גישה למיקום',
+    locationCta: 'אשרו גישה למיקום',
 
     backgroundTitle: 'גם כשהמסך כבוי',
     backgroundBody:
@@ -88,17 +104,35 @@ export const he = {
       'במסך הבא בחרו ״תמיד״ (Always). זה מה שמאפשר לנו להעיר אתכם כשהטלפון נעול.',
     backgroundBodyAndroid:
       'במסך הבא בחרו ״אפשר תמיד״. זה מה שמאפשר לנו להעיר אתכם כשהטלפון נעול.',
-    backgroundCta: 'אפשר גישה ברקע',
+    backgroundCta: 'אפשרו גישה ברקע',
 
     notificationsTitle: 'איך נעיר אתכם',
     notificationsBody:
       'ההתראה מגיעה כהתראה עם צליל ורטט — גם כשהטלפון נעול. בלי אישור התראות לא נוכל להעיר אתכם.',
-    notificationsCta: 'אישור התראות',
+    notificationsCta: 'אשרו התראות',
 
     blockedTitle: 'ההרשאה חסומה',
     blockedBody: 'צריך להפעיל את ההרשאה מהגדרות המכשיר כדי ש״הגענו?״ תוכל להעיר אתכם.',
 
     stepOf: 'שלב {current} מתוך {total}',
+  },
+
+  saved: {
+    title: 'יעדים שמורים',
+    subtitle: 'הקשה אחת מפעילה את ההתראה.',
+    add: 'הוספת יעד',
+    addTitle: 'שמירת היעד',
+    addPrompt: 'איך לקרוא ליעד הזה?',
+    empty: 'עדיין אין יעדים שמורים.',
+    emptyHint: 'שמרו יעד אחרי שתבחרו אותו על המפה.',
+    remove: 'מחיקה',
+    removeConfirm: 'למחוק את ״{name}״?',
+    home: 'בית',
+    work: 'עבודה',
+    station: 'תחנה',
+    favourite: 'מועדף',
+    saveCurrent: 'שמירת היעד',
+    savedConfirm: 'נשמר',
   },
 
   errors: {

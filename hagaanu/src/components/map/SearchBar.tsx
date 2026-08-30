@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -9,13 +9,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { GeocodingService, type SearchResult } from '../../services/location/GeocodingService';
 import { isRTL, t } from '../../i18n';
-import { colors, radii, spacing, typography } from '../../theme';
-import { rowDirection, textAlign } from '../ui';
+import { GeocodingService, type SearchResult } from '../../services/location/GeocodingService';
+import { colors, spacing, type } from '../../theme';
 import { log } from '../../utils/logger';
+import { CloseIcon, SearchIcon, StationNode } from '../icons';
+import { align, row } from '../ui';
 
 type Props = {
   onSelect: (result: SearchResult) => void;
@@ -23,7 +23,12 @@ type Props = {
 
 const DEBOUNCE_MS = 450;
 
-/** Address search over the platform geocoder. Debounced; results as a dropdown. */
+/**
+ * Address search, presented as the paper form field of a ticket machine.
+ *
+ * The field is the one piece of paper on the map screen before a destination
+ * exists, which is what makes it read as the thing to fill in.
+ */
 export function SearchBar({ onSelect }: Props) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -33,6 +38,13 @@ export function SearchBar({ onSelect }: Props) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Guards against a slow earlier request overwriting a newer one's results.
   const requestId = useRef(0);
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    []
+  );
 
   const runSearch = useCallback(async (value: string) => {
     const id = ++requestId.current;
@@ -89,26 +101,29 @@ export function SearchBar({ onSelect }: Props) {
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.field, { flexDirection: rowDirection() }]}>
-        <Ionicons name="search" size={20} color={colors.textFaint} />
+      <View style={[styles.field, { flexDirection: row() }]}>
+        <SearchIcon size={19} color={colors.paperSub} />
         <TextInput
           value={query}
           onChangeText={onChange}
-          onSubmitEditing={() => query.trim().length >= 2 && void runSearch(query)}
+          onSubmitEditing={() => {
+            if (query.trim().length >= 2) void runSearch(query);
+          }}
           placeholder={t('home.searchPlaceholder')}
-          placeholderTextColor={colors.textFaint}
+          placeholderTextColor={colors.paperSub}
           style={[
             styles.input,
-            { textAlign: textAlign(), writingDirection: isRTL() ? 'rtl' : 'ltr' },
+            { textAlign: align(), writingDirection: isRTL() ? 'rtl' : 'ltr' },
           ]}
           returnKeyType="search"
           autoCorrect={false}
+          selectionColor={colors.signal}
           accessibilityLabel={t('home.searchPlaceholder')}
         />
-        {loading ? <ActivityIndicator size="small" color={colors.textFaint} /> : null}
+        {loading ? <ActivityIndicator size="small" color={colors.paperSub} /> : null}
         {query.length > 0 && !loading ? (
-          <Pressable onPress={clear} hitSlop={10} accessibilityLabel={t('common.close')}>
-            <Ionicons name="close-circle" size={20} color={colors.textFaint} />
+          <Pressable onPress={clear} hitSlop={14} accessibilityLabel={t('common.close')}>
+            <CloseIcon size={19} color={colors.paperSub} />
           </Pressable>
         ) : null}
       </View>
@@ -116,7 +131,7 @@ export function SearchBar({ onSelect }: Props) {
       {results.length > 0 || message ? (
         <View style={styles.dropdown}>
           {message ? (
-            <Text style={[styles.message, { textAlign: textAlign() }]}>{message}</Text>
+            <Text style={[styles.message, { textAlign: align() }]}>{message}</Text>
           ) : (
             <ScrollView keyboardShouldPersistTaps="handled" style={styles.dropdownScroll}>
               {results.map((result, index) => (
@@ -126,12 +141,13 @@ export function SearchBar({ onSelect }: Props) {
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.resultRow,
-                    { flexDirection: rowDirection() },
+                    { flexDirection: row() },
+                    index > 0 ? styles.resultRowDivided : null,
                     pressed ? styles.resultRowPressed : null,
                   ]}
                 >
-                  <Ionicons name="location-outline" size={18} color={colors.accent} />
-                  <Text style={[styles.resultLabel, { textAlign: textAlign() }]} numberOfLines={2}>
+                  <StationNode size={18} color={colors.signal} />
+                  <Text style={[styles.resultLabel, { textAlign: align() }]} numberOfLines={2}>
                     {result.label}
                   </Text>
                 </Pressable>
@@ -150,48 +166,49 @@ const styles = StyleSheet.create({
   },
   field: {
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 11,
     height: 52,
     paddingHorizontal: spacing.lg,
-    borderRadius: radii.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.paper,
   },
   input: {
     flex: 1,
-    ...typography.body,
-    color: colors.text,
-    // Android adds vertical padding that de-centers the text in a fixed-height row.
+    ...type.body,
+    fontSize: 15.5,
+    lineHeight: undefined,
+    color: colors.ink,
+    // Android adds vertical padding that de-centres text in a fixed-height row.
     paddingVertical: 0,
   },
   dropdown: {
-    borderRadius: radii.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.paper,
     overflow: 'hidden',
   },
   dropdownScroll: {
-    maxHeight: 220,
+    maxHeight: 224,
   },
   resultRow: {
     alignItems: 'center',
     gap: spacing.md,
+    minHeight: 52,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
+  resultRowDivided: {
+    borderTopWidth: 1,
+    borderTopColor: colors.paperRule,
+  },
   resultRowPressed: {
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.paperShade,
   },
   resultLabel: {
     flex: 1,
-    ...typography.body,
-    color: colors.text,
+    ...type.bodySmall,
+    color: colors.ink,
   },
   message: {
-    ...typography.caption,
-    color: colors.textMuted,
+    ...type.bodySmall,
+    color: colors.paperSub,
     padding: spacing.lg,
   },
 });

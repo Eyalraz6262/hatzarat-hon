@@ -1,13 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { t } from '../../i18n';
-import { colors, spacing, typography } from '../../theme';
+import { colors, spacing, type } from '../../theme';
 import type { Destination } from '../../types';
 import { formatDistance } from '../../utils/geo';
-import { PrimaryButton, rowDirection, textAlign } from '../ui';
-import { RadiusPicker } from './RadiusPicker';
-import { BottomSheet } from './BottomSheet';
+import { CloseIcon, StationNode } from '../icons';
+import { Plate, SignalButton, align, row } from '../ui';
+import { RadiusSelector } from './RadiusSelector';
+import { TicketStub } from './TicketStub';
 
 type Props = {
   destination: Destination | null;
@@ -20,9 +20,10 @@ type Props = {
 };
 
 /**
- * Pre-arm state: destination summary, radius picker, and the one big button.
- * When no destination is chosen yet it collapses to a single prompt, keeping the
- * map — the thing the user needs to interact with — as large as possible.
+ * Pre-arm state: which stop, how close, and the one button.
+ *
+ * With no destination yet it collapses to a single prompt so the map — the
+ * thing the user has to interact with — stays as large as possible.
  */
 export function SetupSheet({
   destination,
@@ -35,89 +36,100 @@ export function SetupSheet({
 }: Props) {
   if (!destination) {
     return (
-      <BottomSheet>
-        <View style={styles.emptyState}>
-          <Text style={[styles.emptyTitle, { textAlign: textAlign() }]}>{t('home.tapToChoose')}</Text>
-          <Text style={[styles.emptySubtitle, { textAlign: textAlign() }]}>
-            {t('home.tapToChooseSub')}
-          </Text>
+      <TicketStub>
+        <View style={styles.empty}>
+          <Plate tone="onPaper">{t('plate.destination')}</Plate>
+          <Text style={[styles.emptyTitle, { textAlign: align() }]}>{t('home.tapToChoose')}</Text>
+          <Text style={[styles.emptySub, { textAlign: align() }]}>{t('home.tapToChooseSub')}</Text>
         </View>
-      </BottomSheet>
+      </TicketStub>
     );
   }
 
   return (
-    <BottomSheet>
-      <View style={[styles.destinationRow, { flexDirection: rowDirection() }]}>
-        <Ionicons name="flag" size={20} color={colors.accent} />
+    <TicketStub>
+      {/* The origin/destination line of a ticket. */}
+      <View style={[styles.destination, { flexDirection: row() }]}>
+        <StationNode size={22} color={colors.signal} />
         <View style={styles.destinationText}>
-          <Text style={[styles.destinationLabel, { textAlign: textAlign() }]} numberOfLines={1}>
+          <Text style={[styles.destinationName, { textAlign: align() }]} numberOfLines={1}>
             {destination.label}
           </Text>
           {distanceM !== null ? (
-            <Text style={[styles.destinationMeta, { textAlign: textAlign() }]}>
+            <Text style={[styles.destinationMeta, { textAlign: align() }]} numberOfLines={1}>
               {t('setup.distanceFromYou', { distance: formatDistance(distanceM) })}
             </Text>
           ) : null}
         </View>
         <Pressable
           onPress={onClearDestination}
-          hitSlop={10}
+          hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel={t('setup.changeDestination')}
+          style={styles.clear}
         >
-          <Ionicons name="close" size={22} color={colors.textFaint} />
+          <CloseIcon size={20} color={colors.paperMuted} />
         </Pressable>
       </View>
 
-      <View style={styles.radiusBlock}>
-        <Text style={[styles.sectionTitle, { textAlign: textAlign() }]}>{t('setup.radiusTitle')}</Text>
-        <RadiusPicker value={radiusM} onChange={onChangeRadius} />
+      <View style={styles.radius}>
+        <Text style={[styles.radiusTitle, { textAlign: align() }]}>{t('setup.radiusTitle')}</Text>
+        <RadiusSelector value={radiusM} onChange={onChangeRadius} />
       </View>
 
-      <PrimaryButton
+      <SignalButton
         label={busy ? t('setup.arming') : t('setup.armButton')}
         loading={busy}
         onPress={onArm}
       />
-    </BottomSheet>
+    </TicketStub>
   );
 }
 
 const styles = StyleSheet.create({
-  emptyState: {
-    paddingBottom: spacing.md,
-    gap: spacing.xs,
+  empty: {
+    gap: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   emptyTitle: {
-    ...typography.title,
-    color: colors.text,
+    ...type.title,
+    color: colors.ink,
   },
-  emptySubtitle: {
-    ...typography.body,
-    color: colors.textMuted,
+  emptySub: {
+    ...type.body,
+    fontSize: 15.5,
+    color: colors.rail,
   },
-  destinationRow: {
-    alignItems: 'center',
-    gap: spacing.md,
+  destination: {
+    alignItems: 'flex-start',
+    gap: 13,
   },
   destinationText: {
     flex: 1,
-    gap: 2,
+    gap: 3,
   },
-  destinationLabel: {
-    ...typography.subtitle,
-    color: colors.text,
+  destinationName: {
+    ...type.subtitle,
+    color: colors.ink,
   },
   destinationMeta: {
-    ...typography.caption,
-    color: colors.textMuted,
+    ...type.labelHeSmall,
+    color: colors.paperSub,
   },
-  radiusBlock: {
+  clear: {
+    // A 20px glyph needs its own 44px target — the icon is not the button.
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -11,
+    marginEnd: -12,
+  },
+  radius: {
     gap: spacing.md,
   },
-  sectionTitle: {
-    ...typography.body,
-    color: colors.textMuted,
+  radiusTitle: {
+    ...type.labelHe,
+    color: colors.paperMuted,
   },
 });

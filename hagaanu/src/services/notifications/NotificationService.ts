@@ -49,7 +49,7 @@ export const NotificationService = {
         vibrationPattern: [...CHANNEL_VIBRATION_PATTERN],
         enableVibrate: true,
         enableLights: true,
-        lightColor: colors.alert,
+        lightColor: colors.signal,
         // Ring through Do Not Disturb. The user still has to grant the DND
         // access; when they haven't, Android silently ignores this flag rather
         // than failing, so it costs nothing to ask for.
@@ -99,7 +99,11 @@ export const NotificationService = {
           interruptionLevel: 'timeSensitive',
           data: { kind: NOTIFICATION_KIND.ALARM },
         },
-        trigger: null,
+        // Presents immediately, but ON the alarm channel. `trigger: null` would
+        // fall back to Android's default channel — losing MAX importance, the
+        // alarm audio stream and the Do Not Disturb bypass, which is the entire
+        // reason the channel exists.
+        trigger: Platform.OS === 'android' ? { channelId: CHANNELS.ALARM } : null,
       });
       log.debug('notify', 'alarm notification presented');
     } catch (error) {
@@ -108,16 +112,26 @@ export const NotificationService = {
   },
 
   /**
-   * Quiet, persistent "we're watching your trip" notification.
-   * On Android this doubles as reassurance next to the foreground-service entry.
+   * The ongoing "we're watching your trip" notification.
+   *
+   * Re-posting with the same identifier replaces it in place, which is how the
+   * distance stays live on the lock screen: someone who half-wakes and glances
+   * at their phone sees "2.3 ק״מ" without unlocking anything. Callers are
+   * responsible for only calling this when the text has actually changed.
    */
-  async presentArmedStatus(destinationLabel: string, radiusLabel: string): Promise<void> {
+  async presentArmedStatus(
+    destinationLabel: string,
+    radiusLabel: string,
+    distanceLabel?: string | null
+  ): Promise<void> {
     await NotificationService.configure();
     try {
       await Notifications.scheduleNotificationAsync({
         identifier: STATUS_NOTIFICATION_ID,
         content: {
-          title: t('active.notificationTitle'),
+          title: distanceLabel
+            ? t('active.notificationTitleLive', { distance: distanceLabel })
+            : t('active.notificationTitle'),
           body: t('active.notificationBody', { radius: radiusLabel, destination: destinationLabel }),
           sound: false,
           sticky: true,
@@ -126,7 +140,9 @@ export const NotificationService = {
           interruptionLevel: 'passive',
           data: { kind: NOTIFICATION_KIND.STATUS },
         },
-        trigger: null,
+        // The silent, low-importance channel. Without this the live distance
+        // updates would ping the user roughly every 50 m for the whole trip.
+        trigger: Platform.OS === 'android' ? { channelId: CHANNELS.STATUS } : null,
       });
     } catch (error) {
       log.warn('notify', 'failed to present status notification', error);

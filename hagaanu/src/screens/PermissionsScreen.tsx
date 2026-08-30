@@ -1,28 +1,17 @@
 import { useMemo } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { t, type TranslationKey } from '../i18n';
 import { PermissionsService } from '../services/permissions/PermissionsService';
 import { usePermissionsStore } from '../state/usePermissionsStore';
-import { colors, radii, spacing, typography } from '../theme';
+import { colors, spacing, type } from '../theme';
 import type { PermissionState, PermissionsSnapshot } from '../types';
-import { PrimaryButton, SecondaryButton } from '../components/ui';
-
-type Props = {
-  /**
-   * Lets the user move on without background location. Foreground location and
-   * notifications are hard requirements — without them the app cannot do its one
-   * job at all — but background access is degradable: the alarm still fires while
-   * the app is open, and the home screen warns about the limitation.
-   */
-  onSkipBackground: () => void;
-};
+import { Crescent } from '../components/icons';
+import { GhostButton, SignalButton, align, row } from '../components/ui';
 
 type Step = {
-  id: 'foreground' | 'background' | 'notifications';
-  icon: keyof typeof Ionicons.glyphMap;
+  id: 'foreground' | 'notifications' | 'background';
   titleKey: TranslationKey;
   bodyKeys: TranslationKey[];
   ctaKey: TranslationKey;
@@ -30,14 +19,23 @@ type Step = {
   request: () => Promise<void>;
 };
 
+type Props = {
+  /**
+   * Lets the user move on without background location. Foreground location and
+   * notifications are hard requirements — without them the app cannot do its
+   * one job at all — but background access is degradable: the alarm still fires
+   * while the app is open, and the map screen warns about the limitation.
+   */
+  onSkipBackground: () => void;
+};
+
 /**
- * The permission primer.
+ * The permission primer, set as a platform indicator board.
  *
- * Each OS dialog gets its own screen explaining *why* first, in the user's terms
- * ("so we can wake you before your stop") rather than the OS's ("allow access to
- * your location"). This is not just politeness: background location is a one-shot
- * prompt on both platforms — a reflexive "deny" is expensive to recover from, so
- * it is worth a screen to make the ask land.
+ * Each OS dialog gets its own screen explaining why first, in the user's terms
+ * ("so we can wake you before your stop") rather than the OS's ("allow access
+ * to your location"). Not politeness: background location is a one-shot prompt
+ * on both platforms, and a reflexive deny is expensive to recover from.
  */
 export function PermissionsScreen({ onSkipBackground }: Props) {
   const snapshot = usePermissionsStore((state) => state.snapshot);
@@ -57,49 +55,83 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
   const blocked = current.state === 'blocked';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        <View style={styles.iconCircle}>
-          <Ionicons name={current.icon} size={34} color={colors.accent} />
+    <View style={styles.screen}>
+      {/* The signage rule that heads every ink screen. */}
+      <View style={styles.rule} />
+
+      {/* Platform-edge ruler down the trailing margin. */}
+      <View style={styles.ruler} pointerEvents="none">
+        {Array.from({ length: 7 }, (_, i) => (
+          <View key={i} style={styles.rulerTick} />
+        ))}
+      </View>
+
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.content}>
+          {/* Step counter, set like a platform indicator. */}
+          <View style={[styles.counter, { flexDirection: row() }]}>
+            <Text style={styles.counterCurrent}>{pad(index + 1)}</Text>
+            <View style={styles.counterDash} />
+            <Text style={styles.counterTotal}>{pad(steps.length)}</Text>
+            <Text style={styles.counterPlate}>{t('plate.permissions')}</Text>
+          </View>
+
+          <Crescent size={76} color={colors.signal} nodeColor={colors.paper} />
+
+          <View style={styles.copy}>
+            <Text style={[styles.title, { textAlign: align() }]}>
+              {blocked ? t('permissions.blockedTitle') : t(current.titleKey)}
+            </Text>
+
+            {blocked ? (
+              <Text style={[styles.body, { textAlign: align() }]}>
+                {t('permissions.blockedBody')}
+              </Text>
+            ) : (
+              current.bodyKeys.map((key, position) =>
+                // The last line of a multi-line ask is the operative instruction
+                // ("choose Always") — promoted onto a strip so it cannot be
+                // skimmed past on the way to the button.
+                position > 0 ? (
+                  <View key={key} style={[styles.instruction, { flexDirection: row() }]}>
+                    <Text style={styles.instructionMark}>!</Text>
+                    <Text style={[styles.instructionText, { textAlign: align() }]}>{t(key)}</Text>
+                  </View>
+                ) : (
+                  <Text key={key} style={[styles.body, { textAlign: align() }]}>
+                    {t(key)}
+                  </Text>
+                )
+              )
+            )}
+          </View>
         </View>
 
-        <Text style={styles.step}>
-          {t('permissions.stepOf', { current: index + 1, total: steps.length })}
-        </Text>
+        <View style={styles.actions}>
+          {blocked ? (
+            <SignalButton
+              label={t('common.openSettings')}
+              onPress={() => PermissionsService.openSystemSettings()}
+            />
+          ) : (
+            <SignalButton label={t(current.ctaKey)} onPress={() => void current.request()} />
+          )}
 
-        <Text style={styles.title}>
-          {blocked ? t('permissions.blockedTitle') : t(current.titleKey)}
-        </Text>
-
-        {blocked ? (
-          <Text style={styles.body}>{t('permissions.blockedBody')}</Text>
-        ) : (
-          current.bodyKeys.map((key) => (
-            <Text key={key} style={styles.body}>
-              {t(key)}
-            </Text>
-          ))
-        )}
-      </View>
-
-      <View style={styles.actions}>
-        {blocked ? (
-          <PrimaryButton
-            label={t('common.openSettings')}
-            onPress={() => PermissionsService.openSystemSettings()}
-          />
-        ) : (
-          <PrimaryButton label={t(current.ctaKey)} onPress={() => void current.request()} />
-        )}
-        {current.id === 'background' ? (
-          <SecondaryButton label={t('common.notNow')} onPress={onSkipBackground} />
-        ) : (
-          <Text style={styles.slogan}>{t('brand.slogan')}</Text>
-        )}
-      </View>
-    </SafeAreaView>
+          {current.id === 'background' ? (
+            <GhostButton label={t('common.notNow')} onPress={onSkipBackground} />
+          ) : (
+            <View style={[styles.slogan, { flexDirection: row() }]}>
+              <View style={styles.sloganDot} />
+              <Text style={styles.sloganText}>{t('brand.slogan')}</Text>
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
+
+const pad = (n: number) => String(n).padStart(2, '0');
 
 function buildSteps(
   snapshot: PermissionsSnapshot,
@@ -109,7 +141,7 @@ function buildSteps(
     requestNotifications: () => Promise<void>;
   }
 ): Step[] {
-  // The platform-specific line tells the user which exact option to tap, because
+  // The platform-specific line names the exact option to tap, because
   // "Always" / "Allow all the time" is buried among more obvious choices.
   const backgroundPlatformBody: TranslationKey =
     Platform.OS === 'ios' ? 'permissions.backgroundBodyIOS' : 'permissions.backgroundBodyAndroid';
@@ -117,7 +149,6 @@ function buildSteps(
   return [
     {
       id: 'foreground',
-      icon: 'navigate-circle-outline',
       titleKey: 'permissions.locationTitle',
       bodyKeys: ['permissions.locationBody'],
       ctaKey: 'permissions.locationCta',
@@ -126,7 +157,6 @@ function buildSteps(
     },
     {
       id: 'notifications',
-      icon: 'notifications-outline',
       titleKey: 'permissions.notificationsTitle',
       bodyKeys: ['permissions.notificationsBody'],
       ctaKey: 'permissions.notificationsCta',
@@ -135,7 +165,6 @@ function buildSteps(
     },
     {
       id: 'background',
-      icon: 'moon-outline',
       titleKey: 'permissions.backgroundTitle',
       bodyKeys: ['permissions.backgroundBody', backgroundPlatformBody],
       ctaKey: 'permissions.backgroundCta',
@@ -146,51 +175,109 @@ function buildSteps(
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: colors.bg,
-    padding: spacing.xl,
+    backgroundColor: colors.ink,
+  },
+  rule: {
+    position: 'absolute',
+    top: 0,
+    start: 0,
+    end: 0,
+    height: 4,
+    backgroundColor: colors.signal,
+  },
+  ruler: {
+    position: 'absolute',
+    top: 140,
+    end: 0,
+    width: 12,
+    height: 420,
+    justifyContent: 'space-between',
+  },
+  rulerTick: {
+    height: 1,
+    backgroundColor: colors.inkLine,
+  },
+  safe: {
+    flex: 1,
+    paddingHorizontal: 28,
+    paddingBottom: spacing.xl,
     justifyContent: 'space-between',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
+    gap: spacing.xxl,
+  },
+  counter: {
+    alignItems: 'center',
     gap: spacing.md,
   },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: radii.lg,
-    backgroundColor: colors.accentSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: spacing.lg,
+  counterCurrent: {
+    ...type.labelStrong,
+    letterSpacing: 1.4,
+    color: colors.signal,
   },
-  step: {
-    ...typography.caption,
-    color: colors.textFaint,
-    textAlign: 'center',
+  counterDash: {
+    width: 26,
+    height: 1,
+    backgroundColor: colors.inkLine,
+  },
+  counterTotal: {
+    ...type.label,
+    letterSpacing: 1.4,
+    color: colors.rail,
+  },
+  counterPlate: {
+    ...type.label,
+    color: colors.rail,
+  },
+  copy: {
+    gap: 18,
   },
   title: {
-    ...typography.display,
-    fontSize: 28,
-    color: colors.text,
-    textAlign: 'center',
+    ...type.display,
+    color: colors.paper,
   },
   body: {
-    ...typography.body,
-    fontSize: 16,
-    lineHeight: 24,
-    color: colors.textMuted,
-    textAlign: 'center',
+    ...type.body,
+    color: colors.railLight,
+  },
+  instruction: {
+    gap: spacing.md,
+    alignItems: 'flex-start',
+    backgroundColor: colors.inkRaised,
+    borderStartWidth: 3,
+    borderStartColor: colors.signal,
+    padding: spacing.lg,
+  },
+  instructionMark: {
+    ...type.labelStrong,
+    color: colors.signal,
+    paddingTop: 2,
+  },
+  instructionText: {
+    flex: 1,
+    ...type.bodySmall,
+    color: colors.paper,
   },
   actions: {
-    gap: spacing.lg,
+    gap: spacing.md,
   },
   slogan: {
-    ...typography.caption,
-    color: colors.textFaint,
-    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    height: 48,
+  },
+  sloganDot: {
+    width: 5,
+    height: 5,
+    backgroundColor: colors.signal,
+  },
+  sloganText: {
+    ...type.labelHeSmall,
+    color: colors.rail,
   },
 });

@@ -11,6 +11,16 @@ export const en: TranslationSchema = {
     slogan: 'Sleep. We’ll wake you up.',
   },
 
+  plate: {
+    destination: 'DESTINATION',
+    metres: 'METRES',
+    permissions: 'PERMISSIONS',
+    wakePass: 'WAKE PASS',
+    live: 'LIVE',
+    saved: 'SAVED',
+    alarm: 'ALARM',
+  },
+
   common: {
     cancel: 'Cancel',
     close: 'Close',
@@ -35,7 +45,7 @@ export const en: TranslationSchema = {
 
   setup: {
     destinationTitle: 'Your destination',
-    radiusTitle: 'When should we wake you?',
+    radiusTitle: 'How close should we wake you?',
     radiusHint: 'We’ll wake you when you get this close to the destination',
     custom: 'Custom',
     customTitle: 'Custom distance',
@@ -49,7 +59,6 @@ export const en: TranslationSchema = {
   },
 
   active: {
-    sleepEmoji: '😴',
     sleepTitle: 'You can sleep',
     sleepSubtitle: 'We’ll wake you before your stop.',
     destination: 'Destination',
@@ -57,23 +66,25 @@ export const en: TranslationSchema = {
     alertRadius: 'Alarm triggers within',
     statusActive: 'Alarm is armed',
     statusWaitingFix: 'Waiting for a location fix…',
-    cancelAlarm: 'Cancel alarm',
+    cancelAlarm: 'Cancel the alarm',
     cancelConfirmTitle: 'Cancel the alarm?',
     cancelConfirmBody: 'We won’t wake you at your destination.',
     cancelConfirmYes: 'Yes, cancel',
     notificationTitle: 'Are we there? — alarm armed',
+    notificationTitleLive: '{distance} to go',
     notificationBody: 'We’ll wake you {radius} before {destination}.',
     serviceTitle: 'Are we there? is tracking your trip',
     serviceBody: 'We’ll wake you as you approach your destination.',
   },
 
   alarm: {
-    title: 'We’re here! 🚨',
+    title: 'We’re here!',
     subtitle: 'Time to wake up',
     destination: 'Destination: {destination}',
     dismiss: 'I’m awake',
-    notificationTitle: 'We’re here! 🚨',
+    notificationTitle: 'We’re here!',
     notificationBody: 'Time to wake up — {destination}',
+    ticketCode: 'HGN·{radius}',
   },
 
   permissions: {
@@ -99,6 +110,24 @@ export const en: TranslationSchema = {
     blockedBody: 'Enable the permission in your device settings so “Are we there?” can wake you.',
 
     stepOf: 'Step {current} of {total}',
+  },
+
+  saved: {
+    title: 'Saved destinations',
+    subtitle: 'One tap arms the alarm.',
+    add: 'Add a destination',
+    addTitle: 'Save this destination',
+    addPrompt: 'What should we call it?',
+    empty: 'No saved destinations yet.',
+    emptyHint: 'Save one after you pick it on the map.',
+    remove: 'Delete',
+    removeConfirm: 'Delete “{name}”?',
+    home: 'Home',
+    work: 'Work',
+    station: 'Station',
+    favourite: 'Favourite',
+    saveCurrent: 'Save destination',
+    savedConfirm: 'Saved',
   },
 
   errors: {

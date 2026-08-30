@@ -4,8 +4,9 @@ import * as Location from 'expo-location';
 import { GEOFENCE_REGION_ID, MAX_ACCURACY_MARGIN_M, TASKS } from '../../constants/config';
 import { ArrivalCoordinator } from '../alarm/ArrivalCoordinator';
 import { LocationService } from '../location/LocationService';
+import { NotificationService } from '../notifications/NotificationService';
 import { AlarmStorage } from '../storage/AlarmStorage';
-import { distanceMeters } from '../../utils/geo';
+import { distanceMeters, formatDistance } from '../../utils/geo';
 import { log } from '../../utils/logger';
 
 /**
@@ -79,6 +80,19 @@ TaskManager.defineTask<LocationEventData>(TASKS.LOCATION, async ({ data, error }
     log.debug('location', `backstop arrival: ${Math.round(distance)}m <= ${session.radiusM}m`);
     await ArrivalCoordinator.trigger('backstop');
     return;
+  }
+
+  // Keep the ongoing notification current, so a glance at the lock screen shows
+  // the trip closing. Only when the rendered text changes — formatDistance
+  // rounds, so most fixes produce the same string and cost nothing.
+  const distanceLabel = formatDistance(distance);
+  if (distanceLabel !== session.statusDistanceLabel) {
+    await AlarmStorage.patch({ statusDistanceLabel: distanceLabel });
+    await NotificationService.presentArmedStatus(
+      session.destination.label,
+      formatDistance(session.radiusM),
+      distanceLabel
+    );
   }
 
   // Battery: sample coarsely far out, tightly close in. Restart the stream only

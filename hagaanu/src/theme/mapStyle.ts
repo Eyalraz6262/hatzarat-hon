@@ -1,26 +1,48 @@
 /**
- * Google Maps JSON style matching the app's night palette.
- * Applied on Android (and on iOS only if the Google provider is opted into).
- * Apple Maps ignores this and follows the system appearance instead.
+ * Google Maps style for the "כרטיס נסיעה" system.
+ *
+ * The map is pushed most of the way to a transit diagram: business POIs and
+ * local road labels are switched off entirely, roads collapse to two weights,
+ * and rail is the only feature promoted above the base. What survives is line
+ * work in ink and rail grey — so the destination's signal-orange zone is the
+ * only saturated thing on the screen, which is the whole point.
+ *
+ * Applied on Android. Apple Maps ignores it and follows its own dark mode.
  */
 export const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#12172a' }] },
+  { elementType: 'geometry', stylers: [{ color: '#14161C' }] },
   { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#9aa4c4' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0b1020' }] },
-  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2a3355' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#6B7280' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#14161C' }] },
+
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#2A2E3A' }] },
   { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
-  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#7f89ab' }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#16281f' }] },
-  { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1d2540' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#98a2c0' }] },
-  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#232c4c' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2c3760' }] },
-  { featureType: 'road.local', elementType: 'labels', stylers: [{ visibility: 'off' }] },
-  { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#25304f' }] },
-  { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#b9c3e0' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#0a1226' }] },
-  { featureType: 'water', elementType: 'geometry.fill', stylers: [{ color: '#0a1226' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4a5578' }] },
+  { featureType: 'administrative.neighborhood', stylers: [{ visibility: 'off' }] },
+
+  // Nothing commercial. A passenger picking a stop does not need restaurants.
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#181E22' }] },
+
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1C1F28' }] },
+  { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#232735' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#2A2E3A' }] },
+  {
+    featureType: 'road.highway',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#6B7280' }, { visibility: 'on' }],
+  },
+
+  // Rail is the subject, so it is the one thing drawn above the base.
+  { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#3D4351' }] },
+  { featureType: 'transit.station.rail', elementType: 'geometry', stylers: [{ color: '#6B7280' }] },
+  {
+    featureType: 'transit.station.rail',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#9AA1AE' }],
+  },
+  { featureType: 'transit.station.bus', stylers: [{ visibility: 'off' }] },
+
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#101219' }] },
+  { featureType: 'water', elementType: 'labels', stylers: [{ visibility: 'off' }] },
 ];

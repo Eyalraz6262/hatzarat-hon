@@ -52,6 +52,12 @@ export type AlarmSession = {
   foregroundOnly: boolean;
   /** Id of the currently active polling tier, so we only restart on change. */
   pollingTierId: string | null;
+  /**
+   * The distance last written into the ongoing notification. Kept so the
+   * background task re-posts only when the visible text actually changes —
+   * re-posting on every fix would be a wake-up per fix for no benefit.
+   */
+  statusDistanceLabel?: string | null;
 };
 
 export type PermissionState = 'unknown' | 'granted' | 'denied' | 'blocked';

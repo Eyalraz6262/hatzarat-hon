@@ -1,45 +1,52 @@
 /**
- * Design tokens for "הגענו?".
+ * Design tokens for "הגענו?" — the "כרטיס נסיעה" system.
  *
- * Deep-night palette: the app is used in a dark train carriage at 23:00, so the
- * default surface is dark and the single call-to-action is the only saturated
- * thing on screen. A light theme can be added later by swapping `colors`.
+ * The language comes from Israeli rail signage and the printed travel ticket:
+ * ink for the world, paper for anything the passenger holds, and a single
+ * signal orange that is spent once per screen. Three rules hold it together
+ * and every value below serves one of them:
+ *
+ *   1. Square corners only. Signage does not round corners.
+ *   2. One orange per screen — it is the primary action, or the status mark,
+ *      or (on the alarm) the entire surface. Never two.
+ *   3. No emoji. Every mark is drawn — see src/components/icons.
  */
 
 export const colors = {
-  /** Page background — near-black with a blue cast. */
-  bg: '#0B1020',
-  /** Raised surfaces: the bottom sheet, cards. */
-  surface: '#141A2E',
-  surfaceAlt: '#1D2540',
-  surfaceMuted: '#262F4D',
+  /** The world: map, chrome, anything behind the ticket. */
+  ink: '#14161C',
+  inkRaised: '#1C1F28',
+  /** Water and recessed areas on the map. */
+  inkDeep: '#101219',
+  inkLine: '#2A2E3A',
+  inkLineStrong: '#3D4351',
 
-  border: 'rgba(255,255,255,0.09)',
-  borderStrong: 'rgba(255,255,255,0.18)',
+  /** Rail greys — the map's line work and secondary text on ink. */
+  rail: '#6B7280',
+  railLight: '#9AA1AE',
 
-  text: '#F4F6FB',
-  textMuted: 'rgba(244,246,251,0.62)',
-  textFaint: 'rgba(244,246,251,0.38)',
+  /** Paper: every surface the passenger "holds". */
+  paper: '#F2EDE4',
+  /** Oversized watermark shapes printed into the paper. */
+  paperWatermark: '#E6DFD1',
+  paperShade: '#E4DDD0',
+  /** Hairline rules between rows on paper. */
+  paperRule: '#E0D9CB',
+  /** Perforations and dotted leaders. */
+  paperPerf: '#C9C1B2',
+  /** Labels on paper. */
+  paperMuted: '#A79E8E',
+  /** Secondary text on paper. */
+  paperSub: '#8C8478',
 
-  /** Brand accent — used for the primary action and the geofence circle. */
-  accent: '#5B8CFF',
-  accentDeep: '#3B6BE0',
-  accentSoft: 'rgba(91,140,255,0.16)',
+  /** The one accent. Rationed — see rule 2. */
+  signal: '#FF6B1A',
+  signalDeep: '#E05A0F',
 
-  /** "Armed / safe to sleep" state. */
-  calm: '#38D9A9',
-  calmSoft: 'rgba(56,217,169,0.14)',
-
-  /** Alarm state. */
-  alert: '#FF5A5F',
-  alertDeep: '#E23B41',
-  alertSoft: 'rgba(255,90,95,0.16)',
-
-  warning: '#FFB84D',
-  warningSoft: 'rgba(255,184,77,0.14)',
-
-  white: '#FFFFFF',
-  overlay: 'rgba(11,16,32,0.72)',
+  /** Translucent inks, for shadows and scrims over the map. */
+  scrim: 'rgba(20,22,28,0.72)',
+  inkOnSignal: 'rgba(20,22,28,0.62)',
+  inkOnSignalLine: 'rgba(20,22,28,0.28)',
 } as const;
 
 export const spacing = {
@@ -51,59 +58,95 @@ export const spacing = {
   xxl: 32,
 } as const;
 
-export const radii = {
-  sm: 10,
-  md: 16,
-  lg: 22,
-  xl: 28,
-  pill: 999,
+/**
+ * There is deliberately no `radii` token.
+ *
+ * Every structural surface in this system is square — that single decision is
+ * what stopped the screens reading as a generic card template. The only round
+ * things in the app are station nodes and perforation punches, which are
+ * circles by nature and take an explicit `borderRadius` equal to half their
+ * size at the point of use.
+ */
+
+/**
+ * Type faces.
+ *
+ * Weight is always expressed by choosing a face, never by `fontWeight` —
+ * Android does not synthesise weights for a named family and would silently
+ * fall back to the system font.
+ */
+export const fonts = {
+  /** Heebo — headline voice. Heavy, tight, signage-like. */
+  displayBlack: 'Heebo_900Black',
+  displayBold: 'Heebo_800ExtraBold',
+  displaySemi: 'Heebo_700Bold',
+
+  /** Assistant — running Hebrew copy. */
+  body: 'Assistant_400Regular',
+  bodyMedium: 'Assistant_600SemiBold',
+  bodyBold: 'Assistant_700Bold',
+
+  /**
+   * IBM Plex Mono — numerals and Latin codes only, set like a departures board.
+   *
+   * It has NO Hebrew coverage. Hebrew set in it falls back to a system face
+   * without warning, so `type.label` (mono) is for Latin and digits and
+   * `type.labelHe` is for Hebrew. Never swap them.
+   */
+  mono: 'IBMPlexMono_400Regular',
+  monoMedium: 'IBMPlexMono_500Medium',
 } as const;
 
 /**
- * Assistant — a Hebrew-first typeface (SIL OFL, safe to ship commercially).
+ * The type scale.
  *
- * The system font renders Hebrew legibly but not beautifully: its Hebrew faces
- * are an afterthought, the weights are uneven, and letters like ם/ס/ט lose their
- * distinction at small sizes. Assistant was drawn for Hebrew and carries a
- * matching Latin set, so mixed strings ("300 מ׳", "1.5 ק״מ") sit on one baseline
- * instead of looking like two fonts fighting.
- *
- * Weight is expressed by picking a face, never by `fontWeight`: Android does not
- * synthesise weights for a named family and would silently fall back.
+ * Two voices, deliberately far apart: display sizes are enormous and tightly
+ * tracked, labels are tiny mono with wide letter-spacing. The gap between them
+ * is the hierarchy — there is very little in the middle.
  */
-export const fonts = {
-  regular: 'Assistant_400Regular',
-  medium: 'Assistant_500Medium',
-  semibold: 'Assistant_600SemiBold',
-  bold: 'Assistant_700Bold',
-  extrabold: 'Assistant_800ExtraBold',
+export const type = {
+  /** The one big statement on a screen. */
+  hero: { fontFamily: fonts.displayBlack, fontSize: 62, lineHeight: 58, letterSpacing: -3 },
+  /** Alarm screen only. */
+  heroAlarm: { fontFamily: fonts.displayBlack, fontSize: 74, lineHeight: 67, letterSpacing: -3.6 },
+  display: { fontFamily: fonts.displayBlack, fontSize: 44, lineHeight: 46, letterSpacing: -1.6 },
+  title: { fontFamily: fonts.displayBlack, fontSize: 32, lineHeight: 35, letterSpacing: -1.1 },
+  subtitle: { fontFamily: fonts.displayBold, fontSize: 21, lineHeight: 26, letterSpacing: -0.5 },
+  heading: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, letterSpacing: -0.45 },
+
+  body: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 25 },
+  bodySmall: { fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 21 },
+  bodyStrong: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24 },
+
+  /** Buttons speak in the display face — they are signage, not prose. */
+  button: { fontFamily: fonts.displayBold, fontSize: 20, letterSpacing: -0.4 },
+  buttonSmall: { fontFamily: fonts.bodyBold, fontSize: 16 },
+
+  /** Departures-board numerals. */
+  readout: { fontFamily: fonts.monoMedium, fontSize: 22, letterSpacing: 0.2 },
+  readoutSmall: { fontFamily: fonts.monoMedium, fontSize: 17, letterSpacing: 0.2 },
+  /**
+   * Latin signage labels — all-caps mono. The wide tracking is what makes them
+   * read as signage, and it only works because these are Latin.
+   */
+  label: { fontFamily: fonts.mono, fontSize: 10.5, letterSpacing: 2 },
+  labelStrong: { fontFamily: fonts.monoMedium, fontSize: 11.5, letterSpacing: 1.8 },
+  code: { fontFamily: fonts.mono, fontSize: 11.5, letterSpacing: 0.4 },
+
+  /**
+   * Hebrew labels. Assistant, and deliberately NO letter-spacing: tracking
+   * breaks word cohesion in Hebrew, which has no letter-spacing tradition to
+   * borrow from. Size carries the hierarchy instead.
+   */
+  labelHe: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0 },
+  labelHeSmall: { fontFamily: fonts.bodyMedium, fontSize: 12.5, letterSpacing: 0 },
 } as const;
 
-export const typography = {
-  display: { fontFamily: fonts.extrabold, fontSize: 34, letterSpacing: -0.5 },
-  title: { fontFamily: fonts.bold, fontSize: 22 },
-  subtitle: { fontFamily: fonts.semibold, fontSize: 17 },
-  body: { fontFamily: fonts.medium, fontSize: 15 },
-  caption: { fontFamily: fonts.medium, fontSize: 13 },
-  button: { fontFamily: fonts.bold, fontSize: 18 },
-} as const;
+/**
+ * Minimum touch target. Every pressable in the app is at least this tall —
+ * checked rather than assumed, because signage-style square controls make it
+ * easy to draw something that looks right and is too small to hit.
+ */
+export const HIT_SIZE = 48;
 
-export const shadow = {
-  card: {
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: -6 },
-    elevation: 16,
-  },
-  button: {
-    shadowColor: colors.accent,
-    shadowOpacity: 0.4,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
-  },
-} as const;
-
-/** Map styling that matches the dark UI (Google Maps / Android). */
 export { darkMapStyle } from './mapStyle';

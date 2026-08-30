@@ -22,7 +22,7 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
-  backgroundColor: '#0B1020',
+  backgroundColor: '#14161C',
 
   ios: {
     bundleIdentifier: 'com.hagaanu.app',
@@ -70,7 +70,7 @@ const config: ExpoConfig = {
     package: 'com.hagaanu.app',
     adaptiveIcon: {
       foregroundImage: './assets/android-icon-foreground.png',
-      backgroundColor: '#0B1020',
+      backgroundColor: '#14161C',
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     permissions: [
@@ -113,7 +113,7 @@ const config: ExpoConfig = {
       'expo-notifications',
       {
         icon: './assets/notification-icon.png',
-        color: '#FF5A5F',
+        color: '#FF6B1A',
         // Copies the alarm tone into res/raw (Android) and the app bundle (iOS)
         // so the notification itself can play it — including when our JS process
         // is gone by the time the notification is shown.
@@ -133,7 +133,7 @@ const config: ExpoConfig = {
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',
-        backgroundColor: '#0B1020',
+        backgroundColor: '#14161C',
       },
     ],
     [

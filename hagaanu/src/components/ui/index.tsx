@@ -10,93 +10,141 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { colors, fonts, radii, shadow, spacing, typography } from '../../theme';
 import { isRTL } from '../../i18n';
+import { Feedback } from '../../services/feedback/Haptics';
+import { HIT_SIZE, colors, spacing, type } from '../../theme';
 
 /**
- * The small set of primitives the whole app is built from.
- * Keeping them here (rather than styling ad hoc per screen) is what makes the
- * "minimal, premium" look consistent — and a future light theme a one-file change.
+ * The primitives the signage system is built from.
+ *
+ * Everything here is square, because that single rule is what stops the app
+ * reading as a generic card template. The only circles in the app are station
+ * nodes and perforation punches, which are circles by nature.
  */
 
-/** Row direction that respects the active language's reading direction. */
-export const rowDirection = (): ViewStyle['flexDirection'] => (isRTL() ? 'row-reverse' : 'row');
+/** Row direction for the active language. */
+export const row = (): ViewStyle['flexDirection'] => (isRTL() ? 'row-reverse' : 'row');
 
-/** Text alignment for body copy in the active language. */
-export const textAlign = (): TextStyle['textAlign'] => (isRTL() ? 'right' : 'left');
+/** Text alignment for the active language. */
+export const align = (): TextStyle['textAlign'] => (isRTL() ? 'right' : 'left');
 
-type PrimaryButtonProps = {
+/* ------------------------------------------------------------------ *
+ * Buttons
+ * ------------------------------------------------------------------ */
+
+type SignalButtonProps = {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
-  tone?: 'accent' | 'alert' | 'calm';
+  /** `signal` on ink, or `ink` when it sits on the orange alarm surface. */
+  tone?: 'signal' | 'ink';
   style?: StyleProp<ViewStyle>;
 };
 
-const TONE_COLORS = {
-  accent: [colors.accent, colors.accentDeep],
-  alert: [colors.alert, colors.alertDeep],
-  calm: [colors.calm, colors.calm],
-} as const;
-
-export function PrimaryButton({
+/**
+ * The primary action. There is exactly one of these on any screen — it is the
+ * screen's single orange, and it is what the ten-second promise rests on.
+ */
+export function SignalButton({
   label,
   onPress,
   disabled,
   loading,
-  tone = 'accent',
+  tone = 'signal',
   style,
-}: PrimaryButtonProps) {
-  const [base, pressedColor] = TONE_COLORS[tone];
-  const inactive = disabled || loading;
+}: SignalButtonProps) {
+  const inert = disabled || loading;
+  const onInk = tone === 'ink';
+
+  const base = onInk ? colors.ink : colors.signal;
+  const pressedBg = onInk ? colors.inkRaised : colors.signalDeep;
+  const labelColor = onInk ? colors.signal : colors.ink;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: Boolean(inactive) }}
-      onPress={inactive ? undefined : onPress}
+      accessibilityState={{ disabled: Boolean(inert) }}
+      onPress={
+        inert
+          ? undefined
+          : () => {
+              Feedback.tick();
+              onPress();
+            }
+      }
       style={({ pressed }) => [
-        styles.primaryButton,
-        { backgroundColor: pressed ? pressedColor : base },
-        tone === 'accent' ? shadow.button : null,
-        inactive ? styles.primaryButtonDisabled : null,
+        styles.signalButton,
+        { backgroundColor: pressed ? pressedBg : base },
+        inert ? styles.signalButtonInert : null,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.white} />
+        <ActivityIndicator color={labelColor} />
       ) : (
-        <Text style={styles.primaryButtonLabel}>{label}</Text>
+        <Text style={[styles.signalButtonLabel, { color: inert ? colors.rail : labelColor }]}>
+          {label}
+        </Text>
       )}
     </Pressable>
   );
 }
 
-type SecondaryButtonProps = {
+/** The quiet counterpart: an outlined action on paper. */
+export function OutlineButton({
+  label,
+  onPress,
+  style,
+}: {
   label: string;
   onPress: () => void;
-  tone?: 'neutral' | 'alert';
   style?: StyleProp<ViewStyle>;
-};
-
-export function SecondaryButton({ label, onPress, tone = 'neutral', style }: SecondaryButtonProps) {
+}) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.secondaryButton,
-        pressed ? styles.secondaryButtonPressed : null,
+        styles.outlineButton,
+        pressed ? { backgroundColor: colors.paperShade } : null,
+        style,
+      ]}
+    >
+      <Text style={styles.outlineButtonLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Text-only, for "not now" and other dismissals. */
+export function GhostButton({
+  label,
+  onPress,
+  tone = 'onInk',
+  style,
+}: {
+  label: string;
+  onPress: () => void;
+  tone?: 'onInk' | 'onPaper';
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.ghostButton,
+        pressed ? { backgroundColor: tone === 'onInk' ? colors.inkRaised : colors.paperShade } : null,
         style,
       ]}
     >
       <Text
         style={[
-          styles.secondaryButtonLabel,
-          tone === 'alert' ? { color: colors.alert } : null,
+          styles.ghostButtonLabel,
+          { color: tone === 'onInk' ? colors.rail : colors.paperSub },
         ]}
       >
         {label}
@@ -105,170 +153,278 @@ export function SecondaryButton({ label, onPress, tone = 'neutral', style }: Sec
   );
 }
 
-type ChipProps = {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-};
+/* ------------------------------------------------------------------ *
+ * Signage type
+ * ------------------------------------------------------------------ */
 
-export function Chip({ label, selected, onPress }: ChipProps) {
+type LabelTone = 'onInk' | 'onPaper' | 'signal';
+
+const labelColor = (tone: LabelTone) =>
+  tone === 'signal' ? colors.signal : tone === 'onPaper' ? colors.paperMuted : colors.rail;
+
+/**
+ * A Hebrew label. Assistant, no tracking.
+ *
+ * Kept separate from `Plate` on purpose: the two look interchangeable in a
+ * component tree and are not. Passing Hebrew to the mono face silently falls
+ * back to a system font while keeping tracking meant for Latin caps.
+ */
+export function Label({
+  children,
+  tone = 'onInk',
+  style,
+}: {
+  children: ReactNode;
+  tone?: LabelTone;
+  style?: StyleProp<TextStyle>;
+}) {
   return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ selected }}
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        selected ? styles.chipSelected : null,
-        pressed && !selected ? styles.chipPressed : null,
-      ]}
+    <Text
+      style={[type.labelHe, { color: labelColor(tone), textAlign: align() }, style]}
+      numberOfLines={1}
     >
-      <Text style={[styles.chipLabel, selected ? styles.chipLabelSelected : null]} numberOfLines={1}>
-        {label}
-      </Text>
-    </Pressable>
+      {children}
+    </Text>
   );
 }
 
-export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
-  return <View style={[styles.card, style]}>{children}</View>;
+/**
+ * A Latin signage plate — mono, all caps, wide tracking. LATIN ONLY: these are
+ * the printed codes on a ticket ("DESTINATION", "WAKE PASS") and stay Latin in
+ * every language. For Hebrew use `Label`.
+ */
+export function Plate({
+  children,
+  tone = 'onInk',
+  style,
+}: {
+  children: ReactNode;
+  tone?: LabelTone;
+  style?: StyleProp<TextStyle>;
+}) {
+  return (
+    <Text
+      style={[type.label, { color: labelColor(tone), textAlign: align() }, style]}
+      numberOfLines={1}
+    >
+      {children}
+    </Text>
+  );
 }
 
-/** Label + value line used throughout the "armed" sheet. */
-export function StatRow({ label, value, tone }: { label: string; value: string; tone?: 'calm' }) {
+/**
+ * A departures-board readout: a large mono figure with its unit set small
+ * beside it, so a column of them lines up on the digits.
+ */
+export function Readout({
+  value,
+  unit,
+  tone = 'ink',
+  size = 'large',
+}: {
+  value: string;
+  unit?: string;
+  tone?: 'ink' | 'signal' | 'paper';
+  size?: 'large' | 'small';
+}) {
+  const color = tone === 'signal' ? colors.signal : tone === 'paper' ? colors.paper : colors.ink;
+  const unitColor = tone === 'signal' ? colors.signal : colors.paperSub;
+
   return (
-    <View style={[styles.statRow, { flexDirection: rowDirection() }]}>
-      <Text style={styles.statLabel} numberOfLines={1}>
-        {label}
-      </Text>
-      <Text
-        style={[styles.statValue, tone === 'calm' ? { color: colors.calm } : null]}
-        numberOfLines={1}
-      >
-        {value}
-      </Text>
+    <View style={[styles.readout, { flexDirection: row() }]}>
+      <Text style={[size === 'large' ? type.readout : type.readoutSmall, { color }]}>{value}</Text>
+      {unit ? <Text style={[styles.readoutUnit, { color: unitColor }]}>{unit}</Text> : null}
     </View>
   );
 }
 
-/** Small pulsing dot + text used as the "alarm is live" indicator. */
-export function StatusPill({ label, tone = 'calm' }: { label: string; tone?: 'calm' | 'warning' }) {
-  const dotColor = tone === 'calm' ? colors.calm : colors.warning;
-  const bg = tone === 'calm' ? colors.calmSoft : colors.warningSoft;
+/* ------------------------------------------------------------------ *
+ * Ticket furniture
+ * ------------------------------------------------------------------ */
 
+/**
+ * A tear line: two punched notches and a run of dashes.
+ *
+ * `behind` is the colour showing through the punches — the world outside the
+ * ticket, which is ink everywhere it is used today. On a full-bleed pass the
+ * notches sit half off-screen and read as two bites taken out of the paper's
+ * edge, which is exactly the printed-ticket effect intended.
+ */
+export function Perforation({ behind = colors.ink }: { behind?: string }) {
   return (
-    <View style={[styles.pill, { backgroundColor: bg, flexDirection: rowDirection() }]}>
-      <View style={[styles.pillDot, { backgroundColor: dotColor }]} />
-      <Text style={[styles.pillLabel, { color: dotColor }]}>{label}</Text>
+    <View style={styles.perforation}>
+      <View style={[styles.notch, styles.notchStart, { backgroundColor: behind }]} />
+      <View style={[styles.notch, styles.notchEnd, { backgroundColor: behind }]} />
+      <View style={styles.perfDashes}>
+        {Array.from({ length: 26 }, (_, index) => (
+          <View key={index} style={styles.perfDash} />
+        ))}
+      </View>
     </View>
   );
 }
 
-export function Divider() {
-  return <View style={styles.divider} />;
+/** The dotted leader between a timetable label and its value. */
+export function DottedLeader() {
+  return (
+    <View style={styles.leader}>
+      {Array.from({ length: 40 }, (_, index) => (
+        <View key={index} style={styles.leaderDot} />
+      ))}
+    </View>
+  );
+}
+
+/**
+ * One row of the departures board: label, leader, value.
+ * `children` is the value side, so it can be a Readout or plain heading text.
+ */
+export function BoardRow({
+  label,
+  children,
+  divided = true,
+}: {
+  label: string;
+  children: ReactNode;
+  divided?: boolean;
+}) {
+  return (
+    <View style={[styles.boardRow, { flexDirection: row() }, divided ? styles.boardRowDivided : null]}>
+      <Label tone="onPaper" style={styles.boardLabel}>
+        {label}
+      </Label>
+      <DottedLeader />
+      <View style={styles.boardValue}>{children}</View>
+    </View>
+  );
+}
+
+/** The live-status mark: a solid signal dot with a tracked mono caption. */
+export function StatusMark({ label }: { label: string }) {
+  return (
+    <View style={[styles.statusMark, { flexDirection: row() }]}>
+      <View style={styles.statusDot} />
+      <Text style={styles.statusLabel} numberOfLines={1}>
+        {label}
+      </Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  primaryButton: {
-    height: 60,
-    borderRadius: radii.lg,
+  signalButton: {
+    height: 62,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
-  primaryButtonDisabled: {
-    backgroundColor: colors.surfaceMuted,
-    shadowOpacity: 0,
-    elevation: 0,
+  signalButtonInert: {
+    backgroundColor: colors.inkLine,
   },
-  primaryButtonLabel: {
-    ...typography.button,
-    color: colors.white,
+  signalButtonLabel: {
+    ...type.button,
   },
-  secondaryButton: {
-    height: 48,
-    borderRadius: radii.md,
+
+  outlineButton: {
+    height: 52,
+    borderWidth: 1.5,
+    borderColor: colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
-  secondaryButtonPressed: {
-    backgroundColor: colors.surfaceAlt,
+  outlineButtonLabel: {
+    ...type.buttonSmall,
+    color: colors.ink,
   },
-  secondaryButtonLabel: {
-    ...typography.body,
-    color: colors.textMuted,
-  },
-  chip: {
-    minWidth: 74,
-    height: 44,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceAlt,
+
+  ghostButton: {
+    height: HIT_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
   },
-  chipPressed: {
-    backgroundColor: colors.surfaceMuted,
+  ghostButtonLabel: {
+    ...type.buttonSmall,
   },
-  chipSelected: {
-    backgroundColor: colors.accentSoft,
-    borderColor: colors.accent,
+
+  readout: {
+    alignItems: 'baseline',
+    gap: 5,
   },
-  chipLabel: {
-    ...typography.body,
-    color: colors.textMuted,
+  readoutUnit: {
+    fontFamily: type.bodyStrong.fontFamily,
+    fontSize: 13,
   },
-  chipLabelSelected: {
-    color: colors.text,
-    fontFamily: fonts.bold,
+
+  perforation: {
+    height: 2,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
   },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+  notch: {
+    position: 'absolute',
+    top: -13,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
   },
-  statRow: {
-    alignItems: 'center',
+  notchStart: { start: -13 },
+  notchEnd: { end: -13 },
+  perfDashes: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-    gap: spacing.md,
+    marginHorizontal: 18,
   },
-  statLabel: {
-    ...typography.body,
-    color: colors.textMuted,
-    flexShrink: 1,
+  perfDash: {
+    width: 6,
+    height: 2,
+    backgroundColor: colors.paperPerf,
   },
-  statValue: {
-    ...typography.subtitle,
-    color: colors.text,
-    flexShrink: 1,
-  },
-  pill: {
-    alignSelf: 'flex-start',
+
+  leader: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
+    overflow: 'hidden',
+    transform: [{ translateY: -3 }],
+  },
+  leaderDot: {
+    width: 1,
+    height: 1,
+    backgroundColor: colors.paperPerf,
+  },
+
+  boardRow: {
+    alignItems: 'baseline',
     gap: spacing.sm,
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.pill,
+    paddingVertical: 11,
   },
-  pillDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  boardRowDivided: {
+    borderTopWidth: 1,
+    borderTopColor: colors.paperRule,
   },
-  pillLabel: {
-    ...typography.caption,
-    fontFamily: fonts.bold,
+  boardLabel: {
+    flexShrink: 0,
   },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
-    marginVertical: spacing.sm,
+  boardValue: {
+    flexShrink: 0,
+  },
+
+  statusMark: {
+    alignItems: 'center',
+    gap: 9,
+  },
+  statusDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: colors.signal,
+  },
+  statusLabel: {
+    ...type.labelHe,
+    fontSize: 13.5,
+    color: colors.ink,
   },
 });

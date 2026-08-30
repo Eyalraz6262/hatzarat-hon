@@ -135,6 +135,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
         triggeredAt: null,
         triggeredBy: null,
         pollingTierId: tier.id,
+        statusDistanceLabel: null,
         foregroundOnly,
       };
 
