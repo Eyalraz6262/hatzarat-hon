@@ -71,7 +71,7 @@ export function SetupSheet({
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel={t('setup.changeDestination')}
-          style={styles.clear}
+          style={({ pressed }) => [styles.clear, pressed ? styles.clearPressed : null]}
         >
           <CloseIcon size={20} color={colors.paperMuted} />
         </Pressable>
@@ -129,6 +129,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: -11,
     marginEnd: -12,
+  },
+  clearPressed: {
+    opacity: 0.45,
   },
   radius: {
     gap: spacing.md,

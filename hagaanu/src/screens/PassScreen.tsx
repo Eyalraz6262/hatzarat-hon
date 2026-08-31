@@ -161,7 +161,7 @@ export function PassScreen({
           {/* Development only. Fires the full arrival path — notification,
               sound, vibration, wake screen — without physically travelling. */}
           {__DEV__ && onSimulateArrival ? (
-            <OutlineButton label="⚙︎ סימולציית הגעה (dev)" onPress={onSimulateArrival} />
+            <OutlineButton label="סימולציית הגעה · DEV" onPress={onSimulateArrival} />
           ) : null}
         </View>
       </SafeAreaView>

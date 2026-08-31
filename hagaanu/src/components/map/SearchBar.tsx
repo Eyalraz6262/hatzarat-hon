@@ -117,12 +117,20 @@ export function SearchBar({ onSelect }: Props) {
           ]}
           returnKeyType="search"
           autoCorrect={false}
+          autoComplete="street-address"
+          textContentType="fullStreetAddress"
           selectionColor={colors.signal}
           accessibilityLabel={t('home.searchPlaceholder')}
         />
         {loading ? <ActivityIndicator size="small" color={colors.paperSub} /> : null}
         {query.length > 0 && !loading ? (
-          <Pressable onPress={clear} hitSlop={14} accessibilityLabel={t('common.close')}>
+          <Pressable
+            onPress={clear}
+            hitSlop={14}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.close')}
+            style={({ pressed }) => (pressed ? styles.iconPressed : null)}
+          >
             <CloseIcon size={19} color={colors.paperSub} />
           </Pressable>
         ) : null}
@@ -179,6 +187,10 @@ const styles = StyleSheet.create({
     color: colors.ink,
     // Android adds vertical padding that de-centres text in a fixed-height row.
     paddingVertical: 0,
+  },
+  /** Every other control dims on press; these two were the exceptions. */
+  iconPressed: {
+    opacity: 0.45,
   },
   dropdown: {
     backgroundColor: colors.paper,
