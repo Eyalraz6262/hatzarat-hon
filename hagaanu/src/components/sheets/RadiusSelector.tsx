@@ -185,7 +185,6 @@ const styles = StyleSheet.create({
   },
   segmentLabel: {
     ...type.readoutSmall,
-    fontSize: 13,
     color: colors.ink,
   },
   segmentLabelSelected: {

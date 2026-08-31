@@ -102,16 +102,15 @@ const styles = StyleSheet.create({
   },
   emptySub: {
     ...type.body,
-    fontSize: 15.5,
     color: colors.rail,
   },
   destination: {
     alignItems: 'flex-start',
-    gap: 13,
+    gap: 12,
   },
   destinationText: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
   destinationName: {
     ...type.subtitle,
@@ -123,6 +122,9 @@ const styles = StyleSheet.create({
   },
   clear: {
     // A 20px glyph needs its own 44px target — the icon is not the button.
+    // The negative margins are optical centring (half the 44−22 difference),
+    // deliberately off the 4pt spacing grid: they cancel the target's padding
+    // rather than creating space.
     width: 44,
     height: 44,
     alignItems: 'center',

@@ -81,10 +81,8 @@ export const fonts = {
   /** Heebo — headline voice. Heavy, tight, signage-like. */
   displayBlack: 'Heebo_900Black',
   displayBold: 'Heebo_800ExtraBold',
-  displaySemi: 'Heebo_700Bold',
 
   /** Assistant — running Hebrew copy. */
-  body: 'Assistant_400Regular',
   bodyMedium: 'Assistant_600SemiBold',
   bodyBold: 'Assistant_700Bold',
 
@@ -102,38 +100,46 @@ export const fonts = {
 /**
  * The type scale.
  *
- * Two voices, deliberately far apart: display sizes are enormous and tightly
- * tracked, labels are tiny mono with wide letter-spacing. The gap between them
- * is the hierarchy — there is very little in the middle.
+ * Nine sizes, and every one of them is here — no component sets `fontSize`
+ * inline. An earlier pass had twenty distinct sizes once one-off overrides were
+ * counted, which is not a scale, it is a pile: two values three pixels apart
+ * carry no information and nothing lines up between screens.
+ *
+ * Three registers, deliberately far apart, because the system has three voices:
+ *   display  64 / 52 / 40 / 28 / 20   Heebo, tight tracking — signage
+ *   text     17 / 15 / 13             Assistant — Hebrew copy and labels
+ *   mono     22 / 11                  Plex Mono — numerals and Latin plates
+ *
+ * The gap between registers IS the hierarchy. There is very little in between
+ * on purpose.
  */
 export const type = {
-  /** The one big statement on a screen. */
-  hero: { fontFamily: fonts.displayBlack, fontSize: 62, lineHeight: 58, letterSpacing: -3 },
-  /** Alarm screen only. */
-  heroAlarm: { fontFamily: fonts.displayBlack, fontSize: 74, lineHeight: 67, letterSpacing: -3.6 },
-  display: { fontFamily: fonts.displayBlack, fontSize: 44, lineHeight: 46, letterSpacing: -1.6 },
-  title: { fontFamily: fonts.displayBlack, fontSize: 32, lineHeight: 35, letterSpacing: -1.1 },
-  subtitle: { fontFamily: fonts.displayBold, fontSize: 21, lineHeight: 26, letterSpacing: -0.5 },
-  heading: { fontFamily: fonts.displayBold, fontSize: 19, lineHeight: 24, letterSpacing: -0.45 },
-
-  body: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 25 },
-  bodySmall: { fontFamily: fonts.bodyMedium, fontSize: 14, lineHeight: 21 },
-  bodyStrong: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 24 },
-
+  /** Alarm screen only — the loudest thing in the app. */
+  heroAlarm: { fontFamily: fonts.displayBlack, fontSize: 64, lineHeight: 60, letterSpacing: -3.2 },
+  /** The wake pass's promise. */
+  hero: { fontFamily: fonts.displayBlack, fontSize: 52, lineHeight: 50, letterSpacing: -2.4 },
+  display: { fontFamily: fonts.displayBlack, fontSize: 40, lineHeight: 43, letterSpacing: -1.5 },
+  title: { fontFamily: fonts.displayBlack, fontSize: 28, lineHeight: 32, letterSpacing: -1 },
+  subtitle: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 26, letterSpacing: -0.5 },
   /** Buttons speak in the display face — they are signage, not prose. */
   button: { fontFamily: fonts.displayBold, fontSize: 20, letterSpacing: -0.4 },
-  buttonSmall: { fontFamily: fonts.bodyBold, fontSize: 16 },
+  heading: { fontFamily: fonts.displayBold, fontSize: 20, lineHeight: 25, letterSpacing: -0.45 },
+
+  body: { fontFamily: fonts.bodyMedium, fontSize: 17, lineHeight: 26 },
+  bodyStrong: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 25 },
+  buttonSmall: { fontFamily: fonts.bodyBold, fontSize: 17 },
+  bodySmall: { fontFamily: fonts.bodyMedium, fontSize: 15, lineHeight: 22 },
 
   /** Departures-board numerals. */
   readout: { fontFamily: fonts.monoMedium, fontSize: 22, letterSpacing: 0.2 },
-  readoutSmall: { fontFamily: fonts.monoMedium, fontSize: 17, letterSpacing: 0.2 },
+  readoutSmall: { fontFamily: fonts.monoMedium, fontSize: 15, letterSpacing: 0.2 },
   /**
-   * Latin signage labels — all-caps mono. The wide tracking is what makes them
+   * Latin signage plates — all-caps mono. The wide tracking is what makes them
    * read as signage, and it only works because these are Latin.
    */
-  label: { fontFamily: fonts.mono, fontSize: 10.5, letterSpacing: 2 },
-  labelStrong: { fontFamily: fonts.monoMedium, fontSize: 11.5, letterSpacing: 1.8 },
-  code: { fontFamily: fonts.mono, fontSize: 11.5, letterSpacing: 0.4 },
+  label: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 2 },
+  labelStrong: { fontFamily: fonts.monoMedium, fontSize: 11, letterSpacing: 1.8 },
+  code: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 0.4 },
 
   /**
    * Hebrew labels. Assistant, and deliberately NO letter-spacing: tracking
@@ -141,7 +147,7 @@ export const type = {
    * borrow from. Size carries the hierarchy instead.
    */
   labelHe: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0 },
-  labelHeSmall: { fontFamily: fonts.bodyMedium, fontSize: 12.5, letterSpacing: 0 },
+  labelHeSmall: { fontFamily: fonts.bodyMedium, fontSize: 13, letterSpacing: 0 },
 } as const;
 
 /**

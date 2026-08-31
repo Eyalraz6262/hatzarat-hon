@@ -350,11 +350,11 @@ const styles = StyleSheet.create({
 
   readout: {
     alignItems: 'baseline',
-    gap: 5,
+    gap: 4,
   },
   readoutUnit: {
-    fontFamily: type.bodyStrong.fontFamily,
-    fontSize: 13,
+    fontFamily: type.labelHe.fontFamily,
+    fontSize: type.labelHe.fontSize,
   },
 
   perforation: {
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   perfDashes: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 18,
+    marginHorizontal: 16,
   },
   perfDash: {
     width: 6,
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   boardRow: {
     alignItems: 'baseline',
     gap: spacing.sm,
-    paddingVertical: 11,
+    paddingVertical: 12,
   },
   boardRowDivided: {
     borderTopWidth: 1,
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
 
   statusMark: {
     alignItems: 'center',
-    gap: 9,
+    gap: 8,
   },
   statusDot: {
     width: 9,
@@ -424,7 +424,6 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     ...type.labelHe,
-    fontSize: 13.5,
     color: colors.ink,
   },
 });

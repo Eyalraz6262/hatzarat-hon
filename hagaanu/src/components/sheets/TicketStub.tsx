@@ -38,6 +38,6 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.sm,
-    gap: 22,
+    gap: 24,
   },
 });

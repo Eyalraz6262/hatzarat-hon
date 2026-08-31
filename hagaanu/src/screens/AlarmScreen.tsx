@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     end: 0,
     height: 14,
     flexDirection: 'row',
-    gap: 13,
+    gap: 12,
     overflow: 'hidden',
   },
   hazardTick: {
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   safe: {
     flex: 1,
-    paddingHorizontal: 26,
+    paddingHorizontal: 24,
     paddingBottom: spacing.xl,
     justifyContent: 'space-between',
   },
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 18,
+    gap: 16,
   },
   beacon: {
     width: 168,
@@ -171,7 +171,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...type.subtitle,
-    fontSize: 24,
     color: colors.ink,
     textAlign: 'center',
   },
@@ -180,7 +179,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderTopWidth: 1.5,
     borderTopColor: colors.inkOnSignalLine,
-    paddingTop: 14,
+    paddingTop: 16,
     maxWidth: '100%',
   },
   destinationLabel: {

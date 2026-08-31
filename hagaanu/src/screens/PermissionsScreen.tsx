@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     color: colors.rail,
   },
   copy: {
-    gap: 18,
+    gap: 16,
   },
   title: {
     ...type.display,
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   instructionMark: {
     ...type.labelStrong,
     color: colors.signal,
-    paddingTop: 2,
+    paddingTop: 4,
   },
   instructionText: {
     flex: 1,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   slogan: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 9,
+    gap: 8,
     height: 48,
   },
   sloganDot: {

@@ -174,15 +174,14 @@ const styles = StyleSheet.create({
   },
   field: {
     alignItems: 'center',
-    gap: 11,
+    gap: 12,
     height: 52,
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.paper,
   },
   input: {
     flex: 1,
-    ...type.body,
-    fontSize: 15.5,
+    ...type.bodySmall,
     lineHeight: undefined,
     color: colors.ink,
     // Android adds vertical padding that de-centres text in a fixed-height row.

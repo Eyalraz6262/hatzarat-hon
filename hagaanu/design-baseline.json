@@ -6,7 +6,7 @@
   "designDoc": "README.md + src/theme/index.ts (the three declared rules)",
   "designScore": "A",
   "slopScore": "A",
-  "designScoreNote": "3.70 mean; the B cap lifted once both high-impact findings were fixed in this run",
+  "designScoreNote": "3.70 mean before the second lens; all nine findings fixed in-session",
   "categories": {
     "navigation": "A",
     "screenAnatomy": "A",
@@ -20,42 +20,152 @@
     "copyContent": "A"
   },
   "findings": [
-    { "id": "FINDING-001", "impact": "high", "category": "navigation",
+    {
+      "id": "FINDING-001",
+      "impact": "high",
+      "category": "navigation",
       "summary": "Android back unhandled on the alarm screen; a reflex press backgrounded the app mid-alarm",
-      "tell": null, "status": "fixed", "commit": "5c97184" },
-    { "id": "FINDING-002", "impact": "high", "category": "typography",
+      "tell": null,
+      "status": "fixed",
+      "commit": "5c97184"
+    },
+    {
+      "id": "FINDING-002",
+      "impact": "high",
+      "category": "typography",
       "summary": "No screen scrolled and no display font-scale ceiling; large Dynamic Type clipped content unreachably",
-      "tell": null, "status": "fixed", "commit": "bba4a33" },
-    { "id": "FINDING-003", "impact": "medium", "category": "colorTheming",
+      "tell": null,
+      "status": "fixed",
+      "commit": "bba4a33"
+    },
+    {
+      "id": "FINDING-003",
+      "impact": "medium",
+      "category": "colorTheming",
       "summary": "Untokenised rgba textShadow on the map lockup",
-      "tell": 6, "status": "fixed", "commit": "405ec68" },
-    { "id": "FINDING-004", "impact": "medium", "category": "interactionMotion",
+      "tell": 6,
+      "status": "fixed",
+      "commit": "405ec68"
+    },
+    {
+      "id": "FINDING-004",
+      "impact": "medium",
+      "category": "interactionMotion",
       "summary": "Search clear and clear-destination Pressables had no pressed state",
-      "tell": 35, "status": "fixed", "commit": "568dffe" },
-    { "id": "FINDING-005", "impact": "polish", "category": "copyContent",
+      "tell": 35,
+      "status": "fixed",
+      "commit": "568dffe"
+    },
+    {
+      "id": "FINDING-005",
+      "impact": "polish",
+      "category": "copyContent",
       "summary": "Gear pictograph in the dev-only simulate button, against the app's own no-emoji rule",
-      "tell": 1, "status": "fixed", "commit": "568dffe" }
+      "tell": 1,
+      "status": "fixed",
+      "commit": "568dffe"
+    },
+    {
+      "id": "FINDING-006",
+      "impact": "medium",
+      "category": "typography",
+      "summary": "20 distinct font sizes once inline overrides were counted; scale collapsed to 10 with zero inline fontSize",
+      "tell": null,
+      "lens": "mobile-app-ui-design (max 4 sizes)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-007",
+      "impact": "medium",
+      "category": "performance",
+      "summary": "Font packages imported from their roots bundled 30 .ttf to use 6; switched to weight subpaths (assets 4.0MB -> 1.7MB)",
+      "tell": null,
+      "lens": "mobile-app-ui-design (2 weights max) surfaced the dead faces",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-008",
+      "impact": "medium",
+      "category": "screenAnatomy",
+      "summary": "14 spacing values off the 4pt grid; snapped to the scale",
+      "tell": null,
+      "lens": "mobile-app-ui-design (8-point grid)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-009",
+      "impact": "medium",
+      "category": "states",
+      "summary": "Dismissing the alarm kept the destination, dropping an arrived user onto a card offering to wake them where they stood; the ending now clears it",
+      "tell": null,
+      "lens": "mobile-app-ui-design (Peak-End Rule)",
+      "status": "fixed"
+    }
   ],
   "dismissed": [
-    { "tell": 13, "where": "src/components/map/SearchBar.tsx",
-      "reason": "ScrollView wraps a map over results capped at 5 in GeocodingService.search; the tell explicitly permits bounded lists" },
-    { "tell": 32, "where": "src/screens/PassScreen.tsx",
-      "reason": "single Alert.alert, guarding the destructive cancel — the sanctioned use" },
-    { "tell": 1, "where": "src/screens/HomeScreen.tsx:24",
-      "reason": "arrow glyph is inside a code comment, not user-visible" },
-    { "tell": 33, "where": "src/i18n/translations/he.ts",
-      "reason": "4 em-dashes in Hebrew strings; the em-dash is standard Hebrew punctuation, the tell targets English LLM copy tics" },
-    { "tell": 2, "reason": "0 hits: no indigo family, 0 LinearGradient" },
-    { "tell": 5, "reason": "0 shadowColor anywhere; the signage system has no shadows" },
-    { "tell": 14, "reason": "0 magic paddingTop; safe-area insets throughout" },
-    { "tell": 36, "reason": "0 useNativeDriver:false; every animation is native-driven" },
-    { "tell": 6, "reason": "0 inline hex outside src/theme after FINDING-003" },
-    { "tell": 41, "reason": "no settings screen exists yet" },
-    { "tell": 42, "reason": "standDown() enumerates and clears geofence, location task, scheduled + presented notifications, audio session and storage" }
+    {
+      "tell": 13,
+      "where": "src/components/map/SearchBar.tsx",
+      "reason": "ScrollView wraps a map over results capped at 5 in GeocodingService.search; the tell explicitly permits bounded lists"
+    },
+    {
+      "tell": 32,
+      "where": "src/screens/PassScreen.tsx",
+      "reason": "single Alert.alert, guarding the destructive cancel — the sanctioned use"
+    },
+    {
+      "tell": 1,
+      "where": "src/screens/HomeScreen.tsx:24",
+      "reason": "arrow glyph is inside a code comment, not user-visible"
+    },
+    {
+      "tell": 33,
+      "where": "src/i18n/translations/he.ts",
+      "reason": "4 em-dashes in Hebrew strings; the em-dash is standard Hebrew punctuation, the tell targets English LLM copy tics"
+    },
+    {
+      "tell": 2,
+      "reason": "0 hits: no indigo family, 0 LinearGradient"
+    },
+    {
+      "tell": 5,
+      "reason": "0 shadowColor anywhere; the signage system has no shadows"
+    },
+    {
+      "tell": 14,
+      "reason": "0 magic paddingTop; safe-area insets throughout"
+    },
+    {
+      "tell": 36,
+      "reason": "0 useNativeDriver:false; every animation is native-driven"
+    },
+    {
+      "tell": 6,
+      "reason": "0 inline hex outside src/theme after FINDING-003"
+    },
+    {
+      "tell": 41,
+      "reason": "no settings screen exists yet"
+    },
+    {
+      "tell": 42,
+      "reason": "standDown() enumerates and clears geofence, location task, scheduled + presented notifications, audio session and storage"
+    }
   ],
   "unverified": [
     "No simulator, emulator or device was reachable: dl.google.com and api.expo.dev are blocked by the environment's network policy, so no Android SDK and no EAS build.",
     "NOT verified on a device: keyboard avoidance, splash-to-first-frame transition, scroll performance, actual font-scale rendering at 1.3x, edge-to-edge insets, haptic firing, alarm audibility, geofence delivery.",
     "First-impression narration and Trunk Test were not run — they are live-pass instruments and a static review cannot fake them."
+  ],
+  "secondLens": "ceorkm/mobile-app-ui-design — run as a second, differently-opinionated pass",
+  "dismissedFromSecondLens": [
+    "Use emojis/illustrations for personality — contradicts the approved direction's rule 3 and tell #1; every mark in this app is drawn SVG.",
+    "backdrop-blur / glassmorphism — tell #9 (BLURVIEW GLASS SPAM).",
+    "rounded-2xl / rounded-3xl cards — contradicts rule 1 (square corners only) and tell #11.",
+    "Glows, white inner shadows on buttons, 5% accent borders — the signage system has no shadows by design; adding them is the generic-premium look the direction rejects.",
+    "Tailwind / Lucide / Recharts implementation notes — wrong stack; this is React Native StyleSheet.",
+    "Sleep/Meditation convention: purple and deep blue — the user chose signal orange on ink.",
+    "60/30/10: accent is 20% of colour REFERENCES, but that is not surface area — the alarm screen is a deliberate full flood counted as one reference. Not actionable as measured.",
+    "Max 4 font sizes: landed at 10, not 4. A system with a display voice, a Hebrew text voice and a departures-board mono register cannot honestly reach 4; halving it and removing every one-off was the real win."
   ]
 }

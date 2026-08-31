@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   },
   stub: {
     alignItems: 'center',
-    gap: 11,
+    gap: 12,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
@@ -226,7 +226,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...type.body,
-    fontSize: 17,
     color: colors.rail,
   },
   board: {
@@ -254,6 +253,6 @@ const styles = StyleSheet.create({
     ...type.label,
     color: colors.paperMuted,
     marginStart: 'auto',
-    paddingBottom: 3,
+    paddingBottom: 4,
   },
 });

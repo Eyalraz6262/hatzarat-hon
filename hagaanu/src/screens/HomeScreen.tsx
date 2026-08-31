@@ -196,7 +196,6 @@ const styles = StyleSheet.create({
   },
   brand: {
     ...type.subtitle,
-    fontSize: 25,
     color: colors.paper,
     // The lockup sits over the map, so it needs its own contrast.
     textShadowColor: colors.scrimStrong,
@@ -204,14 +203,13 @@ const styles = StyleSheet.create({
   },
   live: {
     ...type.label,
-    fontSize: 9,
     color: colors.rail,
     marginStart: 'auto',
   },
   banner: {
     alignItems: 'center',
     gap: spacing.md,
-    paddingVertical: 11,
+    paddingVertical: 12,
     paddingHorizontal: spacing.md,
     backgroundColor: colors.inkRaised,
     borderStartWidth: 3,
@@ -227,7 +225,7 @@ const styles = StyleSheet.create({
   bannerText: {
     flex: 1,
     ...type.labelHeSmall,
-    lineHeight: 18,
+    lineHeight: 19,
     color: colors.paper,
   },
   controls: {

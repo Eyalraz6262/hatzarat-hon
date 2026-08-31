@@ -171,8 +171,14 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   async dismissAlarm() {
     set({ busy: true });
     await ArrivalCoordinator.standDown();
-    // Back to a clean slate, but keep the destination so a return trip is one tap.
-    set({ status: 'idle', session: null, busy: false, error: null });
+    // The destination is cleared, unlike a cancel.
+    //
+    // The trip is the last thing the user experiences, and keeping the pin
+    // would drop someone standing ON the platform back onto a card offering to
+    // wake them at the station they just reached. "One tap for the return trip"
+    // sounded convenient and reads as the app not having noticed they arrived.
+    // A clean map is the honest ending.
+    set({ status: 'idle', session: null, destination: null, distanceM: null, busy: false, error: null });
   },
 
   onArrival: (session) =>
