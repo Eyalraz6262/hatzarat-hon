@@ -6,7 +6,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { useBackGuard } from '../hooks/useBackGuard';
 import { t } from '../i18n';
 import { Feedback } from '../services/feedback/Haptics';
-import { colors, spacing, type } from '../theme';
+import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../theme';
 import type { Destination } from '../types';
 import { SignalBurst } from '../components/icons';
 import { SignalButton, row } from '../components/ui';
@@ -75,8 +75,12 @@ export function AlarmScreen({ destination, onDismiss }: Props) {
             <SignalBurst size={168} color={colors.ink} />
           </View>
 
-          <Text style={styles.title}>{t('alarm.title')}</Text>
-          <Text style={styles.subtitle}>{t('alarm.subtitle')}</Text>
+          <Text style={styles.title} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
+            {t('alarm.title')}
+          </Text>
+          <Text style={styles.subtitle} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
+            {t('alarm.subtitle')}
+          </Text>
 
           <View style={[styles.destination, { flexDirection: row() }]}>
             <Text style={styles.destinationLabel}>{t('active.destination')}</Text>

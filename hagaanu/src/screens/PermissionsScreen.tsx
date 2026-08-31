@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t, type TranslationKey } from '../i18n';
 import { PermissionsService } from '../services/permissions/PermissionsService';
 import { usePermissionsStore } from '../state/usePermissionsStore';
-import { colors, spacing, type } from '../theme';
+import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../theme';
 import type { PermissionState, PermissionsSnapshot } from '../types';
 import { Crescent } from '../components/icons';
 import { GhostButton, SignalButton, align, row } from '../components/ui';
@@ -67,7 +67,17 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
       </View>
 
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.content}>
+        {/*
+          Scrolls rather than clips: at a large system font scale this screen's
+          two paragraphs plus the instruction strip exceed the viewport, and a
+          permission ask the user cannot read to the end of is a dead end.
+          `flexGrow: 1` keeps it optically centred at normal sizes.
+        */}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Step counter, set like a platform indicator. */}
           <View style={[styles.counter, { flexDirection: row() }]}>
             <Text style={styles.counterCurrent}>{pad(index + 1)}</Text>
@@ -79,7 +89,10 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
           <Crescent size={76} color={colors.signal} nodeColor={colors.paper} />
 
           <View style={styles.copy}>
-            <Text style={[styles.title, { textAlign: align() }]}>
+            <Text
+              style={[styles.title, { textAlign: align() }]}
+              maxFontSizeMultiplier={MAX_DISPLAY_SCALE}
+            >
               {blocked ? t('permissions.blockedTitle') : t(current.titleKey)}
             </Text>
 
@@ -105,7 +118,7 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
               )
             )}
           </View>
-        </View>
+        </ScrollView>
 
         <View style={styles.actions}>
           {blocked ? (
@@ -205,10 +218,14 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
     justifyContent: 'space-between',
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
     gap: spacing.xxl,
+    paddingVertical: spacing.xl,
   },
   counter: {
     alignItems: 'center',

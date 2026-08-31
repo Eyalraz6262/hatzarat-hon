@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { t } from '../../i18n';
-import { colors, spacing, type } from '../../theme';
+import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../../theme';
 import type { Destination } from '../../types';
 import { formatDistance } from '../../utils/geo';
 import { CloseIcon, StationNode } from '../icons';
@@ -39,7 +39,12 @@ export function SetupSheet({
       <TicketStub>
         <View style={styles.empty}>
           <Plate tone="onPaper">{t('plate.destination')}</Plate>
-          <Text style={[styles.emptyTitle, { textAlign: align() }]}>{t('home.tapToChoose')}</Text>
+          <Text
+            style={[styles.emptyTitle, { textAlign: align() }]}
+            maxFontSizeMultiplier={MAX_DISPLAY_SCALE}
+          >
+            {t('home.tapToChoose')}
+          </Text>
           <Text style={[styles.emptySub, { textAlign: align() }]}>{t('home.tapToChooseSub')}</Text>
         </View>
       </TicketStub>

@@ -149,4 +149,14 @@ export const type = {
  */
 export const HIT_SIZE = 48;
 
+/**
+ * Ceiling for the display faces under OS font scaling.
+ *
+ * Body copy is deliberately left unclamped — scaling it is the entire point of
+ * the setting. But the display sizes here start at 44px and reach 74px, and at
+ * a 2x system scale a headline alone would fill the screen. 1.3 keeps them
+ * legible-but-bounded; the screens that carry long copy scroll instead.
+ */
+export const MAX_DISPLAY_SCALE = 1.3;
+
 export { darkMapStyle } from './mapStyle';

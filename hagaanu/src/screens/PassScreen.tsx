@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { Alert, Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Easing, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '../i18n';
 import { Feedback } from '../services/feedback/Haptics';
-import { colors, spacing, type } from '../theme';
+import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../theme';
 import type { Destination } from '../types';
 import { formatDistance } from '../utils/geo';
 import { Barcode, BrandGlyph, Crescent } from '../components/icons';
@@ -97,8 +97,17 @@ export function PassScreen({
 
         <Perforation behind={colors.ink} />
 
-        {/* the promise */}
-        <View style={styles.body}>
+        {/*
+          The promise. Scrolls because the 62px hero plus three data rows leave
+          little slack, and a large system font scale would otherwise push the
+          distance readout — the whole reason to look at this screen — off the
+          bottom with no way to reach it.
+        */}
+        <ScrollView
+          style={styles.bodyScroll}
+          contentContainerStyle={styles.body}
+          showsVerticalScrollIndicator={false}
+        >
           <Animated.View
             style={[styles.watermark, { transform: [{ scale: watermarkScale }] }]}
             pointerEvents="none"
@@ -108,7 +117,12 @@ export function PassScreen({
 
           <View style={styles.headline}>
             <StatusMark label={t('active.statusActive')} />
-            <Text style={[styles.title, { textAlign: align() }]}>{t('active.sleepTitle')}</Text>
+            <Text
+              style={[styles.title, { textAlign: align() }]}
+              maxFontSizeMultiplier={MAX_DISPLAY_SCALE}
+            >
+              {t('active.sleepTitle')}
+            </Text>
             <Text style={[styles.subtitle, { textAlign: align() }]}>
               {t('active.sleepSubtitle')}
             </Text>
@@ -133,7 +147,7 @@ export function PassScreen({
               <Readout {...splitDistance(radiusM)} tone="signal" />
             </BoardRow>
           </View>
-        </View>
+        </ScrollView>
 
         {/* foot */}
         <View style={styles.foot}>
@@ -189,11 +203,14 @@ const styles = StyleSheet.create({
     color: colors.paperMuted,
     marginStart: 'auto',
   },
-  body: {
+  bodyScroll: {
     flex: 1,
+  },
+  body: {
+    flexGrow: 1,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xxl,
-    overflow: 'hidden',
+    paddingBottom: spacing.lg,
   },
   watermark: {
     position: 'absolute',
