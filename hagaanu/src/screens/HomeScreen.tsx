@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: colors.paper,
     // The lockup sits over the map, so it needs its own contrast.
-    textShadowColor: 'rgba(20,22,28,0.85)',
+    textShadowColor: colors.scrimStrong,
     textShadowRadius: 10,
   },
   live: {

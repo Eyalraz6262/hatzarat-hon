@@ -45,6 +45,8 @@ export const colors = {
 
   /** Translucent inks, for shadows and scrims over the map. */
   scrim: 'rgba(20,22,28,0.72)',
+  /** Behind type that sits directly on the map, where there is no surface. */
+  scrimStrong: 'rgba(20,22,28,0.85)',
   inkOnSignal: 'rgba(20,22,28,0.62)',
   inkOnSignalLine: 'rgba(20,22,28,0.28)',
 } as const;
