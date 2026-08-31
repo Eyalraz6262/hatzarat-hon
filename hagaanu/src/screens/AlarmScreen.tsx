@@ -3,6 +3,7 @@ import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useKeepAwake } from 'expo-keep-awake';
 
+import { useBackGuard } from '../hooks/useBackGuard';
 import { t } from '../i18n';
 import { Feedback } from '../services/feedback/Haptics';
 import { colors, spacing, type } from '../theme';
@@ -29,6 +30,8 @@ export function AlarmScreen({ destination, onDismiss }: Props) {
   // Someone woken by this must be able to read it without the screen dimming
   // out from under them.
   useKeepAwake();
+  // ...or accidentally dismiss it with a reflex back press.
+  useBackGuard(true);
 
   const pulse = useRef(new Animated.Value(0)).current;
 
