@@ -1,0 +1,1213 @@
+<title>הגענו?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@800;900&family=Assistant:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* ------------------------------------------------------------------
+   הגענו? — interactive prototype, "כרטיס נסיעה" system
+
+   Tokens, type scale and spacing are lifted verbatim from
+   src/theme/index.ts. Single-theme by decision: the product is ink-only
+   because it is used in an unlit carriage at night, so every colour is
+   painted explicitly and the page holds on either host ground.
+
+   Three rules the whole system rests on:
+     1. Square corners only — signage does not round corners.
+     2. One orange per screen.
+     3. No emoji. Every mark is drawn SVG.
+   ------------------------------------------------------------------ */
+:root {
+  /* ---- the world: the map, its chrome, the permission board ---- */
+  --world-bg:      #14161C;
+  --world-raised:  #1C1F28;
+  --world-deep:    #101219;
+  --world-line:    #2A2E3A;
+  --world-line-2:  #3D4351;
+  --world-text:    #F2EDE4;
+  --world-text-2:  #9AA1AE;
+  --world-muted:   #78808E;   /* was #6B7280 — 3.74:1 on ink, failed AA */
+
+  /* ---- paper: everything the passenger holds ---- */
+  --paper:         #F2EDE4;
+  --paper-raised:  #E4DDD0;
+  --paper-watermark:#E6DFD1;
+  --paper-rule:    #E0D9CB;
+  --paper-perf:    #C9C1B2;
+  --paper-text:    #14161C;   /* ink ON paper — the same in both schemes */
+  --paper-sub:     #666C7A;   /* was #8C8478 — 4.15:1 */
+  --paper-muted:   #746B5B;   /* was #A79E8E — 2.27:1 */
+  --paper-faint:   #A79E8E;   /* non-text only: perforations, leaders */
+
+  /* ---- the one accent ---- */
+  --signal:         #FF6B1A;
+  --signal-deep:    #E05A0F;
+  --signal-on-paper:#BE4300;  /* the accent AS TEXT on paper; #FF6B1A is 2.44:1 */
+
+  --scrim:          rgba(20,22,28,0.72);
+  --on-signal:      rgba(20,22,28,0.62);
+  --on-signal-line: rgba(20,22,28,0.28);
+
+  --display: 'Heebo', system-ui, sans-serif;
+  --text:    'Assistant', system-ui, sans-serif;
+  --mono:    'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+
+/* ══ day — the lit platform, 07:00 ══
+
+   Not an inversion. The same two objects under different light: a paper
+   ticket lying on a warmer, heavier counter stock, separated by value and
+   by the perforation rather than by a jump to a dark ground. Only the
+   phone's screen changes; the page around it is the room, not the app. */
+.app[data-scheme="day"] {
+  --world-bg:      #DED7C9;
+  --world-raised:  #CFC7B6;
+  --world-deep:    #D8D0C0;
+  --world-line:    #C3BAA8;
+  --world-line-2:  #5E5648;
+  --world-text:    #14161C;
+  --world-text-2:  #5E5648;
+  --world-muted:   #645D55;
+
+  --paper:         #FBF8F1;
+  --paper-raised:  #F2EDE4;
+  --paper-watermark:#E6DFD1;
+  --paper-rule:    #E6DFD1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--world-bg);
+  color: var(--paper);
+  font-family: var(--text);
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ═══ page shell ═══ */
+.page {
+  direction: rtl;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 64px;
+  display: flex; flex-direction: column; gap: 32px;
+}
+
+.masthead { padding-top: 40px; display: flex; flex-direction: column; gap: 12px; }
+.masthead__plate {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
+  color: var(--rail); display: flex; align-items: center; gap: 12px;
+}
+.masthead__plate::before { content: ''; width: 24px; height: 4px; background: var(--signal); }
+.masthead__title {
+  margin: 0; font-family: var(--display); font-weight: 900;
+  font-size: clamp(40px, 6vw, 64px); letter-spacing: -3px; line-height: .95;
+}
+.masthead__lede { margin: 0; max-width: 60ch; font-size: 17px; line-height: 1.6; color: var(--rail-light); }
+
+.stage { display: grid; grid-template-columns: minmax(0, 390px) minmax(0, 1fr); gap: 40px; align-items: start; }
+
+/* ═══ device ═══ */
+.device { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 16px; }
+.phone {
+  position: relative; width: 100%; max-width: 390px; aspect-ratio: 390/800;
+  background: #000; padding: 8px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.app {
+  position: relative; width: 100%; height: 100%; overflow: hidden;
+  background: var(--world-bg);
+  /* The world's own text colour. Paper surfaces override it — they are a
+     different material and carry their own ink. */
+  color: var(--world-text);
+
+  /* Aliases resolve HERE, against this element's scheme, not at :root. */
+  --ink:            var(--world-bg);
+  --ink-raised:     var(--world-raised);
+  --ink-deep:       var(--world-deep);
+  --ink-line:       var(--world-line);
+  --ink-line-strong:var(--world-line-2);
+  --rail:           var(--world-muted);
+  --rail-light:     var(--world-text-2);
+  --paper-shade:    var(--paper-raised);
+}
+
+
+/* ══ paper grain ══
+   A printed ticket is not a flat fill. Seeded fractal noise at 4.5% over every
+   paper surface — invisible as texture, visible as the difference between
+   "a light rectangle" and "stock". */
+.stub::before,
+.pass::before,
+.saved__stub::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='7'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+.stub > *, .pass > *, .saved__stub > * { position: relative; z-index: 1; }
+
+/* ══ press ══
+   90ms down, 170ms up, ease-out — the app's own timing, and it stops at the
+   reduced-motion boundary exactly as usePressScale does. */
+.btn, .zone, .locate, .saved__stub, .tool {
+  transition: transform 170ms cubic-bezier(.33,0,.67,1), background-color 120ms linear, color 120ms linear;
+}
+.btn:active, .zone:active, .locate:active, .saved__stub:active, .tool:active {
+  transform: scale(.97);
+  transition-duration: 90ms;
+}
+.btn--signal:active, .pass .btn:active { transform: scale(.98); }
+@media (prefers-reduced-motion: reduce) {
+  .btn, .zone, .locate, .saved__stub, .tool { transition: none; }
+  .btn:active, .zone:active, .locate:active, .saved__stub:active, .tool:active { transform: none; }
+}
+
+/* ══ saved destinations — torn stubs, above the sheet ══ */
+.saved { display: flex; flex-direction: column; gap: 8px; }
+.saved__plate { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--paper-muted); padding-inline: 4px; }
+.saved__track { display: flex; gap: 8px; overflow-x: auto; padding-inline-end: 4px; scrollbar-width: none; }
+.saved__track::-webkit-scrollbar { display: none; }
+.saved__stub {
+  position: relative; flex: none; display: flex; align-items: center; gap: 12px;
+  min-height: 56px; padding: 12px 16px; overflow: hidden;
+  border: 1.5px solid var(--paper-text); background: none; cursor: pointer;
+  font: inherit; color: var(--paper-text); text-align: start;
+}
+.saved__stub:hover { background: var(--paper-raised); }
+/* the half-circle bitten out of the leading edge */
+.saved__punch {
+  position: absolute; inset-inline-start: -8px; top: 50%; margin-top: -8px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--paper); border: 1.5px solid var(--paper-text);
+}
+.saved__name { font-family: var(--text); font-weight: 700; font-size: 17px; color: var(--paper-text); white-space: nowrap; }
+.saved__r { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--paper-muted); }
+.saved__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.saved__stub svg { flex: none; }
+
+.ghost {
+  height: 40px; background: none; border: none; cursor: pointer;
+  font-family: var(--text); font-weight: 700; font-size: 15px;
+  color: var(--signal-on-paper); letter-spacing: -.2px;
+}
+.ghost:hover:not(:disabled) { color: var(--paper-text); }
+.ghost:disabled { color: var(--paper-muted); cursor: default; }
+
+/* ═══ screens ═══ */
+.screen { position: absolute; inset: 0; display: none; flex-direction: column; }
+.screen.is-on { display: flex; }
+
+/* — permissions — */
+.perm { padding: 40px 28px 24px; justify-content: space-between; }
+.perm__rule { position: absolute; top: 0; inset-inline: 0; height: 4px; background: var(--signal); }
+.perm__body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 32px; }
+.perm__counter { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 11px; }
+.perm__n  { color: var(--signal); font-weight: 500; letter-spacing: 1.4px; }
+.perm__of { color: var(--rail); letter-spacing: 1.4px; }
+.perm__plate { color: var(--rail); letter-spacing: 2px; }
+.perm__dash { width: 26px; height: 1px; background: var(--ink-line); }
+.perm__copy { display: flex; flex-direction: column; gap: 16px; }
+.perm__title { margin: 0; font-family: var(--display); font-weight: 900; font-size: 40px; line-height: 1.08; letter-spacing: -1.5px; }
+.perm__text { margin: 0; font-size: 17px; line-height: 1.6; color: var(--rail-light); }
+.perm__note { display: flex; gap: 12px; background: var(--ink-raised); border-inline-start: 3px solid var(--signal); padding: 16px; }
+.perm__bang { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 1.8px; color: var(--signal); padding-top: 2px; }
+.perm__noteText { margin: 0; font-size: 15px; line-height: 1.5; }
+.perm__actions { display: flex; flex-direction: column; gap: 12px; }
+.perm__slogan { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; font-size: 13px; color: var(--rail); }
+.perm__dot { width: 4px; height: 4px; background: var(--signal); }
+
+/* — map — */
+.map { position: absolute; inset: 0; cursor: crosshair; }
+.map canvas { width: 100%; height: 100%; display: block; }
+.geo { position: absolute; inset: 0; pointer-events: none; }
+.node {
+  position: absolute; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--signal); transform: translate(50%,-50%);
+  display: grid; place-items: center;
+}
+.node::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--paper-text); }
+.me {
+  position: absolute; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--paper); border: 3px solid var(--paper-text);
+  transform: translate(50%,-50%); box-shadow: 0 0 0 5px rgba(242,237,228,.14);
+}
+.zoneLabel {
+  position: absolute; transform: translate(50%,-50%);
+  background: var(--paper-text); padding: 4px 8px; display: flex; align-items: center; gap: 4px;
+}
+.zoneLabel b { font-family: var(--mono); font-weight: 500; font-size: 13px; color: var(--signal); }
+.zoneLabel span { font-family: var(--text); font-weight: 700; font-size: 11px; color: var(--signal); }
+
+/* — chrome — */
+.chrome { position: relative; z-index: 10; padding: 24px 20px 0; display: flex; flex-direction: column; gap: 16px; pointer-events: none; }
+.chrome > * { pointer-events: auto; }
+.lockup { display: flex; align-items: center; gap: 12px; }
+.lockup__name { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.5px; text-shadow: 0 2px 10px rgba(20,22,28,.85); }
+.lockup__live { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--rail); margin-inline-start: auto; }
+
+.field { color: var(--paper-sub); display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 16px; background: var(--paper); }
+.field input {
+  flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 0;
+  font-family: var(--text); font-weight: 600; font-size: 15px; color: var(--paper-text);
+}
+.field input::placeholder { color: var(--paper-sub); }
+
+.results { background: var(--paper); }
+.results:empty { display: none; }
+.result {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px;
+  padding: 12px 16px; border: 0; background: none; cursor: pointer;
+  font-family: var(--text); font-weight: 600; font-size: 15px; color: var(--paper-text); text-align: start;
+}
+.result + .result { border-top: 1px solid var(--paper-rule); }
+.result:hover { background: var(--paper-shade); }
+
+.banner { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--ink-raised); border-inline-start: 3px solid var(--signal); }
+.banner__bang { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 1.8px; color: var(--signal); }
+.banner span:last-child { font-size: 13px; line-height: 1.45; }
+
+.controls { position: absolute; inset-inline-start: 20px; z-index: 10; }
+.locate { width: 48px; height: 48px; background: var(--ink-raised); border: 1px solid var(--ink-line); color: var(--world-text); display: grid; place-items: center; cursor: pointer; }
+.locate:hover { background: var(--ink-line); }
+
+/* — ticket stub — */
+.stub { position: absolute; inset-inline: 0; bottom: 0; z-index: 20; background: var(--paper); color: var(--paper-text); padding-top: 16px; }
+.perf { position: relative; height: 2px; }
+.perf__notch { position: absolute; top: -13px; width: 26px; height: 26px; border-radius: 50%; background: var(--world-bg); }
+.perf__notch--s { inset-inline-start: -13px; }
+.perf__notch--e { inset-inline-end: -13px; }
+.perf__dashes { position: absolute; inset-inline: 16px; top: 0; height: 2px; background: repeating-linear-gradient(to left, var(--paper-perf) 0 6px, transparent 6px 12px); }
+.stub__body { padding: 24px 24px 32px; display: flex; flex-direction: column; gap: 24px; }
+
+.plate { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--paper-muted); }
+.stub__title { margin: 0; font-family: var(--display); font-weight: 900; font-size: 28px; line-height: 1.14; letter-spacing: -1px; color: var(--paper-text); }
+.stub__sub { margin: 0; font-size: 17px; color: var(--rail); }
+
+.dest { display: flex; align-items: flex-start; gap: 12px; }
+.dest__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.dest__name { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.5px; color: var(--paper-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dest__meta { font-family: var(--text); font-weight: 700; font-size: 13px; color: var(--paper-sub); }
+.dest__clear { width: 44px; height: 44px; margin: -11px -12px -11px 0; border: 0; background: none; display: grid; place-items: center; cursor: pointer; }
+.dest__clear:active { opacity: .45; }
+
+.zoneLabelHe { font-family: var(--text); font-weight: 700; font-size: 13px; color: var(--paper-muted); }
+
+/* fare-zone selector */
+.zones { display: flex; border: 1.5px solid var(--paper-text); }
+.zone {
+  flex: 1; height: 50px; position: relative; border: 0; background: none; cursor: pointer;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-weight: 500; font-size: 15px; color: var(--paper-text);
+}
+.zone + .zone { border-inline-start: 1.5px solid var(--paper-text); }
+.zone:hover:not([aria-checked="true"]) { background: var(--paper-shade); }
+.zone[aria-checked="true"] { background: var(--paper-text); color: var(--paper); }
+.zone__cap { position: absolute; top: 0; inset-inline: 0; height: 3px; background: var(--signal); }
+
+/* buttons */
+.btn {
+  height: 62px; border: 0; cursor: pointer;
+  font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.4px;
+  background: var(--signal); color: var(--paper-text);
+}
+.btn:hover { background: var(--signal-deep); }
+.btn--ink { background: var(--paper-text); color: var(--signal); }
+.btn--ink:hover { background: var(--ink-raised); }
+.btn--outline {
+  height: 52px; background: none; border: 1.5px solid var(--paper-text); color: var(--paper-text);
+  font-family: var(--text); font-weight: 700; font-size: 17px; letter-spacing: 0;
+}
+.btn--outline:hover { background: var(--paper-shade); }
+.btn--ghost {
+  height: 48px; background: none; color: var(--rail);
+  font-family: var(--text); font-weight: 700; font-size: 17px; letter-spacing: 0;
+}
+.btn--ghost:hover { background: var(--ink-raised); }
+
+/* — wake pass — */
+.pass { background: var(--paper); color: var(--paper-text); }
+.pass__stub { display: flex; align-items: center; gap: 12px; padding: 24px 24px 16px; }
+.pass__brand { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
+.pass__body { position: relative; flex: 1; overflow: hidden; padding: 32px 24px 16px; }
+.pass__watermark { position: absolute; top: 12px; inset-inline-end: -84px; animation: drift 10.4s ease-in-out infinite; }
+@keyframes drift { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.pass__head { position: relative; display: flex; flex-direction: column; gap: 12px; }
+.status { display: flex; align-items: center; gap: 8px; }
+.status__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--signal); animation: blip 2s ease-in-out infinite; }
+@keyframes blip { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.status__label { font-family: var(--text); font-weight: 700; font-size: 13px; }
+.pass__title { margin: 0; font-family: var(--display); font-weight: 900; font-size: 52px; line-height: .96; letter-spacing: -2.4px; }
+.pass__sub { margin: 0; font-size: 17px; color: var(--rail); }
+
+.board { position: relative; margin-top: 32px; }
+.board__row { display: flex; align-items: baseline; gap: 8px; padding: 12px 0; }
+.board__row + .board__row { border-top: 1px solid var(--paper-rule); }
+.board__label { flex: none; font-family: var(--text); font-weight: 700; font-size: 13px; color: var(--paper-muted); }
+.board__leader { flex: 1; height: 1px; transform: translateY(-3px); background: repeating-linear-gradient(to left, var(--paper-perf) 0 1px, transparent 1px 5px); }
+.board__value { flex: none; font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.45px; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.readout { flex: none; display: flex; align-items: baseline; gap: 4px; }
+.readout b { font-family: var(--mono); font-weight: 500; font-size: 22px; font-variant-numeric: tabular-nums; }
+.readout i { font-family: var(--text); font-weight: 700; font-size: 13px; font-style: normal; color: var(--paper-sub); }
+.readout--signal b, .readout--signal i { color: var(--signal-on-paper); }
+
+.pass__foot { padding: 16px 24px 32px; display: flex; flex-direction: column; gap: 16px; }
+.pass__code { display: flex; align-items: flex-end; gap: 16px; }
+.pass__codeText { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--paper-muted); margin-inline-start: auto; padding-bottom: 4px; }
+
+/* — alarm — */
+.alarm { background: var(--signal); color: var(--paper-text); padding: 24px 24px 32px; justify-content: space-between; }
+.alarm__hazard { position: absolute; top: 0; inset-inline: 0; height: 14px; background: repeating-linear-gradient(115deg, var(--paper-text) 0 9px, transparent 9px 22px); }
+.alarm__plate { display: flex; align-items: center; gap: 12px; padding-top: 24px; font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: 2px; }
+.alarm__sq { width: 8px; height: 8px; background: var(--paper-text); }
+.alarm__body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.beacon { position: relative; width: 168px; height: 168px; display: grid; place-items: center; }
+.beacon__ring { position: absolute; width: 116px; height: 116px; border-radius: 50%; background: var(--paper-text); animation: ping 1.4s ease-out infinite; }
+@keyframes ping { 0% { transform: scale(1); opacity: .45; } 100% { transform: scale(1.5); opacity: 0; } }
+.alarm__title { margin: 0; font-family: var(--display); font-weight: 900; font-size: 64px; line-height: .94; letter-spacing: -3.2px; }
+.alarm__sub { margin: 0; font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
+.alarm__dest { display: flex; align-items: center; gap: 8px; border-top: 1.5px solid var(--on-signal-line); padding-top: 16px; }
+.alarm__destLabel { font-family: var(--text); font-weight: 700; font-size: 13px; color: var(--on-signal); }
+.alarm__destName { font-family: var(--text); font-weight: 700; font-size: 17px; }
+.alarm .btn { height: 76px; font-size: 28px; letter-spacing: -1px; }
+
+/* ═══ device controls ═══ */
+.tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tool {
+  padding: 8px 12px; border: 1px solid var(--ink-line); background: var(--ink-raised);
+  color: var(--rail); cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1.4px;
+}
+.tool:hover { color: var(--paper); background: var(--ink-line); }
+.tool[aria-pressed="true"] { border-color: var(--signal); color: var(--paper); }
+
+/* ═══ notes ═══ */
+.notes { display: flex; flex-direction: column; gap: 32px; padding-top: 4px; }
+.note { display: flex; flex-direction: column; gap: 12px; }
+.note__head { display: flex; align-items: center; gap: 12px; }
+.note__key { width: 8px; height: 8px; flex: none; }
+.note__title { margin: 0; font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
+.note ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.note li { position: relative; padding-inline-start: 16px; font-size: 15px; line-height: 1.55; color: var(--rail-light); }
+.note li::before { content: ''; position: absolute; inset-inline-start: 0; top: .65em; width: 6px; height: 1px; background: var(--ink-line-strong); }
+.note strong { color: var(--paper); font-weight: 700; }
+
+code {
+  font-family: var(--mono); font-size: .85em; direction: ltr; unicode-bidi: embed;
+  padding: 1px 5px; background: var(--ink-raised); border: 1px solid var(--ink-line);
+  color: #ffb082; white-space: nowrap;
+}
+
+.callout { padding: 16px 20px; background: var(--ink-raised); border-inline-start: 3px solid var(--signal); display: flex; flex-direction: column; gap: 8px; }
+.callout__title { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
+.callout p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--rail-light); }
+
+.cmd { margin: 0; padding: 16px; background: var(--ink-deep); border: 1px solid var(--ink-line); overflow-x: auto; direction: ltr; text-align: left; }
+.cmd code { background: none; border: 0; padding: 0; color: #cbd8ff; font-size: 13px; line-height: 1.85; white-space: pre; }
+
+@media (max-width: 900px) {
+  .page { padding: 0 16px 48px; gap: 24px; }
+  .masthead { padding-top: 24px; }
+  .stage { grid-template-columns: minmax(0,1fr); justify-items: center; }
+  .device { position: static; width: 100%; align-items: center; }
+  .notes { width: 100%; max-width: 560px; }
+}
+@media (max-width: 520px) {
+  .phone { max-width: 100%; padding: 0; box-shadow: 0 16px 44px rgba(0,0,0,.6); }
+}
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <span class="masthead__plate">INTERACTIVE PROTOTYPE · כרטיס נסיעה</span>
+    <h1 class="masthead__title">הגענו?</h1>
+    <p class="masthead__lede">
+      לחצו על המפה, בחרו מרחק, הפעילו — ואז ״הדמיית נסיעה״. הנקודה נוסעת ליעד,
+      המרחק יורד, וכשהיא נכנסת לרדיוס ההתראה נדלקת עם הצליל האמיתי. הצבעים,
+      הגופנים, סקאלת הטיפוגרפיה וכלל ההפעלה זהים לקוד.
+    </p>
+  </header>
+
+  <div class="stage">
+    <div class="device">
+      <div class="phone">
+        <div class="app" id="app" dir="rtl">
+
+          <!-- ═══ permissions ═══ -->
+          <section class="screen perm" id="scPerm">
+            <div class="perm__rule"></div>
+            <div class="perm__body">
+              <div class="perm__counter">
+                <span class="perm__n">03</span>
+                <span class="perm__dash"></span>
+                <span class="perm__of">03</span>
+                <span class="perm__plate">PERMISSIONS</span>
+              </div>
+
+              <svg width="76" height="76" viewBox="0 0 76 76" fill="none" aria-hidden="true">
+                <path d="M52 14a26 26 0 1 0 0 48 31 31 0 0 1 0-48Z" fill="#FF6B1A"></path>
+                <circle cx="52" cy="38" r="9.5" stroke="#F2EDE4" stroke-width="2.5"></circle>
+                <circle cx="52" cy="38" r="3.25" fill="#F2EDE4"></circle>
+              </svg>
+
+              <div class="perm__copy">
+                <h2 class="perm__title">גם כשהמסך כבוי</h2>
+                <p class="perm__text">כדי להעיר אתכם לפני התחנה, ״הגענו?״ צריכה לזהות מתי אתם מתקרבים ליעד גם כשהמסך כבוי והטלפון בכיס.</p>
+                <div class="perm__note">
+                  <span class="perm__bang">!</span>
+                  <p class="perm__noteText">במסך הבא בחרו <strong>״תמיד״</strong>. זה מה שמאפשר לנו להעיר אתכם כשהטלפון נעול.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="perm__actions">
+              <button class="btn" type="button" id="permAllow">אפשרו גישה ברקע</button>
+              <button class="btn btn--ghost" type="button" id="permSkip">לא עכשיו</button>
+              <span class="perm__slogan"><i class="perm__dot"></i>תישן. אנחנו נעיר אותך.</span>
+            </div>
+          </section>
+
+          <!-- ═══ map ═══ -->
+          <section class="screen is-on" id="scMap">
+            <div class="map" id="map">
+              <canvas id="mapCanvas"></canvas>
+              <div class="geo" id="geo" hidden>
+                <svg id="zone" width="100%" height="100%" style="position:absolute;inset:0" aria-hidden="true"></svg>
+                <div class="node" id="node"></div>
+                <div class="zoneLabel" id="zoneLabel"><b id="zoneNum">500</b><span>מ׳</span></div>
+              </div>
+              <div class="me" id="me"></div>
+            </div>
+
+            <div class="chrome">
+              <div class="lockup">
+                <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+                  <rect width="30" height="30" fill="#FF6B1A"></rect>
+                  <circle cx="15" cy="15" r="8.75" stroke="#14161C" stroke-width="3" fill="none"></circle>
+                  <circle cx="15" cy="15" r="3" fill="#14161C"></circle>
+                </svg>
+                <span class="lockup__name">הגענו?</span>
+                <span class="lockup__live">LIVE</span>
+              </div>
+
+              <div id="searchWrap">
+                <div class="field">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.9"></circle>
+                    <path d="M16 16l4 4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+                  </svg>
+                  <input id="search" type="search" placeholder="חיפוש כתובת או תחנה" autocomplete="off" aria-label="חיפוש כתובת או תחנה">
+                </div>
+                <div class="results" id="results" role="listbox"></div>
+              </div>
+
+              <div class="banner" id="banner" hidden>
+                <span class="banner__bang">!</span>
+                <span>בלי הרשאת מיקום ברקע נעיר אתכם רק כשהאפליקציה פתוחה.</span>
+              </div>
+            </div>
+
+            <div class="controls" id="controls">
+              <button class="locate" type="button" id="locate" aria-label="המיקום שלי">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.9"></circle>
+                  <path d="M12 2v4M12 18v4M2 12h4M18 12h4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path>
+                </svg>
+              </button>
+            </div>
+
+            <div class="stub" id="stub"></div>
+          </section>
+
+          <!-- ═══ wake pass ═══ -->
+          <section class="screen pass" id="scPass">
+            <div class="pass__stub">
+              <svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true">
+                <rect width="30" height="30" fill="#FF6B1A"></rect>
+                <circle cx="15" cy="15" r="8.75" stroke="#14161C" stroke-width="3" fill="none"></circle>
+                <circle cx="15" cy="15" r="3" fill="#14161C"></circle>
+              </svg>
+              <span class="pass__brand">הגענו?</span>
+              <span class="plate" style="margin-inline-start:auto">WAKE PASS</span>
+            </div>
+
+            <div class="perf">
+              <div class="perf__notch perf__notch--s"></div>
+              <div class="perf__notch perf__notch--e"></div>
+              <div class="perf__dashes"></div>
+            </div>
+
+            <div class="pass__body">
+              <svg class="pass__watermark" width="300" height="300" viewBox="0 0 76 76" fill="none" aria-hidden="true">
+                <path d="M52 14a26 26 0 1 0 0 48 31 31 0 0 1 0-48Z" fill="#E6DFD1"></path>
+              </svg>
+
+              <div class="pass__head">
+                <div class="status"><i class="status__dot"></i><span class="status__label">ההתראה פעילה</span></div>
+                <h2 class="pass__title">אפשר<br>לישון</h2>
+                <p class="pass__sub">אנחנו נעיר אותך לפני היעד.</p>
+              </div>
+
+              <div class="board">
+                <div class="board__row">
+                  <span class="board__label">יעד</span>
+                  <span class="board__leader"></span>
+                  <span class="board__value" id="passDest">תחנת השלום</span>
+                </div>
+                <div class="board__row">
+                  <span class="board__label">מרחק נוכחי</span>
+                  <span class="board__leader"></span>
+                  <span class="readout"><b id="passDist">2.4</b><i id="passDistUnit">ק״מ</i></span>
+                </div>
+                <div class="board__row">
+                  <span class="board__label">התראה בטווח</span>
+                  <span class="board__leader"></span>
+                  <span class="readout readout--signal"><b id="passRadius">500</b><i>מ׳</i></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pass__foot">
+              <div class="pass__code">
+                <svg width="176" height="38" viewBox="0 0 176 38" fill="#14161C" aria-hidden="true" id="barcode"></svg>
+                <span class="pass__codeText" id="passCode">HGN·500</span>
+              </div>
+              <button class="btn btn--outline" type="button" id="rideBtn"><svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true" style="vertical-align:-1px"><path d="M2 1.5 11.5 6.5 2 11.5z" fill="currentColor"/></svg> הדמיית נסיעה</button>
+              <button class="btn btn--outline" type="button" id="cancelBtn">ביטול ההתראה</button>
+            </div>
+          </section>
+
+          <!-- ═══ alarm ═══ -->
+          <section class="screen alarm" id="scAlarm">
+            <div class="alarm__hazard"></div>
+            <div class="alarm__plate"><i class="alarm__sq"></i>ALARM · 05:42</div>
+
+            <div class="alarm__body">
+              <div class="beacon">
+                <div class="beacon__ring"></div>
+                <svg width="168" height="168" viewBox="0 0 168 168" fill="none" aria-hidden="true">
+                  <circle cx="84" cy="84" r="16" fill="#14161C"></circle>
+                  <circle cx="84" cy="84" r="34" stroke="#14161C" stroke-width="5" stroke-opacity=".72"></circle>
+                  <circle cx="84" cy="84" r="54" stroke="#14161C" stroke-width="4" stroke-opacity=".42"></circle>
+                  <circle cx="84" cy="84" r="76" stroke="#14161C" stroke-width="3" stroke-opacity=".2"></circle>
+                </svg>
+              </div>
+              <h2 class="alarm__title">הגענו!</h2>
+              <p class="alarm__sub">הגיע הזמן להתעורר</p>
+              <div class="alarm__dest">
+                <span class="alarm__destLabel">יעד</span>
+                <span class="alarm__destName" id="alarmDest">תחנת השלום</span>
+              </div>
+            </div>
+
+            <button class="btn btn--ink" type="button" id="dismiss">אני ער</button>
+          </section>
+        </div>
+      </div>
+
+      <div class="tools">
+        <button class="tool" type="button" data-go="perm">הרשאות</button>
+        <button class="tool" type="button" data-go="map">מפה</button>
+        <button class="tool" type="button" id="soundBtn" aria-pressed="true">צליל: פועל</button>
+        <button class="tool" type="button" id="schemeBtn" aria-pressed="false">תצוגה: לילה</button>
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="callout">
+        <span class="callout__title">למה זה אב טיפוס ולא APK</span>
+        <p>
+          מדיניות הרשת של הסביבה חוסמת את <code>dl.google.com</code> (ה־Android SDK
+          וה־Maven של גוגל) ואת <code>api.expo.dev</code> (ה־build בענן) — שניהם 403.
+          אין לי דרך להדר כאן קובץ התקנה, ול־iOS צריך macOS וחתימה של אפל ממילא.
+        </p>
+      </div>
+
+      <section class="note">
+        <div class="note__head"><i class="note__key" style="background:var(--signal)"></i><h2 class="note__title">מה אמיתי כאן</h2></div>
+        <ul>
+          <li><strong>הטוקנים</strong> — אחד לאחד מ־<code>src/theme/palette.ts</code> ו־<code>schemes.ts</code>, אחרי הבנייה מחדש.</li>
+          <li><strong>שתי הסכמות</strong> — לילה ויום, אותם ערכים כמו בקוד. יום הוא לא היפוך: אותו כרטיס נייר, מונח על דלפק חם וכבד יותר.</li>
+          <li><strong>שני המשטחים</strong> — <code>world</code> (המפה והשלד) ו־<code>ticket</code> (כל מה שהנוסע מחזיק) קיימים במקביל, וכל רכיב מבקש את המשטח שהוא מצויר עליו.</li>
+          <li><strong>ניגודיות</strong> — ארבעה ערכים שנפלו ב־WCAG AA תוקנו בשמירת גוון ורוויה: <code>#A79E8E</code> ← <code>#746B5B</code>, <code>#FF6B1A</code> כטקסט על נייר ← <code>#BE4300</code>.</li>
+          <li><strong>יעדים שמורים</strong> — רצועת ספחי כרטיס. בחירה משחזרת גם את המקום וגם את הרדיוס, כי הרדיוס הוא חלק מהנסיעה.</li>
+          <li><strong>סקאלת הטיפוגרפיה</strong> — אותם 10 גדלים בדיוק, אחרי שצומצמה מ־20.</li>
+          <li><strong>המרווחים</strong> — רשת 4pt, כמו בקוד.</li>
+          <li><strong>אזור ההתראה</strong> — טבעת מקווקוות, 12 שנתות אזימוט וקו מידה, מחושבים כמו ב־<code>utils/geo</code>.</li>
+          <li><strong>כלל ההפעלה</strong> — אותה בדיקה <code>distance ≤ radius</code>.</li>
+          <li><strong>הצליל</strong> — אותו דפוס: 784 / 988 / 1175 הרץ.</li>
+          <li><strong>גרעין הנייר</strong> — רעש פרקטלי ב־4.5% על כל משטח נייר, כמו <code>PaperGrain</code>.</li>
+          <li><strong>הלחיצה</strong> — 90ms למטה, 170ms למעלה, ונעצרת ב־<code>prefers-reduced-motion</code> בדיוק כמו <code>usePressScale</code>.</li>
+          <li><strong>אפס אימוג׳י</strong> — כל סימן מצויר SVG, כמו באפליקציה.</li>
+        </ul>
+      </section>
+
+      <section class="note">
+        <div class="note__head"><i class="note__key" style="background:var(--rail)"></i><h2 class="note__title">מה מודמה</h2></div>
+        <ul>
+          <li><strong>המפה</strong> מצוירת בקנבס. באפליקציה: Apple Maps ו‑Google Maps אמיתיות.</li>
+          <li><strong>החיפוש</strong> מסנן רשימת תחנות; באפליקציה הוא פונה ל‑geocoder של מערכת ההפעלה.</li>
+          <li><strong>הנסיעה</strong> — הכפתור מזיז את הנקודה כדי שתראו את המרחק יורד וההתראה נדלקת בזמן.</li>
+        </ul>
+      </section>
+
+      <section class="note">
+        <div class="note__head"><i class="note__key" style="background:var(--signal-deep)"></i><h2 class="note__title">מה קיים רק באפליקציה</h2></div>
+        <ul>
+          <li><strong>Geofence של מערכת ההפעלה.</strong> דף web לא יכול לרשום אזור ב‑<code>CLLocationManager</code> או ב‑<code>GeofencingClient</code>. זה לב המוצר.</li>
+          <li><strong>ריצה כשהמסך כבוי.</strong> דפדפן מושהה ברגע שנועלים את הטלפון — בדיוק מה שהאפליקציה בנויה לשרוד.</li>
+          <li><strong>התראה במסך הנעילה</strong> עם צליל בערוץ השעון המעורר, ומרחק שמתעדכן בזמן אמת.</li>
+          <li><strong>רטט ואפטיקה</strong> בארבע עוצמות.</li>
+          <li><strong>שלוש שכבות זיהוי</strong> — geofence, זרם מיקום ברקע, ובדיקת foreground. כאן רצה רק השלישית.</li>
+        </ul>
+      </section>
+
+      <section class="note">
+        <div class="note__head"><i class="note__key" style="background:var(--paper)"></i><h2 class="note__title">איך מייצרים APK</h2></div>
+        <pre class="cmd"><code>npm install -g eas-cli
+cd hagaanu &amp;&amp; npm install
+eas login &amp;&amp; eas init
+eas build --platform android --profile preview</code></pre>
+        <ul>
+          <li>בסוף מקבלים קישור להורדת ה‑APK ישירות לטלפון.</li>
+          <li><strong>המפה באנדרואיד תהיה אפורה</strong> עד שתכניסו מפתח Google Maps ל‑<code>.env</code>. שאר האפליקציה עובדת בלעדיו.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   Model. The canvas covers a fixed span in metres, so the ring drawn
+   for a 500 m radius is genuinely 500 m wide relative to the moving
+   dot — and the trigger below compares real distances.
+   ══════════════════════════════════════════════════════════════════ */
+const METERS_ACROSS = 5000;
+const PRESETS = [300, 500, 1000, 2000];
+const MIN_R = 150, MAX_R = 20000;
+
+// Drawn marks, never glyphs — the same rule the app holds itself to.
+const PLAY_MARK  = '<svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true" style="vertical-align:-1px"><path d="M2 1.5 11.5 6.5 2 11.5z" fill="currentColor"/></svg> ';
+const PAUSE_MARK = '<svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true" style="vertical-align:-1px"><path d="M2.5 1.5h3v10h-3zM7.5 1.5h3v10h-3z" fill="currentColor"/></svg> ';
+
+const STATIONS = [
+  'תל אביב סבידור מרכז', 'תל אביב השלום', 'תל אביב האוניברסיטה',
+  'חיפה מרכז השמונה', 'חיפה חוף הכרמל', 'בנימינה', 'הרצליה',
+  'ירושלים יצחק נבון', 'באר שבע מרכז', 'רחובות', 'לוד', 'כפר סבא נורדאו',
+  'נתניה', 'אשקלון', 'עכו', 'נהריה', 'מודיעין מרכז', 'רעננה מערב',
+];
+
+const state = {
+  screen: 'map',           // 'perm' | 'map' | 'pass' | 'alarm'
+  destination: null,       // { x, y, label } — normalised 0..1
+  radius: 500,
+  me: { x: .5, y: .86 },
+  backgroundGranted: true,
+  sound: true,
+  ride: null,
+  scheme: 'night',         // 'night' | 'day'
+  // Ordered by last use — yesterday's trip is most likely today's.
+  saved: [
+    { id: 's1', kind: 'work',    name: 'תל אביב השלום',    r: 500,  x: .53, y: .45 },
+    { id: 's2', kind: 'home',    name: 'כפר סבא נורדאו',   r: 1000, x: .36, y: .74 },
+    { id: 's3', kind: 'station', name: 'הרצליה',           r: 300,  x: .90, y: .09 },
+  ],
+};
+
+/* The marks, drawn — never emoji. Interface icons all sit on the 24 grid at
+   stroke 1.9, which is the icon set's one rule. */
+const MARKS = {
+  home:    '<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" fill="none"/>',
+  work:    '<path d="M3 8h18v12H3zM9 8V5h6v3M3 13h18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" fill="none"/>',
+  station: '<path d="M7 3h10v11H7zM7 8h10M9.5 17.5 7 21M14.5 17.5 17 21M9.5 11h.01M14.5 11h.01M7 14h10" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>',
+  favourite:'<path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" fill="none"/>',
+};
+
+const el = (id) => document.getElementById(id);
+const map = el('map');
+
+const box = () => { const r = map.getBoundingClientRect(); return { w: r.width, h: r.height }; };
+const scale = () => METERS_ACROSS / box().w;
+
+function distanceM(a, b) {
+  const { w, h } = box();
+  return Math.hypot((a.x - b.x) * w, (a.y - b.y) * h) * scale();
+}
+
+/** Mirrors formatDistance() in src/utils/geo.ts. */
+function fmt(m) {
+  if (!isFinite(m) || m < 0) return { value: '—', unit: '' };
+  if (m < 1000) {
+    const step = m < 100 ? 10 : 50;
+    return { value: String(Math.max(step, Math.round(m / step) * step)), unit: 'מ׳' };
+  }
+  const km = m / 1000;
+  return { value: km < 10 ? km.toFixed(1) : String(Math.round(km)), unit: 'ק״מ' };
+}
+const fmtStr = (m) => { const f = fmt(m); return f.unit ? `${f.value} ${f.unit}` : f.value; };
+
+/* ══ seeded map ══ */
+function makeRandom(seed) {
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+}
+
+function drawMap() {
+  const canvas = el('mapCanvas');
+  const { w, h } = box();
+  if (!w || !h) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  const c = canvas.getContext('2d');
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const rand = makeRandom(20260831);
+
+  // The map is pushed most of the way to a transit diagram in both schemes:
+  // no commercial POIs, roads collapsed to two weights, rail the only feature
+  // promoted above the base. What survives is line work, so the destination's
+  // orange zone is the only saturated thing on screen.
+  const M = state.scheme === 'day'
+    ? { ground:'#EDE7DA', water:'#D8D0C0', block:'#E5DFD2', street:'#D9D1C1',
+        arterial:'#CAC1AF', rail:'#5E5648', station:'#14161C', scale:'#5E5648', label:'#5E5648' }
+    : { ground:'#14161C', water:'#101219', block:'#1C1F28', street:'#232735',
+        arterial:'#2A2E3A', rail:'#78808E', station:'#9AA1AE', scale:'#3D4351', label:'#78808E' };
+
+  c.fillStyle = M.ground;
+  c.fillRect(0, 0, w, h);
+
+  // Coastline west — as it is for every Israeli city.
+  c.fillStyle = M.water;
+  c.beginPath();
+  c.moveTo(0, 0);
+  for (let y = 0; y <= h; y += h / 14) c.lineTo(w * (.1 + .045 * Math.sin(y / 74) + .02 * rand()), y);
+  c.lineTo(0, h);
+  c.closePath();
+  c.fill();
+
+  // Blocks.
+  const cell = Math.max(38, w / 8);
+  c.fillStyle = M.block;
+  for (let x = w * .13; x < w; x += cell) {
+    for (let y = -cell; y < h + cell; y += cell) {
+      if (rand() < .18) continue;
+      const p = 5 + rand() * 7;
+      c.fillRect(x + p, y + p, cell - p * 2, cell - p * 2);
+    }
+  }
+
+  // Street grid.
+  c.strokeStyle = M.street; c.lineWidth = 1.4;
+  for (let x = w * .13; x < w; x += cell) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); }
+  for (let y = -cell; y < h + cell; y += cell) { c.beginPath(); c.moveTo(w * .1, y); c.lineTo(w, y); c.stroke(); }
+
+  // Arterials.
+  c.strokeStyle = M.arterial; c.lineWidth = 5;
+  c.beginPath(); c.moveTo(w * .1, h * .42); c.lineTo(w, h * .36); c.stroke();
+
+  // The railway — the subject, so it gets its own weight.
+  c.strokeStyle = M.rail; c.lineWidth = 7; c.lineCap = 'round';
+  c.beginPath();
+  c.moveTo(w * .13, h);
+  c.bezierCurveTo(w * .31, h * .83, w * .43, h * .66, w * .53, h * .45);
+  c.bezierCurveTo(w * .62, h * .28, w * .9, h * .2, w * .92, 0);
+  c.stroke();
+
+  // Stations on it.
+  for (const [px, py] of [[.53, .45], [.36, .74], [.9, .09]]) {
+    c.beginPath(); c.arc(w * px, h * py, 7, 0, Math.PI * 2);
+    c.fillStyle = M.ground; c.fill();
+    c.strokeStyle = M.station; c.lineWidth = 3; c.stroke();
+  }
+
+  // Scale bar — this diagram has a real metric scale and says so.
+  const barPx = 1000 / scale();
+  const bx = w - 20 - barPx, by = h - 20;
+  c.strokeStyle = M.scale; c.lineWidth = 1.5; c.lineCap = 'butt';
+  c.beginPath(); c.moveTo(bx, by - 5); c.lineTo(bx, by); c.lineTo(bx + barPx, by); c.lineTo(bx + barPx, by - 5); c.stroke();
+  c.fillStyle = M.label;
+  c.font = '400 11px "IBM Plex Mono", monospace';
+  c.textAlign = 'center';
+  c.fillText('1 KM', bx + barPx / 2, by - 9);
+}
+
+/* ══ the alert zone, as a survey diagram ══ */
+function drawZone() {
+  const svg = el('zone');
+  const { w, h } = box();
+  if (!state.destination) { svg.innerHTML = ''; return; }
+
+  const cx = state.destination.x * w, cy = state.destination.y * h;
+  const r = state.radius / scale();
+  const S = 'stroke="#FF6B1A" fill="none"';
+  let out = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#FF6B1A" fill-opacity=".07"></circle>`;
+  out += `<circle cx="${cx}" cy="${cy}" r="${r}" ${S} stroke-width="2" stroke-dasharray="7 6"></circle>`;
+
+  // Twelve azimuth ticks, just outside the ring.
+  const tick = Math.max(6, r * .12);
+  for (let i = 0; i < 12; i++) {
+    const a = (i * 30) * Math.PI / 180;
+    out += `<line x1="${cx + r * Math.cos(a)}" y1="${cy + r * Math.sin(a)}" x2="${cx + (r + tick) * Math.cos(a)}" y2="${cy + (r + tick) * Math.sin(a)}" ${S} stroke-width="2" stroke-linecap="round"></line>`;
+  }
+  // Radius dimension line, due west, with an end cap.
+  out += `<line x1="${cx}" y1="${cy}" x2="${cx - r}" y2="${cy}" ${S} stroke-width="1.5"></line>`;
+  out += `<line x1="${cx - r}" y1="${cy - r * .09 - 4}" x2="${cx - r}" y2="${cy + r * .09 + 4}" ${S} stroke-width="1.5"></line>`;
+  svg.innerHTML = out;
+
+  const label = el('zoneLabel');
+  label.style.insetInlineEnd = (w - (cx - r / 2)) + 'px';
+  label.style.top = (cy - 18) + 'px';
+  el('zoneNum').textContent = state.radius;
+}
+
+/* ══ the alarm tone — the pattern alarm.wav encodes ══ */
+let audio = null, toneTimer = null;
+
+function beep(t, dur, freq) {
+  const osc = audio.createOscillator(), gain = audio.createGain();
+  const harm = audio.createOscillator(), hg = audio.createGain();
+  osc.frequency.value = freq; harm.frequency.value = freq * 2; hg.gain.value = .32;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(.5, t + .008);
+  gain.gain.setValueAtTime(.5, t + dur - .045);
+  gain.gain.linearRampToValueAtTime(0, t + dur);
+  osc.connect(gain); harm.connect(hg); hg.connect(gain); gain.connect(audio.destination);
+  osc.start(t); osc.stop(t + dur); harm.start(t); harm.stop(t + dur);
+}
+
+function startTone() {
+  if (!state.sound) return;
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+  } catch { return; }
+  const cycle = () => {
+    const t = audio.currentTime;
+    beep(t + .00, .16, 784);   // G5
+    beep(t + .22, .16, 988);   // B5
+    beep(t + .44, .22, 1175);  // D6
+    beep(t + .86, .14, 1175);
+    beep(t + 1.06, .14, 1175);
+  };
+  cycle();
+  toneTimer = setInterval(cycle, 2000);
+}
+function stopTone() { if (toneTimer) { clearInterval(toneTimer); toneTimer = null; } }
+function buzz(p) { if (navigator.vibrate) { try { navigator.vibrate(p); } catch {} } }
+
+/* ══ barcode — a fixed sequence; a real ticket's code does not reshuffle ══ */
+const BARS = [[0,3],[5,1],[9,2],[14,4],[21,1],[25,3],[31,1],[35,2],[40,4],[47,2],[52,1],[56,3],
+  [62,2],[67,1],[71,4],[78,1],[82,2],[87,3],[93,1],[97,2],[102,4],[109,1],[113,3],[119,2],
+  [124,1],[128,4],[135,2],[140,1],[144,3],[150,1],[154,2],[159,4],[166,1],[170,3]];
+el('barcode').innerHTML = BARS.map(([x, w]) => `<rect x="${x}" y="0" width="${w}" height="38"></rect>`).join('');
+
+/* ══ render ══ */
+function renderOverlay() {
+  const { w, h } = box();
+  el('me').style.insetInlineEnd = ((1 - state.me.x) * w) + 'px';
+  el('me').style.top = (state.me.y * h) + 'px';
+
+  const geo = el('geo');
+  if (!state.destination) { geo.hidden = true; return; }
+  geo.hidden = false;
+  el('node').style.insetInlineEnd = ((1 - state.destination.x) * w) + 'px';
+  el('node').style.top = (state.destination.y * h) + 'px';
+  drawZone();
+}
+
+/**
+ * Saved destinations, as a row of torn ticket stubs.
+ *
+ * A strip and not a screen: the whole value is speed, and a route transition
+ * would spend the ten-second arming budget the product is built around. It
+ * renders nothing when empty — an empty strip holding permanent space on the
+ * one screen that matters would cost every user to serve none.
+ */
+function savedStrip() {
+  if (!state.saved.length) return '';
+  const stubs = state.saved.map((it) => `
+    <button class="saved__stub" type="button" data-saved="${it.id}" title="${it.name}">
+      <span class="saved__punch"></span>
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">${MARKS[it.kind]}</svg>
+      <span class="saved__text">
+        <span class="saved__name">${it.name}</span>
+        <span class="saved__r">${it.r >= 1000 ? (it.r / 1000) + ' ק״מ' : it.r + ' מ׳'}</span>
+      </span>
+    </button>`).join('');
+  return `<div class="saved">
+    <span class="saved__plate">SAVED</span>
+    <div class="saved__track">${stubs}</div>
+  </div>`;
+}
+
+function isSaved() {
+  return !!state.destination && state.saved.some((it) => it.name === state.destination.label);
+}
+
+function renderStub() {
+  const stub = el('stub');
+  const perf = '<div class="perf"><div class="perf__notch perf__notch--s"></div><div class="perf__notch perf__notch--e"></div><div class="perf__dashes"></div></div>';
+
+  if (!state.destination) {
+    stub.innerHTML = perf + `<div class="stub__body">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span class="plate">DESTINATION</span>
+        <h2 class="stub__title">איפה להעיר אתכם?</h2>
+        <p class="stub__sub">חפשו כתובת או לחצו על המפה</p>
+      </div>
+      ${savedStrip()}</div>`;
+    return;
+  }
+
+  const d = fmtStr(distanceM(state.me, state.destination));
+  const zones = PRESETS.map((p) => {
+    const on = p === state.radius;
+    return `<button class="zone" type="button" role="radio" aria-checked="${on}" data-r="${p}">${on ? '<i class="zone__cap"></i>' : ''}${p}</button>`;
+  }).join('');
+  const customOn = !PRESETS.includes(state.radius);
+
+  stub.innerHTML = perf + `<div class="stub__body">
+    <div class="dest">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="margin-top:4px" aria-hidden="true">
+        <circle cx="12" cy="12" r="8" stroke="#FF6B1A" stroke-width="2.4"></circle>
+        <circle cx="12" cy="12" r="3" fill="#FF6B1A"></circle>
+      </svg>
+      <div class="dest__text">
+        <span class="dest__name">${state.destination.label}</span>
+        <span class="dest__meta">מרחק ממך · ${d}</span>
+      </div>
+      <button class="dest__clear" type="button" id="clearDest" aria-label="שינוי יעד">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="#A79E8E" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="zoneLabelHe">באיזה מרחק להעיר?</span>
+      <div class="zones" role="radiogroup" aria-label="מרחק מהיעד">
+        ${zones}
+        <button class="zone" type="button" role="radio" aria-checked="${customOn}" id="customZone" aria-label="מרחק מותאם אישית">
+          ${customOn ? '<i class="zone__cap"></i>' + state.radius : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#14161C" stroke-width="2.2" stroke-linecap="round"></path></svg>'}
+        </button>
+      </div>
+      <span class="plate">METRES</span>
+    </div>
+
+    <button class="btn" type="button" id="armBtn">תעיר אותי כאן</button>
+    <button class="ghost" type="button" id="saveBtn"${isSaved() ? ' disabled' : ''}>${isSaved() ? 'נשמר' : 'שמירת היעד'}</button>
+  </div>`;
+}
+
+function renderPass() {
+  if (!state.destination) return;
+  el('passDest').textContent = state.destination.label;
+  const d = fmt(distanceM(state.me, state.destination));
+  el('passDist').textContent = d.value;
+  el('passDistUnit').textContent = d.unit;
+  el('passRadius').textContent = state.radius;
+  el('passCode').textContent = 'HGN·' + state.radius;
+  el('rideBtn').innerHTML = state.ride ? PAUSE_MARK + 'עצירת ההדמיה' : PLAY_MARK + 'הדמיית נסיעה';
+}
+
+function render() {
+  for (const [id, name] of [['scPerm','perm'], ['scMap','map'], ['scPass','pass'], ['scAlarm','alarm']]) {
+    el(id).classList.toggle('is-on', state.screen === name);
+  }
+  el('banner').hidden = state.backgroundGranted;
+  el('searchWrap').hidden = false;
+  document.querySelectorAll('[data-go]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.go === state.screen)));
+
+  if (state.screen === 'map') { renderStub(); renderOverlay(); positionControls(); }
+  if (state.screen === 'pass') renderPass();
+  if (state.screen === 'alarm' && state.destination) el('alarmDest').textContent = state.destination.label;
+}
+
+function positionControls() {
+  const stub = el('stub');
+  el('controls').style.bottom = (stub.offsetHeight + 16) + 'px';
+}
+
+/* ══ the trigger — same shape as ArrivalCoordinator.trigger() ══ */
+function triggerArrival() {
+  if (state.screen === 'alarm') return;
+  stopRide();
+  state.screen = 'alarm';
+  render();
+  buzz([0, 800, 400, 800, 400, 1200]);
+  startTone();
+}
+
+/* ══ simulated ride ══ */
+function stopRide() { if (state.ride) { cancelAnimationFrame(state.ride.raf); state.ride = null; } }
+
+function startRide() {
+  stopRide();
+  const { w, h } = box();
+  const speed = 260;             // simulated metres per second
+  let last = performance.now();
+
+  const step = (now) => {
+    const dt = Math.min((now - last) / 1000, .1); last = now;
+    const dx = (state.destination.x - state.me.x) * w;
+    const dy = (state.destination.y - state.me.y) * h;
+    const px = Math.hypot(dx, dy);
+    const travel = (speed * dt) / scale();
+
+    if (px > travel) { state.me.x += (dx / px) * travel / w; state.me.y += (dy / px) * travel / h; }
+    else { state.me.x = state.destination.x; state.me.y = state.destination.y; }
+
+    const dist = distanceM(state.me, state.destination);
+    const f = fmt(dist);
+    el('passDist').textContent = f.value;
+    el('passDistUnit').textContent = f.unit;
+
+    if (dist <= state.radius) { triggerArrival(); return; }   // the real rule
+    state.ride.raf = requestAnimationFrame(step);
+  };
+  state.ride = { raf: requestAnimationFrame(step) };
+  renderPass();
+}
+
+/* ══ events ══ */
+map.addEventListener('click', (e) => {
+  if (state.screen !== 'map') return;
+  const r = map.getBoundingClientRect();
+  state.destination = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height, label: 'יעד שנבחר' };
+  el('search').value = ''; el('results').innerHTML = '';
+  render();
+});
+
+el('search').addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  const out = el('results');
+  if (q.length < 2) { out.innerHTML = ''; return; }
+  const hits = STATIONS.filter((s) => s.includes(q)).slice(0, 5);
+  out.innerHTML = hits.length
+    ? hits.map((s) => `<button class="result" type="button" role="option" data-station="${s}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="8" stroke="#FF6B1A" stroke-width="2.4"></circle>
+          <circle cx="12" cy="12" r="3" fill="#FF6B1A"></circle></svg>
+        <span>${s}</span></button>`).join('')
+    : '<div style="padding:16px;font-size:15px;color:var(--paper-sub)">לא נמצאה כתובת מתאימה.</div>';
+});
+
+el('results').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-station]');
+  if (!b) return;
+  const name = b.dataset.station;
+  // Positions on a stylised map are illustrative, derived from the name so a
+  // given station always lands in the same place.
+  const rand = makeRandom([...name].reduce((a, ch) => a + ch.charCodeAt(0), 7));
+  state.destination = { x: .3 + rand() * .45, y: .2 + rand() * .3, label: name };
+  el('search').value = ''; el('results').innerHTML = '';
+  render();
+});
+
+el('stub').addEventListener('click', (e) => {
+  const r = e.target.closest('[data-r]');
+  if (r) { state.radius = Number(r.dataset.r); render(); return; }
+
+  if (e.target.closest('#customZone')) {
+    const raw = window.prompt('מרחק מותאם אישית (במטרים) — בין 150 ל‑20000', String(state.radius));
+    if (raw === null) return;
+    const v = parseInt(String(raw).replace(/\D/g, ''), 10);
+    if (!isFinite(v) || v < MIN_R || v > MAX_R) { window.alert('יש להזין מרחק בין ' + MIN_R + ' ל‑' + MAX_R + ' מטר'); return; }
+    state.radius = v; render(); return;
+  }
+  if (e.target.closest('#clearDest')) { state.destination = null; render(); return; }
+
+  // Restoring a saved trip restores the place AND the radius. The radius is
+  // part of the trip, not a global preference — the person who rides the same
+  // line every morning wants yesterday's alarm back whole.
+  const sv = e.target.closest('[data-saved]');
+  if (sv) {
+    const it = state.saved.find((x) => x.id === sv.dataset.saved);
+    if (it) {
+      state.destination = { x: it.x, y: it.y, label: it.name };
+      state.radius = it.r;
+      state.saved = [it, ...state.saved.filter((x) => x.id !== it.id)];
+      buzz(12);
+      render();
+    }
+    return;
+  }
+
+  if (e.target.closest('#saveBtn')) {
+    if (!isSaved() && state.destination) {
+      state.saved = [{
+        id: 's' + Date.now(), kind: 'favourite', name: state.destination.label,
+        r: state.radius, x: state.destination.x, y: state.destination.y,
+      }, ...state.saved].slice(0, 12);
+      buzz(12);
+      render();
+    }
+    return;
+  }
+
+  if (e.target.closest('#armBtn')) { buzz(40); state.screen = 'pass'; render(); }
+});
+
+el('rideBtn').addEventListener('click', () => { if (state.ride) { stopRide(); renderPass(); } else startRide(); });
+el('cancelBtn').addEventListener('click', () => { stopRide(); state.screen = 'map'; render(); });
+
+el('dismiss').addEventListener('click', () => {
+  stopTone(); buzz(0);
+  // Peak-End: the destination is cleared, so an arrived user is not offered an
+  // alarm for the station they are standing on.
+  state.destination = null;
+  state.me = { x: .5, y: .86 };
+  state.screen = 'map';
+  render();
+});
+
+el('permAllow').addEventListener('click', () => { state.backgroundGranted = true; state.screen = 'map'; render(); });
+el('permSkip').addEventListener('click', () => { state.backgroundGranted = false; state.screen = 'map'; render(); });
+el('locate').addEventListener('click', () => renderOverlay());
+
+document.querySelectorAll('[data-go]').forEach((b) =>
+  b.addEventListener('click', () => { state.screen = b.dataset.go; render(); }));
+
+el('schemeBtn').addEventListener('click', (e) => {
+  state.scheme = state.scheme === 'night' ? 'day' : 'night';
+  el('app').dataset.scheme = state.scheme;
+  e.currentTarget.setAttribute('aria-pressed', String(state.scheme === 'day'));
+  e.currentTarget.textContent = state.scheme === 'day' ? 'תצוגה: יום' : 'תצוגה: לילה';
+  drawMap();
+  render();
+});
+
+el('soundBtn').addEventListener('click', (e) => {
+  state.sound = !state.sound;
+  e.currentTarget.setAttribute('aria-pressed', String(state.sound));
+  e.currentTarget.textContent = state.sound ? 'צליל: פועל' : 'צליל: כבוי';
+  if (!state.sound) stopTone();
+});
+
+let rt = null;
+window.addEventListener('resize', () => {
+  clearTimeout(rt);
+  rt = setTimeout(() => { drawMap(); renderOverlay(); positionControls(); }, 120);
+});
+
+function boot() { drawMap(); render(); }
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(boot);
+else boot();
+</script>

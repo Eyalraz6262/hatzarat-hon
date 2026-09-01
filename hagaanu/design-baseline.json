@@ -1,0 +1,324 @@
+{
+  "tool": "mobile-design-review",
+  "version": 1,
+  "date": "2026-09-01",
+  "pass": "static-only",
+  "designDoc": "MOBILE-DESIGN.md (written this run) + src/theme/{palette,schemes,index}.ts",
+  "designScore": "A",
+  "slopScore": "A",
+  "designScoreNote": "4.00 mean at close. All 19 findings closed; no high-impact finding open, so the B cap does not apply. The score is a STATIC score — see unverified.",
+  "categories": {
+    "navigation": "A",
+    "screenAnatomy": "A",
+    "typography": "A",
+    "colorTheming": "A",
+    "surfacesGrouping": "A",
+    "states": "A",
+    "interactionMotion": "A",
+    "formsInput": "A",
+    "performance": "A",
+    "copyContent": "A"
+  },
+  "findings": [
+    {
+      "id": "FINDING-001",
+      "impact": "high",
+      "category": "navigation",
+      "summary": "Android back unhandled on the alarm screen; a reflex press backgrounded the app mid-alarm",
+      "tell": null,
+      "status": "fixed",
+      "commit": "5c97184"
+    },
+    {
+      "id": "FINDING-002",
+      "impact": "high",
+      "category": "typography",
+      "summary": "No screen scrolled and no display font-scale ceiling; large Dynamic Type clipped content unreachably",
+      "tell": null,
+      "status": "fixed",
+      "commit": "bba4a33"
+    },
+    {
+      "id": "FINDING-003",
+      "impact": "medium",
+      "category": "colorTheming",
+      "summary": "Untokenised rgba textShadow on the map lockup",
+      "tell": 6,
+      "status": "fixed",
+      "commit": "405ec68"
+    },
+    {
+      "id": "FINDING-004",
+      "impact": "medium",
+      "category": "interactionMotion",
+      "summary": "Search clear and clear-destination Pressables had no pressed state",
+      "tell": 35,
+      "status": "fixed",
+      "commit": "568dffe"
+    },
+    {
+      "id": "FINDING-005",
+      "impact": "polish",
+      "category": "copyContent",
+      "summary": "Gear pictograph in the dev-only simulate button, against the app's own no-emoji rule",
+      "tell": 1,
+      "status": "fixed",
+      "commit": "568dffe"
+    },
+    {
+      "id": "FINDING-006",
+      "impact": "medium",
+      "category": "typography",
+      "summary": "20 distinct font sizes once inline overrides were counted; scale collapsed to 10 with zero inline fontSize",
+      "tell": null,
+      "lens": "mobile-app-ui-design (max 4 sizes)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-007",
+      "impact": "medium",
+      "category": "performance",
+      "summary": "Font packages imported from their roots bundled 30 .ttf to use 6; switched to weight subpaths (assets 4.0MB -> 1.7MB)",
+      "tell": null,
+      "lens": "mobile-app-ui-design (2 weights max) surfaced the dead faces",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-008",
+      "impact": "medium",
+      "category": "screenAnatomy",
+      "summary": "14 spacing values off the 4pt grid; snapped to the scale",
+      "tell": null,
+      "lens": "mobile-app-ui-design (8-point grid)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-009",
+      "impact": "medium",
+      "category": "states",
+      "summary": "Dismissing the alarm kept the destination, dropping an arrived user onto a card offering to wake them where they stood; the ending now clears it",
+      "tell": null,
+      "lens": "mobile-app-ui-design (Peak-End Rule)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-010",
+      "impact": "medium",
+      "category": "iconography",
+      "summary": "Interface icons drifted across 1.9/2/2.2/2.4 stroke against the set's own documented 1.9; standardised, and brand marks split into a separate documented class",
+      "tell": null,
+      "lens": "taste-skill (inconsistent stroke widths)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-011",
+      "impact": "medium",
+      "category": "interactionMotion",
+      "summary": "Pressed states were colour-only and instant; added a native-driven press-scale that respects reduce motion",
+      "tell": 35,
+      "lens": "taste-skill (no active/pressed feedback) — agrees with tell #35",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-012",
+      "impact": "polish",
+      "category": "surfacesGrouping",
+      "summary": "Every surface was a flat fill; the paper now carries a seeded 128px grain at 4.5%, so a printed ticket reads as printed",
+      "tell": null,
+      "lens": "taste-skill (flat design with zero texture)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-013",
+      "impact": "polish",
+      "category": "screenAnatomy",
+      "summary": "Hardcoded maxWidth 190 truncated Hebrew station names on wider phones; replaced with flexShrink",
+      "tell": null,
+      "lens": "taste-skill (hardcoded pixel widths)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-014",
+      "impact": "high",
+      "category": "colorTheming",
+      "summary": "Four shipped palette values failed WCAG AA as text (paperMuted 2.27:1, signalOnPaper 2.44:1, rail 3.74:1, paperSub 4.15:1); solved by holding hue and saturation and moving lightness until each cleared 4.5:1",
+      "tell": null,
+      "phase": "1",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-015",
+      "impact": "high",
+      "category": "colorTheming",
+      "summary": "No light mode, and none was possible: tokens were named after the material (ink/paper/rail) so every component hard-coded one. Added a palette -> schemes indirection with two Surface sets per scheme and a real day scheme that is a second material rather than an inversion",
+      "tell": null,
+      "phase": "1-2",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-016",
+      "impact": "medium",
+      "category": "states",
+      "summary": "Saved destinations were designed and stringed but never built; the i18n keys had shipped with no code behind them. Built as a strip of torn ticket stubs above the setup sheet, restoring place AND radius",
+      "tell": null,
+      "phase": "5",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-017",
+      "impact": "medium",
+      "category": "states",
+      "summary": "removeSaved was defined in the store and never called, so a mis-saved stop was permanent until the 12-item cap pushed it out; added long-press to delete behind a confirm, with the hint on the accessibility label",
+      "tell": null,
+      "phase": "5",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-018",
+      "impact": "medium",
+      "category": "typography",
+      "summary": "The new SavedStrip set fontSize inline, re-opening FINDING-006 in the same commit that closed the feature; moved to type.bodyStrong. Caught by the close-out regression, not by review",
+      "tell": null,
+      "phase": "5",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-019",
+      "impact": "polish",
+      "category": "copyContent",
+      "summary": "The type scale's own doc comment still claimed nine sizes after the collapse landed ten",
+      "tell": null,
+      "phase": "5",
+      "status": "fixed"
+    }
+  ],
+  "dismissed": [
+    {
+      "tell": 13,
+      "where": "src/components/map/SearchBar.tsx",
+      "reason": "ScrollView wraps a map over results capped at 5 in GeocodingService.search; the tell explicitly permits bounded lists"
+    },
+    {
+      "tell": 32,
+      "where": "src/screens/PassScreen.tsx",
+      "reason": "single Alert.alert, guarding the destructive cancel — the sanctioned use"
+    },
+    {
+      "tell": 1,
+      "where": "src/screens/HomeScreen.tsx:24",
+      "reason": "arrow glyph is inside a code comment, not user-visible"
+    },
+    {
+      "tell": 33,
+      "where": "src/i18n/translations/he.ts",
+      "reason": "4 em-dashes in Hebrew strings; the em-dash is standard Hebrew punctuation, the tell targets English LLM copy tics"
+    },
+    {
+      "tell": 2,
+      "reason": "0 hits: no indigo family, 0 LinearGradient"
+    },
+    {
+      "tell": 5,
+      "reason": "0 shadowColor anywhere; the signage system has no shadows"
+    },
+    {
+      "tell": 14,
+      "reason": "0 magic paddingTop; safe-area insets throughout"
+    },
+    {
+      "tell": 36,
+      "reason": "0 useNativeDriver:false; every animation is native-driven"
+    },
+    {
+      "tell": 6,
+      "reason": "0 inline hex outside src/theme after FINDING-003"
+    },
+    {
+      "tell": 41,
+      "reason": "no settings screen exists yet"
+    },
+    {
+      "tell": 42,
+      "reason": "standDown() enumerates and clears geofence, location task, scheduled + presented notifications, audio session and storage"
+    },
+    {
+      "tell": 13,
+      "where": "src/components/sheets/SavedStrip.tsx",
+      "reason": "ScrollView over saved stubs capped at MAX = 12 in SavedStorage; bounded list, and a horizontal strip of 12 does not warrant FlatList overhead"
+    },
+    {
+      "tell": 13,
+      "where": "src/screens/PermissionsScreen.tsx",
+      "reason": "ScrollView over a fixed 3-card board, not a data list"
+    },
+    {
+      "tell": 32,
+      "where": "src/components/sheets/SavedStrip.tsx",
+      "reason": "Alert.alert guards the destructive delete — the sanctioned use"
+    },
+    {
+      "tell": 32,
+      "where": "src/components/sheets/SetupSheet.tsx",
+      "reason": "Alert.prompt names a saved stop on iOS; documented platform divergence, Android falls back to the destination's own label"
+    },
+    {
+      "tell": 11,
+      "where": "borderRadius 4.5/5/8/13/58 across ui, DestinationMap, SavedStrip, AlarmScreen",
+      "reason": "every one is exactly half its element's size — station nodes, perforation punches, the alarm target. Circles by nature, which is the documented exception to the square-corners rule; no rounded rectangle anywhere"
+    },
+    {
+      "where": "SavedStrip stubs use a pressed fill rather than usePressScale",
+      "reason": "a scale animation on an item inside a horizontal ScrollView fights the scroll gesture; a pressed fill is the correct feedback there and is still real feedback"
+    }
+  ],
+  "unverified": [
+    "No simulator, emulator or device was reachable: dl.google.com and api.expo.dev are blocked by the environment's network policy, so no Android SDK and no EAS build.",
+    "NOT verified on a device: keyboard avoidance, splash-to-first-frame transition, scroll performance, actual font-scale rendering at 1.3x, edge-to-edge insets, haptic firing, alarm audibility, geofence delivery.",
+    "First-impression narration and Trunk Test were not run — they are live-pass instruments and a static review cannot fake them.",
+    "The day scheme has not been seen rendered. Its contrast ratios were computed, not observed, and Apple Maps' own light appearance under userInterfaceStyle='light' is unverified against the ticket paper."
+  ],
+  "secondLens": "ceorkm/mobile-app-ui-design — run as a second, differently-opinionated pass",
+  "dismissedFromSecondLens": [
+    "Use emojis/illustrations for personality — contradicts the approved direction's rule 3 and tell #1; every mark in this app is drawn SVG.",
+    "backdrop-blur / glassmorphism — tell #9 (BLURVIEW GLASS SPAM).",
+    "rounded-2xl / rounded-3xl cards — contradicts rule 1 (square corners only) and tell #11.",
+    "Glows, white inner shadows on buttons, 5% accent borders — the signage system has no shadows by design; adding them is the generic-premium look the direction rejects.",
+    "Tailwind / Lucide / Recharts implementation notes — wrong stack; this is React Native StyleSheet.",
+    "Sleep/Meditation convention: purple and deep blue — the user chose signal orange on ink.",
+    "60/30/10: accent is 20% of colour REFERENCES, but that is not surface area — the alarm screen is a deliberate full flood counted as one reference. Not actionable as measured.",
+    "Max 4 font sizes: landed at 10, not 4. A system with a display voice, a Hebrew text voice and a departures-board mono register cannot honestly reach 4; halving it and removing every one-off was the real win."
+  ],
+  "thirdLens": "Leonxlnx/taste-skill — the web-scoped upstream that draftbit adapted for RN",
+  "dismissedFromThirdLens": [
+    "Accent saturation <=80%: signal orange measures S=100%. Deliberate — it is a signal colour on rail signage and the alarm flood is meant to scream. Also an approved brand decision, not mine to re-litigate.",
+    "One grey family only: rail greys are cool (H~220), paper greys warm (H~37). Both are present, but they never share a ground — greys relate to the surface they sit on, and mixing them WITHIN a surface is what the rule is actually about.",
+    "No random dark section in a light page: the wake pass is all-paper while other screens are ink. Systematic, not a copy-paste accident — it is the ticket metaphor.",
+    "Glassmorphism, spotlight borders, mesh gradients, variable-font and scroll-driven motion: web techniques, and several contradict the approved direction and the anti-slop catalog.",
+    "Font suggestions (Geist, Outfit, Satoshi, Cabinet Grotesk): none carry Hebrew. Heebo and Assistant were chosen for exactly that reason.",
+    "404 pages, cookie consent, meta tags, skip-to-content, smooth scroll, semantic HTML, z-index scale: web-only, no analogue in React Native.",
+    "Lorem Ipsum / Acme / John Doe / round numbers: none present; copy is real Hebrew throughout."
+  ],
+  "run": "regression — mobile-redesign-app, preserve-language mode (2nd run against this baseline)",
+  "delta": {
+    "against": "the 2026-09-01 pre-rebuild baseline (13 findings, all fixed)",
+    "categories": "no letter changed — every category was already A and none regressed",
+    "newFindings": [
+      "FINDING-014 (high)",
+      "FINDING-015 (high)",
+      "FINDING-016",
+      "FINDING-017",
+      "FINDING-018",
+      "FINDING-019"
+    ],
+    "resolvedThisRun": [
+      "FINDING-014",
+      "FINDING-015",
+      "FINDING-016",
+      "FINDING-017",
+      "FINDING-018",
+      "FINDING-019"
+    ],
+    "stillOpen": [],
+    "note": "The two high findings were invisible to the first pass because it graded the system that existed: a single-scheme app cannot fail dark-mode parity, and contrast was assumed rather than measured. Building the second scheme is what made both measurable. FINDING-018 is the regression pass earning its keep — the rebuild broke a rule the rebuild had set."
+  }
+}
