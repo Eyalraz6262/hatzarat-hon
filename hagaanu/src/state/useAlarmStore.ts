@@ -7,6 +7,7 @@ import { GeofencingService } from '../services/geofencing/GeofencingService';
 import { LocationService } from '../services/location/LocationService';
 import { NotificationService } from '../services/notifications/NotificationService';
 import { AlarmStorage } from '../services/storage/AlarmStorage';
+import { SavedStorage, type SavedDestination, type SavedKind } from '../services/storage/SavedStorage';
 import { usePermissionsStore } from './usePermissionsStore';
 import type { AlarmSession, AlarmStatus, Destination, PositionSample } from '../types';
 import { distanceMeters, formatDistance } from '../utils/geo';
@@ -25,6 +26,8 @@ type AlarmState = {
   /** True while arm/cancel is in flight, so the button can't be double-tapped. */
   busy: boolean;
   error: string | null;
+  /** Ordered by last use — the trip taken yesterday is the likely one now. */
+  saved: SavedDestination[];
 
   setDestination: (destination: Destination | null) => void;
   setRadius: (radiusM: number) => void;
@@ -33,6 +36,9 @@ type AlarmState = {
 
   /** Rehydrates from disk — call once at boot, before the first render matters. */
   hydrate: () => Promise<void>;
+  saveCurrent: (name: string, kind: SavedKind) => Promise<void>;
+  useSaved: (item: SavedDestination) => Promise<void>;
+  removeSaved: (id: string) => Promise<void>;
   arm: () => Promise<boolean>;
   cancel: () => Promise<void>;
   dismissAlarm: () => Promise<void>;
@@ -54,6 +60,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   session: null,
   busy: false,
   error: null,
+  saved: [],
 
   setDestination: (destination) =>
     set((state) => ({
@@ -73,6 +80,8 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   setError: (error) => set({ error }),
 
   async hydrate() {
+    set({ saved: await SavedStorage.readAll() });
+
     const session = await AlarmStorage.read();
     if (!session) return;
 
@@ -108,6 +117,31 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       destination: session.destination,
       radiusM: session.radiusM,
     });
+  },
+
+  async saveCurrent(name, kind) {
+    const { destination, radiusM } = get();
+    if (!destination) return;
+    set({ saved: await SavedStorage.save({ name, kind, destination, radiusM }) });
+  },
+
+  /**
+   * Picking a saved destination sets BOTH the place and the radius it was
+   * saved with — the radius is part of the trip, not a global preference, and
+   * restoring only half of it would silently arm the wrong alarm.
+   */
+  async useSaved(item) {
+    set((state) => ({
+      destination: item.destination,
+      radiusM: item.radiusM,
+      distanceM: computeDistance(state.position, item.destination),
+      error: null,
+    }));
+    set({ saved: await SavedStorage.touch(item.id) });
+  },
+
+  async removeSaved(id) {
+    set({ saved: await SavedStorage.remove(id) });
   },
 
   async arm() {

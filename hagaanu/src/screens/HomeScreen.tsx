@@ -35,6 +35,9 @@ export function HomeScreen() {
   const setDestination = useAlarmStore((state) => state.setDestination);
   const setRadius = useAlarmStore((state) => state.setRadius);
   const arm = useAlarmStore((state) => state.arm);
+  const saved = useAlarmStore((state) => state.saved);
+  const useSaved = useAlarmStore((state) => state.useSaved);
+  const saveCurrent = useAlarmStore((state) => state.saveCurrent);
 
   const backgroundGranted = usePermissionsStore(
     (state) => state.snapshot.backgroundLocation === 'granted'
@@ -176,9 +179,15 @@ export function HomeScreen() {
           radiusM={radiusM}
           distanceM={distanceM}
           busy={busy}
+          saved={saved}
           onChangeRadius={changeRadius}
           onClearDestination={() => setDestination(null)}
           onArm={() => void arm()}
+          onPickSaved={(item) => {
+            void useSaved(item);
+            mapRef.current?.focusDestination(item.destination, item.radiusM);
+          }}
+          onSaveCurrent={(name) => void saveCurrent(name, 'favourite')}
         />
       </View>
     </View>

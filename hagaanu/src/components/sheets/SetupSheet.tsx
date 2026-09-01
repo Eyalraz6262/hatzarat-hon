@@ -1,11 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { t } from '../../i18n';
+import type { SavedDestination } from '../../services/storage/SavedStorage';
 import { MAX_DISPLAY_SCALE, spacing, type, useTheme } from '../../theme';
 import type { Destination } from '../../types';
 import { formatDistance } from '../../utils/geo';
 import { CloseIcon, StationNode } from '../icons';
-import { Plate, SignalButton, align, row } from '../ui';
+import { GhostButton, Plate, SignalButton, align, row } from '../ui';
+import { SavedStrip } from './SavedStrip';
 import { RadiusSelector } from './RadiusSelector';
 import { TicketStub } from './TicketStub';
 
@@ -14,9 +16,12 @@ type Props = {
   radiusM: number;
   distanceM: number | null;
   busy: boolean;
+  saved: SavedDestination[];
   onChangeRadius: (radiusM: number) => void;
   onClearDestination: () => void;
   onArm: () => void;
+  onPickSaved: (item: SavedDestination) => void;
+  onSaveCurrent: (name: string) => void;
 };
 
 /**
@@ -30,9 +35,12 @@ export function SetupSheet({
   radiusM,
   distanceM,
   busy,
+  saved,
   onChangeRadius,
   onClearDestination,
   onArm,
+  onPickSaved,
+  onSaveCurrent,
 }: Props) {
   const theme = useTheme();
   const s = theme.ticket;
@@ -40,6 +48,7 @@ export function SetupSheet({
   if (!destination) {
     return (
       <TicketStub>
+        <SavedStrip items={saved} onPick={onPickSaved} />
         <View style={styles.empty}>
           <Plate color={s.textMuted}>{t('plate.destination')}</Plate>
           <Text
@@ -99,6 +108,33 @@ export function SetupSheet({
         label={busy ? t('setup.arming') : t('setup.armButton')}
         loading={busy}
         onPress={onArm}
+      />
+
+      {/*
+        Saving is offered here, under the armed action, rather than as a
+        separate flow: the moment someone has just chosen a stop and a radius
+        is the only moment they know whether this trip is worth keeping.
+      */}
+      <GhostButton
+        label={t('saved.saveCurrent')}
+        surface={s}
+        onPress={() =>
+          Alert.prompt
+            ? Alert.prompt(
+                t('saved.addTitle'),
+                t('saved.addPrompt'),
+                (name) => {
+                  const trimmed = name?.trim();
+                  if (trimmed) onSaveCurrent(trimmed);
+                },
+                'plain-text',
+                destination.label
+              )
+            : // Android has no Alert.prompt; the destination's own label is a
+              // good enough name, and a second dialog would cost more than it
+              // buys for a one-field entry.
+              onSaveCurrent(destination.label)
+        }
       />
     </TicketStub>
   );
