@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '../../theme';
 import { Perforation } from '../ui';
+import { PaperGrain } from '../ui/PaperGrain';
 
 /**
  * The paper stub docked to the bottom of the map.
@@ -24,6 +25,7 @@ export function TicketStub({
 
   return (
     <View style={[styles.stub, { paddingBottom: Math.max(insets.bottom, spacing.lg) + 14 }, style]}>
+      <PaperGrain />
       <Perforation behind={colors.ink} />
       <View style={styles.body}>{children}</View>
     </View>
@@ -34,6 +36,8 @@ const styles = StyleSheet.create({
   stub: {
     backgroundColor: colors.paper,
     paddingTop: spacing.lg,
+    // Clips the grain tile to the stub's own edge.
+    overflow: 'hidden',
   },
   body: {
     paddingHorizontal: spacing.xl,

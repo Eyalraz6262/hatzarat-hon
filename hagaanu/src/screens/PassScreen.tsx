@@ -8,6 +8,7 @@ import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../theme';
 import type { Destination } from '../types';
 import { formatDistance } from '../utils/geo';
 import { Barcode, BrandGlyph, Crescent } from '../components/icons';
+import { PaperGrain } from '../components/ui/PaperGrain';
 import {
   BoardRow,
   OutlineButton,
@@ -87,6 +88,7 @@ export function PassScreen({
 
   return (
     <View style={styles.screen}>
+      <PaperGrain />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         {/* stub */}
         <View style={[styles.stub, { flexDirection: row() }]}>
@@ -183,6 +185,7 @@ const styles = StyleSheet.create({
   screen: {
     ...StyleSheet.absoluteFill,
     backgroundColor: colors.paper,
+    overflow: 'hidden',
   },
   safe: {
     flex: 1,
@@ -234,7 +237,9 @@ const styles = StyleSheet.create({
   boardName: {
     ...type.heading,
     color: colors.ink,
-    maxWidth: 190,
+    // Was a hardcoded 190px, which truncated station names on wider phones for
+    // no reason. The row's leader already absorbs the slack.
+    flexShrink: 1,
   },
   pending: {
     ...type.labelHeSmall,

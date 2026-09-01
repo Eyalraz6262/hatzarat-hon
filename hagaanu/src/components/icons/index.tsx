@@ -10,10 +10,18 @@ import { colors } from '../../theme';
  * were previously doing the emotional work the design should do, while a font
  * shipped 4 MB to use six glyphs.
  *
- * House rules: a 24×24 grid, 1.9 stroke, round caps and joins, no fills except
- * where a shape is genuinely solid (station cores, the brand mark). Two marks —
- * Crescent and StationNode — are the brand's own vocabulary and recur at every
- * scale from the app icon to a 9 px status dot.
+ * Two classes, and the distinction is what keeps the set coherent:
+ *
+ * INTERFACE ICONS — search, close, plus, locate, and the saved-list marks. A
+ * 24×24 grid, stroke `S` (1.9) without exception, round caps and joins. An
+ * earlier pass had these drifting across 1.9 / 2 / 2.2 / 2.4, which is exactly
+ * the mismatched-stroke tell: at 20px the difference reads as sloppiness rather
+ * than emphasis.
+ *
+ * BRAND MARKS — Crescent, StationNode, BrandGlyph, SignalBurst. These are
+ * artwork, not iconography: they carry their own grids (76, 30, 168) and their
+ * own weights, scaled proportionally, and they recur from the launcher icon
+ * down to a 9px status dot.
  */
 
 type IconProps = {
@@ -21,6 +29,7 @@ type IconProps = {
   color?: string;
 };
 
+/** The interface-icon stroke. Every 24-grid icon uses this and nothing else. */
 const S = 1.9;
 
 export function SearchIcon({ size = 20, color = colors.rail }: IconProps) {
@@ -35,12 +44,7 @@ export function SearchIcon({ size = 20, color = colors.rail }: IconProps) {
 export function CloseIcon({ size = 20, color = colors.paperMuted }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M6 6l12 12M18 6L6 18"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
+      <Path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={S} strokeLinecap="round" />
     </Svg>
   );
 }
@@ -48,7 +52,7 @@ export function CloseIcon({ size = 20, color = colors.paperMuted }: IconProps) {
 export function PlusIcon({ size = 20, color = colors.signal }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
+      <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={S} strokeLinecap="round" />
     </Svg>
   );
 }
@@ -76,7 +80,7 @@ export function LocateIcon({ size = 22, color = colors.paper }: IconProps) {
 export function StationNode({ size = 22, color = colors.signal }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="8" stroke={color} strokeWidth={2.4} />
+      <Circle cx="12" cy="12" r="8" stroke={color} strokeWidth={S} />
       <Circle cx="12" cy="12" r="3" fill={color} />
     </Svg>
   );

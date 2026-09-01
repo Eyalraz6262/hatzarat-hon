@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
+import { useCallback, useRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Pressable,
   StyleSheet,
   Text,
@@ -10,9 +12,46 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { isRTL } from '../../i18n';
 import { Feedback } from '../../services/feedback/Haptics';
 import { HIT_SIZE, colors, spacing, type } from '../../theme';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+/**
+ * Physical press feedback: the control gives under the thumb and springs back.
+ *
+ * Colour-only pressed states read as a state change; a scale reads as a button
+ * being pushed, which is the difference between an interface that responds and
+ * one that feels built. Fast down (90ms) and slower up (170ms) — the asymmetry
+ * is what makes it feel like weight rather than a blink.
+ *
+ * Runs on the native driver, and collapses to a no-op under reduce motion.
+ */
+function usePressScale(to = 0.97) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const reduced = useReducedMotion();
+
+  const animate = useCallback(
+    (value: number, duration: number) => {
+      if (reduced) return;
+      Animated.timing(scale, {
+        toValue: value,
+        duration,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start();
+    },
+    [scale, reduced]
+  );
+
+  return {
+    style: { transform: [{ scale }] },
+    onPressIn: () => animate(to, 90),
+    onPressOut: () => animate(1, 170),
+  };
+}
 
 /**
  * The primitives the signage system is built from.
@@ -56,16 +95,19 @@ export function SignalButton({
 }: SignalButtonProps) {
   const inert = disabled || loading;
   const onInk = tone === 'ink';
+  const press = usePressScale();
 
   const base = onInk ? colors.ink : colors.signal;
   const pressedBg = onInk ? colors.inkRaised : colors.signalDeep;
   const labelColor = onInk ? colors.signal : colors.ink;
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: Boolean(inert) }}
+      onPressIn={inert ? undefined : press.onPressIn}
+      onPressOut={inert ? undefined : press.onPressOut}
       onPress={
         inert
           ? undefined
@@ -78,6 +120,7 @@ export function SignalButton({
         styles.signalButton,
         { backgroundColor: pressed ? pressedBg : base },
         inert ? styles.signalButtonInert : null,
+        press.style,
         style,
       ]}
     >
@@ -88,7 +131,7 @@ export function SignalButton({
           {label}
         </Text>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -102,19 +145,23 @@ export function OutlineButton({
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
+  const press = usePressScale(0.98);
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       style={({ pressed }) => [
         styles.outlineButton,
         pressed ? { backgroundColor: colors.paperShade } : null,
+        press.style,
         style,
       ]}
     >
       <Text style={styles.outlineButtonLabel}>{label}</Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

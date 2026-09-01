@@ -1,7 +1,7 @@
 {
   "tool": "mobile-design-review",
   "version": 1,
-  "date": "2026-08-31",
+  "date": "2026-09-01",
   "pass": "static-only",
   "designDoc": "README.md + src/theme/index.ts (the three declared rules)",
   "designScore": "A",
@@ -100,6 +100,42 @@
       "tell": null,
       "lens": "mobile-app-ui-design (Peak-End Rule)",
       "status": "fixed"
+    },
+    {
+      "id": "FINDING-010",
+      "impact": "medium",
+      "category": "iconography",
+      "summary": "Interface icons drifted across 1.9/2/2.2/2.4 stroke against the set's own documented 1.9; standardised, and brand marks split into a separate documented class",
+      "tell": null,
+      "lens": "taste-skill (inconsistent stroke widths)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-011",
+      "impact": "medium",
+      "category": "interactionMotion",
+      "summary": "Pressed states were colour-only and instant; added a native-driven press-scale that respects reduce motion",
+      "tell": 35,
+      "lens": "taste-skill (no active/pressed feedback) — agrees with tell #35",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-012",
+      "impact": "polish",
+      "category": "surfacesGrouping",
+      "summary": "Every surface was a flat fill; the paper now carries a seeded 128px grain at 4.5%, so a printed ticket reads as printed",
+      "tell": null,
+      "lens": "taste-skill (flat design with zero texture)",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-013",
+      "impact": "polish",
+      "category": "screenAnatomy",
+      "summary": "Hardcoded maxWidth 190 truncated Hebrew station names on wider phones; replaced with flexShrink",
+      "tell": null,
+      "lens": "taste-skill (hardcoded pixel widths)",
+      "status": "fixed"
     }
   ],
   "dismissed": [
@@ -167,5 +203,15 @@
     "Sleep/Meditation convention: purple and deep blue — the user chose signal orange on ink.",
     "60/30/10: accent is 20% of colour REFERENCES, but that is not surface area — the alarm screen is a deliberate full flood counted as one reference. Not actionable as measured.",
     "Max 4 font sizes: landed at 10, not 4. A system with a display voice, a Hebrew text voice and a departures-board mono register cannot honestly reach 4; halving it and removing every one-off was the real win."
+  ],
+  "thirdLens": "Leonxlnx/taste-skill — the web-scoped upstream that draftbit adapted for RN",
+  "dismissedFromThirdLens": [
+    "Accent saturation <=80%: signal orange measures S=100%. Deliberate — it is a signal colour on rail signage and the alarm flood is meant to scream. Also an approved brand decision, not mine to re-litigate.",
+    "One grey family only: rail greys are cool (H~220), paper greys warm (H~37). Both are present, but they never share a ground — greys relate to the surface they sit on, and mixing them WITHIN a surface is what the rule is actually about.",
+    "No random dark section in a light page: the wake pass is all-paper while other screens are ink. Systematic, not a copy-paste accident — it is the ticket metaphor.",
+    "Glassmorphism, spotlight borders, mesh gradients, variable-font and scroll-driven motion: web techniques, and several contradict the approved direction and the anti-slop catalog.",
+    "Font suggestions (Geist, Outfit, Satoshi, Cabinet Grotesk): none carry Hebrew. Heebo and Assistant were chosen for exactly that reason.",
+    "404 pages, cookie consent, meta tags, skip-to-content, smooth scroll, semantic HTML, z-index scale: web-only, no analogue in React Native.",
+    "Lorem Ipsum / Acme / John Doe / round numbers: none present; copy is real Hebrew throughout."
   ]
 }
