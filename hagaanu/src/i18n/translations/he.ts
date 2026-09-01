@@ -125,6 +125,7 @@ export const he = {
     addPrompt: 'איך לקרוא ליעד הזה?',
     empty: 'עדיין אין יעדים שמורים.',
     emptyHint: 'שמרו יעד אחרי שתבחרו אותו על המפה.',
+    removeHint: 'לחיצה ארוכה מוחקת את היעד.',
     remove: 'מחיקה',
     removeConfirm: 'למחוק את ״{name}״?',
     home: 'בית',

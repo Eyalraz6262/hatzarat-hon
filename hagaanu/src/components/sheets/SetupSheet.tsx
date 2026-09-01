@@ -21,6 +21,7 @@ type Props = {
   onClearDestination: () => void;
   onArm: () => void;
   onPickSaved: (item: SavedDestination) => void;
+  onRemoveSaved: (item: SavedDestination) => void;
   onSaveCurrent: (name: string) => void;
 };
 
@@ -40,6 +41,7 @@ export function SetupSheet({
   onClearDestination,
   onArm,
   onPickSaved,
+  onRemoveSaved,
   onSaveCurrent,
 }: Props) {
   const theme = useTheme();
@@ -48,7 +50,7 @@ export function SetupSheet({
   if (!destination) {
     return (
       <TicketStub>
-        <SavedStrip items={saved} onPick={onPickSaved} />
+        <SavedStrip items={saved} onPick={onPickSaved} onRemove={onRemoveSaved} />
         <View style={styles.empty}>
           <Plate color={s.textMuted}>{t('plate.destination')}</Plate>
           <Text

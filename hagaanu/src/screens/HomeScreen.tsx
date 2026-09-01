@@ -38,6 +38,7 @@ export function HomeScreen() {
   const saved = useAlarmStore((state) => state.saved);
   const useSaved = useAlarmStore((state) => state.useSaved);
   const saveCurrent = useAlarmStore((state) => state.saveCurrent);
+  const removeSaved = useAlarmStore((state) => state.removeSaved);
 
   const backgroundGranted = usePermissionsStore(
     (state) => state.snapshot.backgroundLocation === 'granted'
@@ -187,6 +188,7 @@ export function HomeScreen() {
             void useSaved(item);
             mapRef.current?.focusDestination(item.destination, item.radiusM);
           }}
+          onRemoveSaved={(item) => void removeSaved(item.id)}
           onSaveCurrent={(name) => void saveCurrent(name, 'favourite')}
         />
       </View>

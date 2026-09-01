@@ -65,7 +65,7 @@ export const fonts = {
 /**
  * The type scale.
  *
- * Nine sizes, and every one of them is here — no component sets `fontSize`
+ * Ten sizes, and every one of them is here — no component sets `fontSize`
  * inline. An earlier pass had twenty distinct sizes once one-off overrides were
  * counted, which is not a scale, it is a pile: two values three pixels apart
  * carry no information and nothing lines up between screens.

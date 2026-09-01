@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { t } from '../../i18n';
 import { Feedback } from '../../services/feedback/Haptics';
@@ -11,6 +11,7 @@ import { Plate, row } from '../ui';
 type Props = {
   items: SavedDestination[];
   onPick: (item: SavedDestination) => void;
+  onRemove: (item: SavedDestination) => void;
 };
 
 const MARKS: Record<SavedKind, typeof HomeIcon> = {
@@ -31,11 +32,21 @@ const MARKS: Record<SavedKind, typeof HomeIcon> = {
  * Renders nothing when empty — an empty strip taking up permanent space on the
  * one screen that matters would cost every user to serve none.
  */
-export function SavedStrip({ items, onPick }: Props) {
+export function SavedStrip({ items, onPick, onRemove }: Props) {
   const theme = useTheme();
   const s = theme.ticket;
 
   if (items.length === 0) return null;
+
+  // Long-press rather than a delete affordance on every stub: the strip lives on
+  // the one screen the ten-second budget belongs to, and a row of X buttons would
+  // put "throw this away" next to "use this" at the same weight.
+  const confirmRemove = (item: SavedDestination) => {
+    Alert.alert(t('saved.removeConfirm', { name: item.name }), undefined, [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('saved.remove'), style: 'destructive', onPress: () => onRemove(item) },
+    ]);
+  };
 
   return (
     <View style={styles.wrap}>
@@ -55,9 +66,14 @@ export function SavedStrip({ items, onPick }: Props) {
               key={item.id}
               accessibilityRole="button"
               accessibilityLabel={item.name}
+              accessibilityHint={t('saved.removeHint')}
               onPress={() => {
                 Feedback.tick();
                 onPick(item);
+              }}
+              onLongPress={() => {
+                Feedback.tick();
+                confirmRemove(item);
               }}
               style={({ pressed }) => [
                 styles.stub,
@@ -123,8 +139,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   name: {
-    ...type.labelHe,
-    fontSize: 15,
+    ...type.bodyStrong,
   },
   radius: {
     ...type.label,

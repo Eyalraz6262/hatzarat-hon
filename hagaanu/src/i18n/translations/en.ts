@@ -120,6 +120,7 @@ export const en: TranslationSchema = {
     addPrompt: 'What should we call it?',
     empty: 'No saved destinations yet.',
     emptyHint: 'Save one after you pick it on the map.',
+    removeHint: 'Long-press to delete.',
     remove: 'Delete',
     removeConfirm: 'Delete “{name}”?',
     home: 'Home',
