@@ -17,7 +17,7 @@ import { useForegroundArrivalCheck } from './src/hooks/useForegroundArrivalCheck
 import { NotificationService } from './src/services/notifications/NotificationService';
 import { useAlarmStore } from './src/state/useAlarmStore';
 import { usePermissionsStore } from './src/state/usePermissionsStore';
-import { colors } from './src/theme';
+import { palette, useTheme } from './src/theme';
 import { log } from './src/utils/logger';
 
 void SplashScreen.preventAutoHideAsync();
@@ -30,6 +30,7 @@ void SplashScreen.preventAutoHideAsync();
  * any of them, which a stack navigator would only complicate.
  */
 export default function App() {
+  const theme = useTheme();
   const [booted, setBooted] = useState(false);
   // Session-scoped: the user chose to continue without background location. Not
   // persisted, so the next cold start asks once more — the ask matters too much.
@@ -61,7 +62,9 @@ export default function App() {
       try {
         // Paints the window behind React with the app's own background, so a
         // cold start never flashes white before the first frame.
-        await SystemUI.setBackgroundColorAsync(colors.ink);
+        // The native window ground. Painted from the pigment rather than the
+        // scheme: this runs before React renders, so there is no hook to read.
+        await SystemUI.setBackgroundColorAsync(palette.ink);
 
         // Channels before anything else: a geofence event arriving in the next
         // second must find the alarm channel already created.
@@ -85,7 +88,7 @@ export default function App() {
   const onDismissAlarm = useCallback(() => void dismissAlarm(), [dismissAlarm]);
 
   if (!ready) {
-    return <View style={styles.boot} />;
+    return <View style={[styles.boot, { backgroundColor: theme.world.bg }]} />;
   }
 
   // Foreground location and notifications are non-negotiable. Background location
@@ -97,8 +100,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
-      <View style={styles.root}>
+      <StatusBar style={theme.statusBar} />
+      <View style={[styles.root, { backgroundColor: theme.world.bg }]}>
         {/*
           A plain state machine rather than a navigator: there are only four
           destinations, and the alarm has to be able to take the screen from any
@@ -129,10 +132,8 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.ink,
   },
   boot: {
     flex: 1,
-    backgroundColor: colors.ink,
   },
 });

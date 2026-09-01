@@ -12,44 +12,9 @@
  *   3. No emoji. Every mark is drawn — see src/components/icons.
  */
 
-export const colors = {
-  /** The world: map, chrome, anything behind the ticket. */
-  ink: '#14161C',
-  inkRaised: '#1C1F28',
-  /** Water and recessed areas on the map. */
-  inkDeep: '#101219',
-  inkLine: '#2A2E3A',
-  inkLineStrong: '#3D4351',
-
-  /** Rail greys — the map's line work and secondary text on ink. */
-  rail: '#6B7280',
-  railLight: '#9AA1AE',
-
-  /** Paper: every surface the passenger "holds". */
-  paper: '#F2EDE4',
-  /** Oversized watermark shapes printed into the paper. */
-  paperWatermark: '#E6DFD1',
-  paperShade: '#E4DDD0',
-  /** Hairline rules between rows on paper. */
-  paperRule: '#E0D9CB',
-  /** Perforations and dotted leaders. */
-  paperPerf: '#C9C1B2',
-  /** Labels on paper. */
-  paperMuted: '#A79E8E',
-  /** Secondary text on paper. */
-  paperSub: '#8C8478',
-
-  /** The one accent. Rationed — see rule 2. */
-  signal: '#FF6B1A',
-  signalDeep: '#E05A0F',
-
-  /** Translucent inks, for shadows and scrims over the map. */
-  scrim: 'rgba(20,22,28,0.72)',
-  /** Behind type that sits directly on the map, where there is no surface. */
-  scrimStrong: 'rgba(20,22,28,0.85)',
-  inkOnSignal: 'rgba(20,22,28,0.62)',
-  inkOnSignalLine: 'rgba(20,22,28,0.28)',
-} as const;
+export { palette } from './palette';
+export { schemes, night, day, type Scheme, type Surface } from './schemes';
+export { useTheme, useSurface } from './useTheme';
 
 export const spacing = {
   xs: 4,
@@ -167,4 +132,4 @@ export const HIT_SIZE = 48;
  */
 export const MAX_DISPLAY_SCALE = 1.3;
 
-export { darkMapStyle } from './mapStyle';
+export { mapStyleFor } from './mapStyle';

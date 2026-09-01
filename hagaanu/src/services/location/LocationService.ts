@@ -2,7 +2,7 @@ import * as Location from 'expo-location';
 
 import { POLLING_TIERS, TASKS, type PollingTier } from '../../constants/config';
 import { t } from '../../i18n';
-import { colors } from '../../theme';
+import { palette } from '../../theme';
 import type { PositionSample } from '../../types';
 import { log } from '../../utils/logger';
 
@@ -104,7 +104,7 @@ export const LocationService = {
       foregroundService: {
         notificationTitle: t('active.serviceTitle'),
         notificationBody: t('active.serviceBody'),
-        notificationColor: colors.signal,
+        notificationColor: palette.signal,
         killServiceOnDestroy: false,
       },
       mayShowUserSettingsDialog: false,

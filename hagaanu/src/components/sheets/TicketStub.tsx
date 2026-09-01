@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, spacing } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { Perforation } from '../ui';
 import { PaperGrain } from '../ui/PaperGrain';
 
@@ -22,11 +22,18 @@ export function TicketStub({
   style?: StyleProp<ViewStyle>;
 }) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
 
   return (
-    <View style={[styles.stub, { paddingBottom: Math.max(insets.bottom, spacing.lg) + 14 }, style]}>
+    <View
+      style={[
+        styles.stub,
+        { backgroundColor: theme.ticket.bg, paddingBottom: Math.max(insets.bottom, spacing.lg) + 16 },
+        style,
+      ]}
+    >
       <PaperGrain />
-      <Perforation behind={colors.ink} />
+      <Perforation behind={theme.world.bg} dashes={theme.ticket.faint} />
       <View style={styles.body}>{children}</View>
     </View>
   );
@@ -34,7 +41,6 @@ export function TicketStub({
 
 const styles = StyleSheet.create({
   stub: {
-    backgroundColor: colors.paper,
     paddingTop: spacing.lg,
     // Clips the grain tile to the stub's own edge.
     overflow: 'hidden',

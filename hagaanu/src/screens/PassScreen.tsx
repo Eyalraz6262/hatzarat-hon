@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { t } from '../i18n';
 import { Feedback } from '../services/feedback/Haptics';
-import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../theme';
+import { MAX_DISPLAY_SCALE, spacing, type, useTheme } from '../theme';
 import type { Destination } from '../types';
 import { formatDistance } from '../utils/geo';
 import { Barcode, BrandGlyph, Crescent } from '../components/icons';
@@ -45,6 +45,10 @@ export function PassScreen({
   onCancel,
   onSimulateArrival,
 }: Props) {
+  const theme = useTheme();
+  // The pass is a paper object end to end, so every colour on it comes from
+  // the ticket surface — the world only shows through the perforation punches.
+  const s = theme.ticket;
   const breath = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -87,17 +91,17 @@ export function PassScreen({
   };
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: s.bg }]}>
       <PaperGrain />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         {/* stub */}
         <View style={[styles.stub, { flexDirection: row() }]}>
           <BrandGlyph size={28} />
-          <Text style={styles.brand}>{t('brand.name')}</Text>
-          <Text style={styles.plate}>{t('plate.wakePass')}</Text>
+          <Text style={[styles.brand, { color: s.textPrimary }]}>{t('brand.name')}</Text>
+          <Text style={[styles.plate, { color: s.textMuted }]}>{t('plate.wakePass')}</Text>
         </View>
 
-        <Perforation behind={colors.ink} />
+        <Perforation behind={theme.world.bg} dashes={s.faint} />
 
         {/*
           The promise. Scrolls because the 62px hero plus three data rows leave
@@ -114,39 +118,47 @@ export function PassScreen({
             style={[styles.watermark, { transform: [{ scale: watermarkScale }] }]}
             pointerEvents="none"
           >
-            <Crescent size={300} color={colors.paperWatermark} showNode={false} />
+            <Crescent size={300} color={s.raised} nodeColor={s.raised} showNode={false} />
           </Animated.View>
 
           <View style={styles.headline}>
-            <StatusMark label={t('active.statusActive')} />
+            <StatusMark label={t('active.statusActive')} surface={s} />
             <Text
-              style={[styles.title, { textAlign: align() }]}
+              style={[styles.title, { color: s.textPrimary, textAlign: align() }]}
               maxFontSizeMultiplier={MAX_DISPLAY_SCALE}
             >
               {t('active.sleepTitle')}
             </Text>
-            <Text style={[styles.subtitle, { textAlign: align() }]}>
+            <Text style={[styles.subtitle, { color: s.textSecondary, textAlign: align() }]}>
               {t('active.sleepSubtitle')}
             </Text>
           </View>
 
           <View style={styles.board}>
-            <BoardRow label={t('active.destination')} divided={false}>
-              <Text style={styles.boardName} numberOfLines={1}>
+            <BoardRow label={t('active.destination')} surface={s} divided={false}>
+              <Text style={[styles.boardName, { color: s.textPrimary }]} numberOfLines={1}>
                 {destination.label}
               </Text>
             </BoardRow>
 
-            <BoardRow label={t('active.currentDistance')}>
+            <BoardRow label={t('active.currentDistance')} surface={s}>
               {distanceM === null ? (
-                <Text style={styles.pending}>{t('active.statusWaitingFix')}</Text>
+                <Text style={[styles.pending, { color: s.textMuted }]}>{t('active.statusWaitingFix')}</Text>
               ) : (
-                <Readout {...splitDistance(distanceM)} tone="ink" />
+                <Readout
+                  {...splitDistance(distanceM)}
+                  color={s.textPrimary}
+                  unitColor={s.textSecondary}
+                />
               )}
             </BoardRow>
 
-            <BoardRow label={t('active.alertRadius')}>
-              <Readout {...splitDistance(radiusM)} tone="signal" />
+            <BoardRow label={t('active.alertRadius')} surface={s}>
+              <Readout
+                {...splitDistance(radiusM)}
+                color={theme.accent.onPaper}
+                unitColor={theme.accent.onPaper}
+              />
             </BoardRow>
           </View>
         </ScrollView>
@@ -154,16 +166,16 @@ export function PassScreen({
         {/* foot */}
         <View style={styles.foot}>
           <View style={[styles.code, { flexDirection: row() }]}>
-            <Barcode width={176} height={38} color={colors.ink} />
-            <Text style={styles.codeText}>{t('alarm.ticketCode', { radius: radiusM })}</Text>
+            <Barcode width={176} height={38} color={s.textPrimary} />
+            <Text style={[styles.codeText, { color: s.textMuted }]}>{t('alarm.ticketCode', { radius: radiusM })}</Text>
           </View>
 
-          <OutlineButton label={t('active.cancelAlarm')} onPress={confirmCancel} />
+          <OutlineButton label={t('active.cancelAlarm')} surface={s} onPress={confirmCancel} />
 
           {/* Development only. Fires the full arrival path — notification,
               sound, vibration, wake screen — without physically travelling. */}
           {__DEV__ && onSimulateArrival ? (
-            <OutlineButton label="סימולציית הגעה · DEV" onPress={onSimulateArrival} />
+            <OutlineButton label="סימולציית הגעה · DEV" surface={s} onPress={onSimulateArrival} />
           ) : null}
         </View>
       </SafeAreaView>
@@ -184,7 +196,6 @@ function splitDistance(meters: number): { value: string; unit: string } {
 const styles = StyleSheet.create({
   screen: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: colors.paper,
     overflow: 'hidden',
   },
   safe: {
@@ -199,11 +210,9 @@ const styles = StyleSheet.create({
   },
   brand: {
     ...type.subtitle,
-    color: colors.ink,
   },
   plate: {
     ...type.label,
-    color: colors.paperMuted,
     marginStart: 'auto',
   },
   bodyScroll: {
@@ -225,25 +234,21 @@ const styles = StyleSheet.create({
   },
   title: {
     ...type.hero,
-    color: colors.ink,
   },
   subtitle: {
     ...type.body,
-    color: colors.rail,
   },
   board: {
     marginTop: spacing.xxl,
   },
   boardName: {
     ...type.heading,
-    color: colors.ink,
     // Was a hardcoded 190px, which truncated station names on wider phones for
     // no reason. The row's leader already absorbs the slack.
     flexShrink: 1,
   },
   pending: {
     ...type.labelHeSmall,
-    color: colors.paperSub,
   },
   foot: {
     paddingHorizontal: spacing.xl,
@@ -256,7 +261,6 @@ const styles = StyleSheet.create({
   },
   codeText: {
     ...type.label,
-    color: colors.paperMuted,
     marginStart: 'auto',
     paddingBottom: 4,
   },

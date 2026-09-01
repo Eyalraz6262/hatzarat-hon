@@ -13,7 +13,7 @@ import {
   CHANNEL_VIBRATION_PATTERN,
 } from '../../constants/config';
 import { t } from '../../i18n';
-import { colors } from '../../theme';
+import { palette } from '../../theme';
 import { log } from '../../utils/logger';
 
 /** Marks our own notifications so listeners can tell them apart. */
@@ -49,7 +49,7 @@ export const NotificationService = {
         vibrationPattern: [...CHANNEL_VIBRATION_PATTERN],
         enableVibrate: true,
         enableLights: true,
-        lightColor: colors.signal,
+        lightColor: palette.signal,
         // Ring through Do Not Disturb. The user still has to grant the DND
         // access; when they haven't, Android silently ignores this flag rather
         // than failing, so it costs nothing to ask for.

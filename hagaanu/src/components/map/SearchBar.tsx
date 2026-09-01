@@ -12,7 +12,7 @@ import {
 
 import { isRTL, t } from '../../i18n';
 import { GeocodingService, type SearchResult } from '../../services/location/GeocodingService';
-import { colors, spacing, type } from '../../theme';
+import { spacing, type, useTheme } from '../../theme';
 import { log } from '../../utils/logger';
 import { CloseIcon, SearchIcon, StationNode } from '../icons';
 import { align, row } from '../ui';
@@ -30,6 +30,8 @@ const DEBOUNCE_MS = 450;
  * exists, which is what makes it read as the thing to fill in.
  */
 export function SearchBar({ onSelect }: Props) {
+  const theme = useTheme();
+  const s = theme.ticket;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -101,8 +103,8 @@ export function SearchBar({ onSelect }: Props) {
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.field, { flexDirection: row() }]}>
-        <SearchIcon size={19} color={colors.paperSub} />
+      <View style={[styles.field, { backgroundColor: s.bg, flexDirection: row() }]}>
+        <SearchIcon size={19} color={s.textSecondary} />
         <TextInput
           value={query}
           onChangeText={onChange}
@@ -110,19 +112,19 @@ export function SearchBar({ onSelect }: Props) {
             if (query.trim().length >= 2) void runSearch(query);
           }}
           placeholder={t('home.searchPlaceholder')}
-          placeholderTextColor={colors.paperSub}
+          placeholderTextColor={s.textMuted}
           style={[
             styles.input,
-            { textAlign: align(), writingDirection: isRTL() ? 'rtl' : 'ltr' },
+            { color: s.textPrimary, textAlign: align(), writingDirection: isRTL() ? 'rtl' : 'ltr' },
           ]}
           returnKeyType="search"
           autoCorrect={false}
           autoComplete="street-address"
           textContentType="fullStreetAddress"
-          selectionColor={colors.signal}
+          selectionColor={theme.accent.base}
           accessibilityLabel={t('home.searchPlaceholder')}
         />
-        {loading ? <ActivityIndicator size="small" color={colors.paperSub} /> : null}
+        {loading ? <ActivityIndicator size="small" color={s.textSecondary} /> : null}
         {query.length > 0 && !loading ? (
           <Pressable
             onPress={clear}
@@ -131,15 +133,15 @@ export function SearchBar({ onSelect }: Props) {
             accessibilityLabel={t('common.close')}
             style={({ pressed }) => (pressed ? styles.iconPressed : null)}
           >
-            <CloseIcon size={19} color={colors.paperSub} />
+            <CloseIcon size={19} color={s.textSecondary} />
           </Pressable>
         ) : null}
       </View>
 
       {results.length > 0 || message ? (
-        <View style={styles.dropdown}>
+        <View style={[styles.dropdown, { backgroundColor: s.bg }]}>
           {message ? (
-            <Text style={[styles.message, { textAlign: align() }]}>{message}</Text>
+            <Text style={[styles.message, { color: s.textSecondary, textAlign: align() }]}>{message}</Text>
           ) : (
             <ScrollView keyboardShouldPersistTaps="handled" style={styles.dropdownScroll}>
               {results.map((result, index) => (
@@ -150,12 +152,15 @@ export function SearchBar({ onSelect }: Props) {
                   style={({ pressed }) => [
                     styles.resultRow,
                     { flexDirection: row() },
-                    index > 0 ? styles.resultRowDivided : null,
-                    pressed ? styles.resultRowPressed : null,
+                    index > 0 ? { borderTopWidth: 1, borderTopColor: s.divider } : null,
+                    pressed ? { backgroundColor: s.pressed } : null,
                   ]}
                 >
-                  <StationNode size={18} color={colors.signal} />
-                  <Text style={[styles.resultLabel, { textAlign: align() }]} numberOfLines={2}>
+                  <StationNode size={18} color={theme.accent.base} />
+                  <Text
+                    style={[styles.resultLabel, { color: s.textPrimary, textAlign: align() }]}
+                    numberOfLines={2}
+                  >
                     {result.label}
                   </Text>
                 </Pressable>
@@ -177,13 +182,11 @@ const styles = StyleSheet.create({
     gap: 12,
     height: 52,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.paper,
   },
   input: {
     flex: 1,
     ...type.bodySmall,
     lineHeight: undefined,
-    color: colors.ink,
     // Android adds vertical padding that de-centres text in a fixed-height row.
     paddingVertical: 0,
   },
@@ -192,7 +195,6 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   dropdown: {
-    backgroundColor: colors.paper,
     overflow: 'hidden',
   },
   dropdownScroll: {
@@ -205,21 +207,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
-  resultRowDivided: {
-    borderTopWidth: 1,
-    borderTopColor: colors.paperRule,
-  },
-  resultRowPressed: {
-    backgroundColor: colors.paperShade,
-  },
   resultLabel: {
     flex: 1,
     ...type.bodySmall,
-    color: colors.ink,
   },
   message: {
     ...type.bodySmall,
-    color: colors.paperSub,
     padding: spacing.lg,
   },
 });

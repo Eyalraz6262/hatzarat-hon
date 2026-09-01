@@ -6,7 +6,7 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { useBackGuard } from '../hooks/useBackGuard';
 import { t } from '../i18n';
 import { Feedback } from '../services/feedback/Haptics';
-import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../theme';
+import { MAX_DISPLAY_SCALE, spacing, type, useTheme } from '../theme';
 import type { Destination } from '../types';
 import { SignalBurst } from '../components/icons';
 import { SignalButton, row } from '../components/ui';
@@ -27,6 +27,9 @@ type Props = {
  * enormous button, maximum contrast, nothing else to parse or mis-tap.
  */
 export function AlarmScreen({ destination, onDismiss }: Props) {
+  // The alarm does not follow the scheme. It is an event, not a surface: the
+  // same orange flood at 05:40 in winter dark and at 07:20 in summer light.
+  const { alarm } = useTheme();
   // Someone woken by this must be able to read it without the screen dimming
   // out from under them.
   useKeepAwake();
@@ -52,39 +55,39 @@ export function AlarmScreen({ destination, onDismiss }: Props) {
   const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0] });
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: alarm.bg }]}>
       {/* Platform-edge hazard marking. */}
       <View style={styles.hazard}>
         {Array.from({ length: 30 }, (_, index) => (
-          <View key={index} style={styles.hazardTick} />
+          <View key={index} style={[styles.hazardTick, { backgroundColor: alarm.ink }]} />
         ))}
       </View>
 
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={[styles.plateRow, { flexDirection: row() }]}>
-          <View style={styles.plateDot} />
-          <Text style={styles.plate}>{t('plate.alarm')}</Text>
+          <View style={[styles.plateDot, { backgroundColor: alarm.ink }]} />
+          <Text style={[styles.plate, { color: alarm.ink }]}>{t('plate.alarm')}</Text>
         </View>
 
         <View style={styles.body}>
           <View style={styles.beacon}>
             <Animated.View
-              style={[styles.ring, { transform: [{ scale }], opacity }]}
+              style={[styles.ring, { backgroundColor: alarm.ink, transform: [{ scale }], opacity }]}
               pointerEvents="none"
             />
-            <SignalBurst size={168} color={colors.ink} />
+            <SignalBurst size={168} color={alarm.ink} />
           </View>
 
-          <Text style={styles.title} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
+          <Text style={[styles.title, { color: alarm.ink }]} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
             {t('alarm.title')}
           </Text>
-          <Text style={styles.subtitle} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
+          <Text style={[styles.subtitle, { color: alarm.ink }]} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
             {t('alarm.subtitle')}
           </Text>
 
-          <View style={[styles.destination, { flexDirection: row() }]}>
-            <Text style={styles.destinationLabel}>{t('active.destination')}</Text>
-            <Text style={styles.destinationName} numberOfLines={1}>
+          <View style={[styles.destination, { borderTopColor: alarm.line, flexDirection: row() }]}>
+            <Text style={[styles.destinationLabel, { color: alarm.muted }]}>{t('active.destination')}</Text>
+            <Text style={[styles.destinationName, { color: alarm.ink }]} numberOfLines={1}>
               {destination.label}
             </Text>
           </View>
@@ -107,7 +110,6 @@ export function AlarmScreen({ destination, onDismiss }: Props) {
 const styles = StyleSheet.create({
   screen: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: colors.signal,
   },
   hazard: {
     position: 'absolute',
@@ -122,7 +124,6 @@ const styles = StyleSheet.create({
   hazardTick: {
     width: 9,
     height: 14,
-    backgroundColor: colors.ink,
     transform: [{ skewX: '-25deg' }],
   },
   safe: {
@@ -139,11 +140,9 @@ const styles = StyleSheet.create({
   plateDot: {
     width: 8,
     height: 8,
-    backgroundColor: colors.ink,
   },
   plate: {
     ...type.labelStrong,
-    color: colors.ink,
   },
   body: {
     flex: 1,
@@ -162,33 +161,27 @@ const styles = StyleSheet.create({
     width: 116,
     height: 116,
     borderRadius: 58,
-    backgroundColor: colors.ink,
   },
   title: {
     ...type.heroAlarm,
-    color: colors.ink,
     textAlign: 'center',
   },
   subtitle: {
     ...type.subtitle,
-    color: colors.ink,
     textAlign: 'center',
   },
   destination: {
     alignItems: 'center',
     gap: spacing.sm,
     borderTopWidth: 1.5,
-    borderTopColor: colors.inkOnSignalLine,
     paddingTop: 16,
     maxWidth: '100%',
   },
   destinationLabel: {
     ...type.labelHe,
-    color: colors.inkOnSignal,
   },
   destinationName: {
     ...type.bodyStrong,
-    color: colors.ink,
     flexShrink: 1,
   },
   dismiss: {

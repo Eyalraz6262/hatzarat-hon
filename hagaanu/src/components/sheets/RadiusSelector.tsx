@@ -4,7 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 import { MAX_RADIUS_M, MIN_RADIUS_M, RADIUS_PRESETS } from '../../constants/config';
 import { t } from '../../i18n';
 import { Feedback } from '../../services/feedback/Haptics';
-import { colors, spacing, type } from '../../theme';
+import { spacing, type, useTheme } from '../../theme';
 import { PlusIcon } from '../icons';
 import { OutlineButton, SignalButton, align } from '../ui';
 
@@ -22,6 +22,8 @@ type Props = {
  * where it belongs, while still tying the selection to the accent.
  */
 export function RadiusSelector({ value, onChange }: Props) {
+  const theme = useTheme();
+  const s = theme.ticket;
   const [customOpen, setCustomOpen] = useState(false);
   const [draft, setDraft] = useState('');
   const [invalid, setInvalid] = useState(false);
@@ -54,7 +56,7 @@ export function RadiusSelector({ value, onChange }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.bar} accessibilityRole="radiogroup">
+      <View style={[styles.bar, { borderColor: s.border }]} accessibilityRole="radiogroup">
         {RADIUS_PRESETS.map((preset, index) => {
           const selected = value === preset;
           return (
@@ -66,13 +68,15 @@ export function RadiusSelector({ value, onChange }: Props) {
               onPress={() => select(preset)}
               style={({ pressed }) => [
                 styles.segment,
-                index > 0 ? styles.segmentDivided : null,
-                selected ? styles.segmentSelected : null,
-                pressed && !selected ? styles.segmentPressed : null,
+                index > 0 ? { borderStartWidth: 1.5, borderStartColor: s.border } : null,
+                selected ? { backgroundColor: s.textPrimary } : null,
+                pressed && !selected ? { backgroundColor: s.pressed } : null,
               ]}
             >
-              {selected ? <View style={styles.segmentCap} /> : null}
-              <Text style={[styles.segmentLabel, selected ? styles.segmentLabelSelected : null]}>
+              {selected ? (
+                <View style={[styles.segmentCap, { backgroundColor: theme.accent.base }]} />
+              ) : null}
+              <Text style={[styles.segmentLabel, { color: selected ? s.bg : s.textPrimary }]}>
                 {preset}
               </Text>
             </Pressable>
@@ -86,23 +90,23 @@ export function RadiusSelector({ value, onChange }: Props) {
           onPress={openCustom}
           style={({ pressed }) => [
             styles.segment,
-            styles.segmentDivided,
-            !isPreset ? styles.segmentSelected : null,
-            pressed && isPreset ? styles.segmentPressed : null,
+            { borderStartWidth: 1.5, borderStartColor: s.border },
+            !isPreset ? { backgroundColor: s.textPrimary } : null,
+            pressed && isPreset ? { backgroundColor: s.pressed } : null,
           ]}
         >
           {!isPreset ? (
             <>
-              <View style={styles.segmentCap} />
-              <Text style={[styles.segmentLabel, styles.segmentLabelSelected]}>{value}</Text>
+              <View style={[styles.segmentCap, { backgroundColor: theme.accent.base }]} />
+              <Text style={[styles.segmentLabel, { color: s.bg }]}>{value}</Text>
             </>
           ) : (
-            <PlusIcon size={17} color={colors.ink} />
+            <PlusIcon size={17} color={s.textPrimary} />
           )}
         </Pressable>
       </View>
 
-      <Text style={styles.unit}>{t('plate.metres')}</Text>
+      <Text style={[styles.unit, { color: s.textMuted }]}>{t('plate.metres')}</Text>
 
       <Modal
         visible={customOpen}
@@ -110,10 +114,13 @@ export function RadiusSelector({ value, onChange }: Props) {
         animationType="fade"
         onRequestClose={() => setCustomOpen(false)}
       >
-        <Pressable style={styles.backdrop} onPress={() => setCustomOpen(false)}>
+        <Pressable
+          style={[styles.backdrop, { backgroundColor: theme.scrim }]}
+          onPress={() => setCustomOpen(false)}
+        >
           {/* Stops taps inside the dialog from dismissing it. */}
-          <Pressable style={styles.dialog} onPress={() => undefined}>
-            <Text style={[styles.dialogTitle, { textAlign: align() }]}>
+          <Pressable style={[styles.dialog, { backgroundColor: s.bg }]} onPress={() => undefined}>
+            <Text style={[styles.dialogTitle, { color: s.textPrimary, textAlign: align() }]}>
               {t('setup.customTitle')}
             </Text>
 
@@ -126,22 +133,34 @@ export function RadiusSelector({ value, onChange }: Props) {
               keyboardType="number-pad"
               inputMode="numeric"
               placeholder={t('setup.customPlaceholder')}
-              placeholderTextColor={colors.paperMuted}
-              style={[styles.input, invalid ? styles.inputInvalid : null]}
+              placeholderTextColor={s.textMuted}
+              style={[
+                styles.input,
+                { backgroundColor: s.raised, borderColor: invalid ? theme.accent.onPaper : s.border, color: s.textPrimary },
+              ]}
               autoFocus
-              selectionColor={colors.signal}
+              selectionColor={theme.accent.base}
               onSubmitEditing={commitCustom}
               accessibilityLabel={t('setup.customPlaceholder')}
             />
 
-            <Text style={[styles.hint, invalid ? styles.hintInvalid : null, { textAlign: align() }]}>
+            <Text
+              style={[
+                styles.hint,
+                { color: invalid ? theme.accent.onPaper : s.textSecondary, textAlign: align() },
+              ]}
+            >
               {invalid
                 ? t('setup.customInvalid', { min: MIN_RADIUS_M, max: MAX_RADIUS_M })
                 : t('setup.customRange', { min: MIN_RADIUS_M, max: MAX_RADIUS_M })}
             </Text>
 
             <SignalButton label={t('common.save')} onPress={commitCustom} />
-            <OutlineButton label={t('common.cancel')} onPress={() => setCustomOpen(false)} />
+            <OutlineButton
+              label={t('common.cancel')}
+              surface={s}
+              onPress={() => setCustomOpen(false)}
+            />
           </Pressable>
         </Pressable>
       </Modal>
@@ -156,23 +175,12 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     borderWidth: 1.5,
-    borderColor: colors.ink,
   },
   segment: {
     flex: 1,
     height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  segmentDivided: {
-    borderStartWidth: 1.5,
-    borderStartColor: colors.ink,
-  },
-  segmentPressed: {
-    backgroundColor: colors.paperShade,
-  },
-  segmentSelected: {
-    backgroundColor: colors.ink,
   },
   /** The thin orange bar that marks the live segment. */
   segmentCap: {
@@ -181,24 +189,17 @@ const styles = StyleSheet.create({
     start: 0,
     end: 0,
     height: 3,
-    backgroundColor: colors.signal,
   },
   segmentLabel: {
     ...type.readoutSmall,
-    color: colors.ink,
-  },
-  segmentLabelSelected: {
-    color: colors.paper,
   },
   unit: {
     ...type.label,
-    color: colors.paperMuted,
     textAlign: 'left',
   },
 
   backdrop: {
     flex: 1,
-    backgroundColor: colors.scrim,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,
@@ -206,32 +207,20 @@ const styles = StyleSheet.create({
   dialog: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: colors.paper,
     padding: spacing.xl,
     gap: spacing.md,
   },
   dialogTitle: {
     ...type.subtitle,
-    color: colors.ink,
   },
   input: {
     height: 62,
-    backgroundColor: colors.paperShade,
     borderWidth: 1.5,
-    borderColor: colors.ink,
     paddingHorizontal: spacing.lg,
     ...type.readout,
-    color: colors.ink,
     textAlign: 'center',
-  },
-  inputInvalid: {
-    borderColor: colors.signalDeep,
   },
   hint: {
     ...type.labelHeSmall,
-    color: colors.paperSub,
-  },
-  hintInvalid: {
-    color: colors.signalDeep,
   },
 });

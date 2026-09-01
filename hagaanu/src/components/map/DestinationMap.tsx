@@ -8,7 +8,7 @@ import MapView, {
   type Region,
 } from 'react-native-maps';
 
-import { colors, darkMapStyle } from '../../theme';
+import { mapStyleFor, useTheme } from '../../theme';
 import type { Destination, LatLng } from '../../types';
 import { dimensionLine, regionForRadius, ringPoints, ringTicks } from '../../utils/geo';
 
@@ -46,6 +46,7 @@ export const DestinationMap = forwardRef<DestinationMapHandle, Props>(function D
   { initialRegion, destination, radiusM, interactive, onPickPoint },
   ref
 ) {
+  const theme = useTheme();
   const mapRef = useRef<MapView>(null);
 
   useImperativeHandle(ref, () => ({
@@ -72,8 +73,8 @@ export const DestinationMap = forwardRef<DestinationMapHandle, Props>(function D
       ref={mapRef}
       style={StyleSheet.absoluteFill}
       provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
-      customMapStyle={Platform.OS === 'android' ? darkMapStyle : undefined}
-      userInterfaceStyle="dark"
+      customMapStyle={Platform.OS === 'android' ? mapStyleFor(theme) : undefined}
+      userInterfaceStyle={theme.name === "day" ? "light" : "dark"}
       initialRegion={initialRegion}
       showsUserLocation
       showsMyLocationButton={false}
@@ -91,7 +92,7 @@ export const DestinationMap = forwardRef<DestinationMapHandle, Props>(function D
         <>
           <Polyline
             coordinates={zone.ring}
-            strokeColor={colors.signal}
+            strokeColor={theme.accent.base}
             strokeWidth={2}
             lineDashPattern={[7, 6]}
             lineCap="butt"
@@ -101,14 +102,14 @@ export const DestinationMap = forwardRef<DestinationMapHandle, Props>(function D
             <Polyline
               key={`tick-${index}`}
               coordinates={tick}
-              strokeColor={colors.signal}
+              strokeColor={theme.accent.base}
               strokeWidth={2}
               lineCap="round"
             />
           ))}
 
-          <Polyline coordinates={zone.line} strokeColor={colors.signal} strokeWidth={1.5} />
-          <Polyline coordinates={zone.cap} strokeColor={colors.signal} strokeWidth={1.5} />
+          <Polyline coordinates={zone.line} strokeColor={theme.accent.base} strokeWidth={1.5} />
+          <Polyline coordinates={zone.cap} strokeColor={theme.accent.base} strokeWidth={1.5} />
 
           {/*
             The interchange marker of a transit diagram — the same object the
@@ -123,8 +124,8 @@ export const DestinationMap = forwardRef<DestinationMapHandle, Props>(function D
             tracksViewChanges={false}
             title={destination.label}
           >
-            <View style={styles.node}>
-              <View style={styles.nodeCore} />
+            <View style={[styles.node, { backgroundColor: theme.accent.base }]}>
+              <View style={[styles.nodeCore, { backgroundColor: theme.accent.contrast }]} />
             </View>
           </Marker>
         </>
@@ -138,7 +139,6 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: colors.signal,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -146,6 +146,5 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.ink,
   },
 });

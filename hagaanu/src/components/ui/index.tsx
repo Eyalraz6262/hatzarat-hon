@@ -1,4 +1,4 @@
-import { useCallback, useRef, type ReactNode } from 'react';
+import { useCallback, useMemo, useRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -15,9 +15,27 @@ import {
 import { useReducedMotion } from '../../hooks/useReducedMotion';
 import { isRTL } from '../../i18n';
 import { Feedback } from '../../services/feedback/Haptics';
-import { HIT_SIZE, colors, spacing, type } from '../../theme';
+import { HIT_SIZE, spacing, type, useTheme, type Scheme, type Surface } from '../../theme';
+
+/**
+ * The primitives the signage system is built from.
+ *
+ * Everything here is square, because that single rule is what stops the app
+ * reading as a generic card template. The only circles in the app are station
+ * nodes and perforation punches, which are circles by nature.
+ *
+ * Colour comes from the active scheme at render time; layout and type stay in
+ * a static StyleSheet. That split is deliberate — geometry does not change
+ * between night and day, so only the values that do are recomputed.
+ */
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+/** Row direction for the active language. */
+export const row = (): ViewStyle['flexDirection'] => (isRTL() ? 'row-reverse' : 'row');
+
+/** Text alignment for the active language. */
+export const align = (): TextStyle['textAlign'] => (isRTL() ? 'right' : 'left');
 
 /**
  * Physical press feedback: the control gives under the thumb and springs back.
@@ -53,20 +71,6 @@ function usePressScale(to = 0.97) {
   };
 }
 
-/**
- * The primitives the signage system is built from.
- *
- * Everything here is square, because that single rule is what stops the app
- * reading as a generic card template. The only circles in the app are station
- * nodes and perforation punches, which are circles by nature.
- */
-
-/** Row direction for the active language. */
-export const row = (): ViewStyle['flexDirection'] => (isRTL() ? 'row-reverse' : 'row');
-
-/** Text alignment for the active language. */
-export const align = (): TextStyle['textAlign'] => (isRTL() ? 'right' : 'left');
-
 /* ------------------------------------------------------------------ *
  * Buttons
  * ------------------------------------------------------------------ */
@@ -76,7 +80,7 @@ type SignalButtonProps = {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
-  /** `signal` on ink, or `ink` when it sits on the orange alarm surface. */
+  /** `signal` on any normal surface, or `ink` when it sits on the alarm flood. */
   tone?: 'signal' | 'ink';
   style?: StyleProp<ViewStyle>;
 };
@@ -93,13 +97,14 @@ export function SignalButton({
   tone = 'signal',
   style,
 }: SignalButtonProps) {
+  const theme = useTheme();
   const inert = disabled || loading;
   const onInk = tone === 'ink';
   const press = usePressScale();
 
-  const base = onInk ? colors.ink : colors.signal;
-  const pressedBg = onInk ? colors.inkRaised : colors.signalDeep;
-  const labelColor = onInk ? colors.signal : colors.ink;
+  const base = onInk ? theme.alarm.ink : theme.accent.base;
+  const pressedBg = onInk ? theme.world.raised : theme.accent.pressed;
+  const labelColor = onInk ? theme.accent.base : theme.accent.contrast;
 
   return (
     <AnimatedPressable
@@ -118,8 +123,7 @@ export function SignalButton({
       }
       style={({ pressed }) => [
         styles.signalButton,
-        { backgroundColor: pressed ? pressedBg : base },
-        inert ? styles.signalButtonInert : null,
+        { backgroundColor: inert ? theme.world.divider : pressed ? pressedBg : base },
         press.style,
         style,
       ]}
@@ -127,7 +131,9 @@ export function SignalButton({
       {loading ? (
         <ActivityIndicator color={labelColor} />
       ) : (
-        <Text style={[styles.signalButtonLabel, { color: inert ? colors.rail : labelColor }]}>
+        <Text
+          style={[styles.signalButtonLabel, { color: inert ? theme.world.textMuted : labelColor }]}
+        >
           {label}
         </Text>
       )}
@@ -135,14 +141,16 @@ export function SignalButton({
   );
 }
 
-/** The quiet counterpart: an outlined action on paper. */
+/** The quiet counterpart: an outlined action, drawn on whichever surface it sits on. */
 export function OutlineButton({
   label,
   onPress,
+  surface,
   style,
 }: {
   label: string;
   onPress: () => void;
+  surface: Surface;
   style?: StyleProp<ViewStyle>;
 }) {
   const press = usePressScale(0.98);
@@ -155,12 +163,12 @@ export function OutlineButton({
       onPressOut={press.onPressOut}
       style={({ pressed }) => [
         styles.outlineButton,
-        pressed ? { backgroundColor: colors.paperShade } : null,
+        { borderColor: surface.border, backgroundColor: pressed ? surface.pressed : 'transparent' },
         press.style,
         style,
       ]}
     >
-      <Text style={styles.outlineButtonLabel}>{label}</Text>
+      <Text style={[styles.outlineButtonLabel, { color: surface.textPrimary }]}>{label}</Text>
     </AnimatedPressable>
   );
 }
@@ -169,12 +177,12 @@ export function OutlineButton({
 export function GhostButton({
   label,
   onPress,
-  tone = 'onInk',
+  surface,
   style,
 }: {
   label: string;
   onPress: () => void;
-  tone?: 'onInk' | 'onPaper';
+  surface: Surface;
   style?: StyleProp<ViewStyle>;
 }) {
   return (
@@ -184,18 +192,11 @@ export function GhostButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.ghostButton,
-        pressed ? { backgroundColor: tone === 'onInk' ? colors.inkRaised : colors.paperShade } : null,
+        pressed ? { backgroundColor: surface.pressed } : null,
         style,
       ]}
     >
-      <Text
-        style={[
-          styles.ghostButtonLabel,
-          { color: tone === 'onInk' ? colors.rail : colors.paperSub },
-        ]}
-      >
-        {label}
-      </Text>
+      <Text style={[styles.ghostButtonLabel, { color: surface.textMuted }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -203,11 +204,6 @@ export function GhostButton({
 /* ------------------------------------------------------------------ *
  * Signage type
  * ------------------------------------------------------------------ */
-
-type LabelTone = 'onInk' | 'onPaper' | 'signal';
-
-const labelColor = (tone: LabelTone) =>
-  tone === 'signal' ? colors.signal : tone === 'onPaper' ? colors.paperMuted : colors.rail;
 
 /**
  * A Hebrew label. Assistant, no tracking.
@@ -218,18 +214,15 @@ const labelColor = (tone: LabelTone) =>
  */
 export function Label({
   children,
-  tone = 'onInk',
+  color,
   style,
 }: {
   children: ReactNode;
-  tone?: LabelTone;
+  color: string;
   style?: StyleProp<TextStyle>;
 }) {
   return (
-    <Text
-      style={[type.labelHe, { color: labelColor(tone), textAlign: align() }, style]}
-      numberOfLines={1}
-    >
+    <Text style={[type.labelHe, { color, textAlign: align() }, style]} numberOfLines={1}>
       {children}
     </Text>
   );
@@ -242,18 +235,15 @@ export function Label({
  */
 export function Plate({
   children,
-  tone = 'onInk',
+  color,
   style,
 }: {
   children: ReactNode;
-  tone?: LabelTone;
+  color: string;
   style?: StyleProp<TextStyle>;
 }) {
   return (
-    <Text
-      style={[type.label, { color: labelColor(tone), textAlign: align() }, style]}
-      numberOfLines={1}
-    >
+    <Text style={[type.label, { color, textAlign: align() }, style]} numberOfLines={1}>
       {children}
     </Text>
   );
@@ -266,17 +256,16 @@ export function Plate({
 export function Readout({
   value,
   unit,
-  tone = 'ink',
+  color,
+  unitColor,
   size = 'large',
 }: {
   value: string;
   unit?: string;
-  tone?: 'ink' | 'signal' | 'paper';
+  color: string;
+  unitColor: string;
   size?: 'large' | 'small';
 }) {
-  const color = tone === 'signal' ? colors.signal : tone === 'paper' ? colors.paper : colors.ink;
-  const unitColor = tone === 'signal' ? colors.signal : colors.paperSub;
-
   return (
     <View style={[styles.readout, { flexDirection: row() }]}>
       <Text style={[size === 'large' ? type.readout : type.readoutSmall, { color }]}>{value}</Text>
@@ -293,18 +282,18 @@ export function Readout({
  * A tear line: two punched notches and a run of dashes.
  *
  * `behind` is the colour showing through the punches — the world outside the
- * ticket, which is ink everywhere it is used today. On a full-bleed pass the
- * notches sit half off-screen and read as two bites taken out of the paper's
- * edge, which is exactly the printed-ticket effect intended.
+ * ticket. On a full-bleed pass the notches sit half off-screen and read as two
+ * bites taken out of the paper's edge, which is the printed-ticket effect
+ * intended.
  */
-export function Perforation({ behind = colors.ink }: { behind?: string }) {
+export function Perforation({ behind, dashes }: { behind: string; dashes: string }) {
   return (
     <View style={styles.perforation}>
       <View style={[styles.notch, styles.notchStart, { backgroundColor: behind }]} />
       <View style={[styles.notch, styles.notchEnd, { backgroundColor: behind }]} />
       <View style={styles.perfDashes}>
         {Array.from({ length: 26 }, (_, index) => (
-          <View key={index} style={styles.perfDash} />
+          <View key={index} style={[styles.perfDash, { backgroundColor: dashes }]} />
         ))}
       </View>
     </View>
@@ -312,11 +301,11 @@ export function Perforation({ behind = colors.ink }: { behind?: string }) {
 }
 
 /** The dotted leader between a timetable label and its value. */
-export function DottedLeader() {
+export function DottedLeader({ color }: { color: string }) {
   return (
     <View style={styles.leader}>
       {Array.from({ length: 40 }, (_, index) => (
-        <View key={index} style={styles.leaderDot} />
+        <View key={index} style={[styles.leaderDot, { backgroundColor: color }]} />
       ))}
     </View>
   );
@@ -328,34 +317,52 @@ export function DottedLeader() {
  */
 export function BoardRow({
   label,
+  surface,
   children,
   divided = true,
 }: {
   label: string;
+  surface: Surface;
   children: ReactNode;
   divided?: boolean;
 }) {
   return (
-    <View style={[styles.boardRow, { flexDirection: row() }, divided ? styles.boardRowDivided : null]}>
-      <Label tone="onPaper" style={styles.boardLabel}>
+    <View
+      style={[
+        styles.boardRow,
+        { flexDirection: row() },
+        divided ? { borderTopWidth: 1, borderTopColor: surface.divider } : null,
+      ]}
+    >
+      <Label color={surface.textMuted} style={styles.boardLabel}>
         {label}
       </Label>
-      <DottedLeader />
+      <DottedLeader color={surface.faint} />
       <View style={styles.boardValue}>{children}</View>
     </View>
   );
 }
 
-/** The live-status mark: a solid signal dot with a tracked mono caption. */
-export function StatusMark({ label }: { label: string }) {
+/** The live-status mark: a solid signal dot with a tracked caption. */
+export function StatusMark({ label, surface }: { label: string; surface: Surface }) {
+  const theme = useTheme();
   return (
     <View style={[styles.statusMark, { flexDirection: row() }]}>
-      <View style={styles.statusDot} />
-      <Text style={styles.statusLabel} numberOfLines={1}>
+      <View style={[styles.statusDot, { backgroundColor: theme.accent.base }]} />
+      <Text style={[styles.statusLabel, { color: surface.textPrimary }]} numberOfLines={1}>
         {label}
       </Text>
     </View>
   );
+}
+
+/**
+ * Convenience for a screen that needs the whole scheme plus one surface.
+ * Saves every screen writing the same two lines.
+ */
+export function useScreenTheme(which: 'world' | 'ticket'): { theme: Scheme; surface: Surface } {
+  const theme = useTheme();
+  return useMemo(() => ({ theme, surface: theme[which] }), [theme, which]);
 }
 
 const styles = StyleSheet.create({
@@ -365,9 +372,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
-  signalButtonInert: {
-    backgroundColor: colors.inkLine,
-  },
   signalButtonLabel: {
     ...type.button,
   },
@@ -375,14 +379,12 @@ const styles = StyleSheet.create({
   outlineButton: {
     height: 52,
     borderWidth: 1.5,
-    borderColor: colors.ink,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
   outlineButtonLabel: {
     ...type.buttonSmall,
-    color: colors.ink,
   },
 
   ghostButton: {
@@ -406,7 +408,6 @@ const styles = StyleSheet.create({
 
   perforation: {
     height: 2,
-    backgroundColor: 'transparent',
     justifyContent: 'center',
   },
   notch: {
@@ -426,7 +427,6 @@ const styles = StyleSheet.create({
   perfDash: {
     width: 6,
     height: 2,
-    backgroundColor: colors.paperPerf,
   },
 
   leader: {
@@ -440,7 +440,6 @@ const styles = StyleSheet.create({
   leaderDot: {
     width: 1,
     height: 1,
-    backgroundColor: colors.paperPerf,
   },
 
   boardRow: {
@@ -448,29 +447,23 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingVertical: 12,
   },
-  boardRowDivided: {
-    borderTopWidth: 1,
-    borderTopColor: colors.paperRule,
-  },
   boardLabel: {
     flexShrink: 0,
   },
   boardValue: {
-    flexShrink: 0,
+    flexShrink: 1,
   },
 
   statusMark: {
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.sm,
   },
   statusDot: {
     width: 9,
     height: 9,
     borderRadius: 4.5,
-    backgroundColor: colors.signal,
   },
   statusLabel: {
     ...type.labelHe,
-    color: colors.ink,
   },
 });

@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t, type TranslationKey } from '../i18n';
 import { PermissionsService } from '../services/permissions/PermissionsService';
 import { usePermissionsStore } from '../state/usePermissionsStore';
-import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../theme';
+import { MAX_DISPLAY_SCALE, spacing, type, useTheme } from '../theme';
 import type { PermissionState, PermissionsSnapshot } from '../types';
 import { Crescent } from '../components/icons';
 import { GhostButton, SignalButton, align, row } from '../components/ui';
@@ -38,6 +38,8 @@ type Props = {
  * on both platforms, and a reflexive deny is expensive to recover from.
  */
 export function PermissionsScreen({ onSkipBackground }: Props) {
+  const theme = useTheme();
+  const w = theme.world;
   const snapshot = usePermissionsStore((state) => state.snapshot);
   const requestForeground = usePermissionsStore((state) => state.requestForeground);
   const requestBackground = usePermissionsStore((state) => state.requestBackground);
@@ -55,14 +57,14 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
   const blocked = current.state === 'blocked';
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: w.bg }]}>
       {/* The signage rule that heads every ink screen. */}
-      <View style={styles.rule} />
+      <View style={[styles.rule, { backgroundColor: theme.accent.base }]} />
 
       {/* Platform-edge ruler down the trailing margin. */}
       <View style={styles.ruler} pointerEvents="none">
         {Array.from({ length: 7 }, (_, i) => (
-          <View key={i} style={styles.rulerTick} />
+          <View key={i} style={[styles.rulerTick, { backgroundColor: w.divider }]} />
         ))}
       </View>
 
@@ -80,24 +82,24 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
         >
           {/* Step counter, set like a platform indicator. */}
           <View style={[styles.counter, { flexDirection: row() }]}>
-            <Text style={styles.counterCurrent}>{pad(index + 1)}</Text>
-            <View style={styles.counterDash} />
-            <Text style={styles.counterTotal}>{pad(steps.length)}</Text>
-            <Text style={styles.counterPlate}>{t('plate.permissions')}</Text>
+            <Text style={[styles.counterCurrent, { color: theme.accent.base }]}>{pad(index + 1)}</Text>
+            <View style={[styles.counterDash, { backgroundColor: w.divider }]} />
+            <Text style={[styles.counterTotal, { color: w.textMuted }]}>{pad(steps.length)}</Text>
+            <Text style={[styles.counterPlate, { color: w.textMuted }]}>{t('plate.permissions')}</Text>
           </View>
 
-          <Crescent size={76} color={colors.signal} nodeColor={colors.paper} />
+          <Crescent size={76} color={theme.accent.base} nodeColor={w.bg} />
 
           <View style={styles.copy}>
             <Text
-              style={[styles.title, { textAlign: align() }]}
+              style={[styles.title, { color: w.textPrimary, textAlign: align() }]}
               maxFontSizeMultiplier={MAX_DISPLAY_SCALE}
             >
               {blocked ? t('permissions.blockedTitle') : t(current.titleKey)}
             </Text>
 
             {blocked ? (
-              <Text style={[styles.body, { textAlign: align() }]}>
+              <Text style={[styles.body, { color: w.textSecondary, textAlign: align() }]}>
                 {t('permissions.blockedBody')}
               </Text>
             ) : (
@@ -106,12 +108,20 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
                 // ("choose Always") — promoted onto a strip so it cannot be
                 // skimmed past on the way to the button.
                 position > 0 ? (
-                  <View key={key} style={[styles.instruction, { flexDirection: row() }]}>
-                    <Text style={styles.instructionMark}>!</Text>
-                    <Text style={[styles.instructionText, { textAlign: align() }]}>{t(key)}</Text>
+                  <View
+                    key={key}
+                    style={[
+                      styles.instruction,
+                      { backgroundColor: w.raised, borderStartColor: theme.accent.base, flexDirection: row() },
+                    ]}
+                  >
+                    <Text style={[styles.instructionMark, { color: theme.accent.base }]}>!</Text>
+                    <Text style={[styles.instructionText, { color: w.textPrimary, textAlign: align() }]}>
+                      {t(key)}
+                    </Text>
                   </View>
                 ) : (
-                  <Text key={key} style={[styles.body, { textAlign: align() }]}>
+                  <Text key={key} style={[styles.body, { color: w.textSecondary, textAlign: align() }]}>
                     {t(key)}
                   </Text>
                 )
@@ -131,11 +141,11 @@ export function PermissionsScreen({ onSkipBackground }: Props) {
           )}
 
           {current.id === 'background' ? (
-            <GhostButton label={t('common.notNow')} onPress={onSkipBackground} />
+            <GhostButton label={t('common.notNow')} surface={w} onPress={onSkipBackground} />
           ) : (
             <View style={[styles.slogan, { flexDirection: row() }]}>
-              <View style={styles.sloganDot} />
-              <Text style={styles.sloganText}>{t('brand.slogan')}</Text>
+              <View style={[styles.sloganDot, { backgroundColor: theme.accent.base }]} />
+              <Text style={[styles.sloganText, { color: w.textMuted }]}>{t('brand.slogan')}</Text>
             </View>
           )}
         </View>
@@ -190,7 +200,6 @@ function buildSteps(
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.ink,
   },
   rule: {
     position: 'absolute',
@@ -198,7 +207,6 @@ const styles = StyleSheet.create({
     start: 0,
     end: 0,
     height: 4,
-    backgroundColor: colors.signal,
   },
   ruler: {
     position: 'absolute',
@@ -210,7 +218,6 @@ const styles = StyleSheet.create({
   },
   rulerTick: {
     height: 1,
-    backgroundColor: colors.inkLine,
   },
   safe: {
     flex: 1,
@@ -234,50 +241,40 @@ const styles = StyleSheet.create({
   counterCurrent: {
     ...type.labelStrong,
     letterSpacing: 1.4,
-    color: colors.signal,
   },
   counterDash: {
     width: 26,
     height: 1,
-    backgroundColor: colors.inkLine,
   },
   counterTotal: {
     ...type.label,
     letterSpacing: 1.4,
-    color: colors.rail,
   },
   counterPlate: {
     ...type.label,
-    color: colors.rail,
   },
   copy: {
     gap: 16,
   },
   title: {
     ...type.display,
-    color: colors.paper,
   },
   body: {
     ...type.body,
-    color: colors.railLight,
   },
   instruction: {
     gap: spacing.md,
     alignItems: 'flex-start',
-    backgroundColor: colors.inkRaised,
     borderStartWidth: 3,
-    borderStartColor: colors.signal,
     padding: spacing.lg,
   },
   instructionMark: {
     ...type.labelStrong,
-    color: colors.signal,
     paddingTop: 4,
   },
   instructionText: {
     flex: 1,
     ...type.bodySmall,
-    color: colors.paper,
   },
   actions: {
     gap: spacing.md,
@@ -291,10 +288,8 @@ const styles = StyleSheet.create({
   sloganDot: {
     width: 5,
     height: 5,
-    backgroundColor: colors.signal,
   },
   sloganText: {
     ...type.labelHeSmall,
-    color: colors.rail,
   },
 });

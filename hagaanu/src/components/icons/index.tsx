@@ -1,7 +1,5 @@
 import Svg, { Circle, Path, Rect, G } from 'react-native-svg';
 
-import { colors } from '../../theme';
-
 /**
  * The drawn icon set.
  *
@@ -26,13 +24,18 @@ import { colors } from '../../theme';
 
 type IconProps = {
   size?: number;
-  color?: string;
+  /**
+   * Required, deliberately. An icon is a leaf and must not hold a colour
+   * opinion — the surface it is drawn on decides, and making this optional
+   * would let a default silently survive a scheme change.
+   */
+  color: string;
 };
 
 /** The interface-icon stroke. Every 24-grid icon uses this and nothing else. */
 const S = 1.9;
 
-export function SearchIcon({ size = 20, color = colors.rail }: IconProps) {
+export function SearchIcon({ size = 20, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Circle cx="11" cy="11" r="6.5" stroke={color} strokeWidth={S} />
@@ -41,7 +44,7 @@ export function SearchIcon({ size = 20, color = colors.rail }: IconProps) {
   );
 }
 
-export function CloseIcon({ size = 20, color = colors.paperMuted }: IconProps) {
+export function CloseIcon({ size = 20, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={S} strokeLinecap="round" />
@@ -49,7 +52,7 @@ export function CloseIcon({ size = 20, color = colors.paperMuted }: IconProps) {
   );
 }
 
-export function PlusIcon({ size = 20, color = colors.signal }: IconProps) {
+export function PlusIcon({ size = 20, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M12 5v14M5 12h14" stroke={color} strokeWidth={S} strokeLinecap="round" />
@@ -58,7 +61,7 @@ export function PlusIcon({ size = 20, color = colors.signal }: IconProps) {
 }
 
 /** Crosshair — "centre the map on me". */
-export function LocateIcon({ size = 22, color = colors.paper }: IconProps) {
+export function LocateIcon({ size = 22, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Circle cx="12" cy="12" r="4" stroke={color} strokeWidth={S} />
@@ -77,7 +80,7 @@ export function LocateIcon({ size = 22, color = colors.paper }: IconProps) {
  * everywhere it appears — on the map, in the sheet, in the saved list — so the
  * same object always looks like the same object.
  */
-export function StationNode({ size = 22, color = colors.signal }: IconProps) {
+export function StationNode({ size = 22, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Circle cx="12" cy="12" r="8" stroke={color} strokeWidth={S} />
@@ -92,10 +95,10 @@ export function StationNode({ size = 22, color = colors.signal }: IconProps) {
  */
 export function Crescent({
   size = 76,
-  color = colors.signal,
-  nodeColor = colors.paper,
+  color,
+  nodeColor,
   showNode = true,
-}: IconProps & { nodeColor?: string; showNode?: boolean }) {
+}: IconProps & { nodeColor: string; showNode?: boolean }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 76 76" fill="none">
       <Path d="M52 14a26 26 0 1 0 0 48 31 31 0 0 1 0-48Z" fill={color} />
@@ -109,19 +112,24 @@ export function Crescent({
   );
 }
 
-/** The app's lockup glyph: the node, reversed out of a solid signal square. */
+/**
+ * The app's lockup glyph: the node reversed out of a solid signal square.
+ *
+ * The only mark with fixed colours. It is the logo — it does not re-theme,
+ * in the same way a printed logo does not change ink because the light did.
+ */
 export function BrandGlyph({ size = 30 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 30 30">
-      <Rect width="30" height="30" fill={colors.signal} />
-      <Circle cx="15" cy="15" r="8.75" stroke={colors.ink} strokeWidth={3} fill="none" />
-      <Circle cx="15" cy="15" r="3" fill={colors.ink} />
+      <Rect width="30" height="30" fill="#FF6B1A" />
+      <Circle cx="15" cy="15" r="8.75" stroke="#14161C" strokeWidth={3} fill="none" />
+      <Circle cx="15" cy="15" r="3" fill="#14161C" />
     </Svg>
   );
 }
 
 /** Concentric rings radiating from a node — the alarm, in the map's own language. */
-export function SignalBurst({ size = 168, color = colors.ink }: IconProps) {
+export function SignalBurst({ size = 168, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 168 168" fill="none">
       <Circle cx="84" cy="84" r="16" fill={color} />
@@ -134,7 +142,7 @@ export function SignalBurst({ size = 168, color = colors.ink }: IconProps) {
 
 /* ---------- saved-destination marks ---------- */
 
-export function HomeIcon({ size = 24, color = colors.ink }: IconProps) {
+export function HomeIcon({ size = 24, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M4 10.2 12 4l8 6.2V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8.8Z" stroke={color} strokeWidth={S} strokeLinejoin="round" />
@@ -143,7 +151,7 @@ export function HomeIcon({ size = 24, color = colors.ink }: IconProps) {
   );
 }
 
-export function WorkIcon({ size = 24, color = colors.ink }: IconProps) {
+export function WorkIcon({ size = 24, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Rect x="3.5" y="7.5" width="17" height="12.5" rx="1.5" stroke={color} strokeWidth={S} />
@@ -153,7 +161,7 @@ export function WorkIcon({ size = 24, color = colors.ink }: IconProps) {
   );
 }
 
-export function TrainIcon({ size = 24, color = colors.ink }: IconProps) {
+export function TrainIcon({ size = 24, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Rect x="5" y="3.5" width="14" height="13.5" rx="2.5" stroke={color} strokeWidth={S} />
@@ -165,7 +173,7 @@ export function TrainIcon({ size = 24, color = colors.ink }: IconProps) {
   );
 }
 
-export function StarIcon({ size = 24, color = colors.ink }: IconProps) {
+export function StarIcon({ size = 24, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
@@ -178,7 +186,7 @@ export function StarIcon({ size = 24, color = colors.ink }: IconProps) {
   );
 }
 
-export function BellIcon({ size = 24, color = colors.paper }: IconProps) {
+export function BellIcon({ size = 24, color }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
@@ -208,11 +216,11 @@ const BARS: [number, number][] = [
 export function Barcode({
   width = 176,
   height = 38,
-  color = colors.ink,
+  color,
 }: {
   width?: number;
   height?: number;
-  color?: string;
+  color: string;
 }) {
   return (
     <Svg width={width} height={height} viewBox="0 0 176 38">

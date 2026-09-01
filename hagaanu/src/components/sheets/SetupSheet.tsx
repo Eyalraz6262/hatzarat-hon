@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { t } from '../../i18n';
-import { MAX_DISPLAY_SCALE, colors, spacing, type } from '../../theme';
+import { MAX_DISPLAY_SCALE, spacing, type, useTheme } from '../../theme';
 import type { Destination } from '../../types';
 import { formatDistance } from '../../utils/geo';
 import { CloseIcon, StationNode } from '../icons';
@@ -34,18 +34,23 @@ export function SetupSheet({
   onClearDestination,
   onArm,
 }: Props) {
+  const theme = useTheme();
+  const s = theme.ticket;
+
   if (!destination) {
     return (
       <TicketStub>
         <View style={styles.empty}>
-          <Plate tone="onPaper">{t('plate.destination')}</Plate>
+          <Plate color={s.textMuted}>{t('plate.destination')}</Plate>
           <Text
-            style={[styles.emptyTitle, { textAlign: align() }]}
+            style={[styles.emptyTitle, { color: s.textPrimary, textAlign: align() }]}
             maxFontSizeMultiplier={MAX_DISPLAY_SCALE}
           >
             {t('home.tapToChoose')}
           </Text>
-          <Text style={[styles.emptySub, { textAlign: align() }]}>{t('home.tapToChooseSub')}</Text>
+          <Text style={[styles.emptySub, { color: s.textSecondary, textAlign: align() }]}>
+            {t('home.tapToChooseSub')}
+          </Text>
         </View>
       </TicketStub>
     );
@@ -55,13 +60,19 @@ export function SetupSheet({
     <TicketStub>
       {/* The origin/destination line of a ticket. */}
       <View style={[styles.destination, { flexDirection: row() }]}>
-        <StationNode size={22} color={colors.signal} />
+        <StationNode size={22} color={theme.accent.base} />
         <View style={styles.destinationText}>
-          <Text style={[styles.destinationName, { textAlign: align() }]} numberOfLines={1}>
+          <Text
+            style={[styles.destinationName, { color: s.textPrimary, textAlign: align() }]}
+            numberOfLines={1}
+          >
             {destination.label}
           </Text>
           {distanceM !== null ? (
-            <Text style={[styles.destinationMeta, { textAlign: align() }]} numberOfLines={1}>
+            <Text
+              style={[styles.destinationMeta, { color: s.textSecondary, textAlign: align() }]}
+              numberOfLines={1}
+            >
               {t('setup.distanceFromYou', { distance: formatDistance(distanceM) })}
             </Text>
           ) : null}
@@ -73,12 +84,14 @@ export function SetupSheet({
           accessibilityLabel={t('setup.changeDestination')}
           style={({ pressed }) => [styles.clear, pressed ? styles.clearPressed : null]}
         >
-          <CloseIcon size={20} color={colors.paperMuted} />
+          <CloseIcon size={20} color={s.textMuted} />
         </Pressable>
       </View>
 
       <View style={styles.radius}>
-        <Text style={[styles.radiusTitle, { textAlign: align() }]}>{t('setup.radiusTitle')}</Text>
+        <Text style={[styles.radiusTitle, { color: s.textMuted, textAlign: align() }]}>
+          {t('setup.radiusTitle')}
+        </Text>
         <RadiusSelector value={radiusM} onChange={onChangeRadius} />
       </View>
 
@@ -98,11 +111,9 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...type.title,
-    color: colors.ink,
   },
   emptySub: {
     ...type.body,
-    color: colors.rail,
   },
   destination: {
     alignItems: 'flex-start',
@@ -114,15 +125,13 @@ const styles = StyleSheet.create({
   },
   destinationName: {
     ...type.subtitle,
-    color: colors.ink,
   },
   destinationMeta: {
     ...type.labelHeSmall,
-    color: colors.paperSub,
   },
   clear: {
     // A 20px glyph needs its own 44px target — the icon is not the button.
-    // The negative margins are optical centring (half the 44−22 difference),
+    // The negative margins are optical centring (half the 44-22 difference),
     // deliberately off the 4pt spacing grid: they cancel the target's padding
     // rather than creating space.
     width: 44,
@@ -140,6 +149,5 @@ const styles = StyleSheet.create({
   },
   radiusTitle: {
     ...type.labelHe,
-    color: colors.paperMuted,
   },
 });

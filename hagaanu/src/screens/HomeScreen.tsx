@@ -8,7 +8,7 @@ import { t, type TranslationKey } from '../i18n';
 import { GeocodingService } from '../services/location/GeocodingService';
 import { useAlarmStore } from '../state/useAlarmStore';
 import { usePermissionsStore } from '../state/usePermissionsStore';
-import { colors, spacing, type } from '../theme';
+import { spacing, type, useTheme } from '../theme';
 import type { LatLng } from '../types';
 import { DestinationMap, type DestinationMapHandle } from '../components/map/DestinationMap';
 import { SearchBar } from '../components/map/SearchBar';
@@ -41,6 +41,8 @@ export function HomeScreen() {
   );
   const locationServicesEnabled = usePermissionsStore((state) => state.locationServicesEnabled);
 
+  const theme = useTheme();
+  const w = theme.world;
   const mapRef = useRef<DestinationMapHandle>(null);
   const [initialRegion] = useState<Region>(FALLBACK_REGION);
   // The stub's height changes with its content, so the locate button is placed
@@ -109,7 +111,7 @@ export function HomeScreen() {
   }, [locationServicesEnabled, error, backgroundGranted]);
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: w.bg }]}>
       <DestinationMap
         ref={mapRef}
         initialRegion={initialRegion}
@@ -123,8 +125,8 @@ export function HomeScreen() {
         <View style={styles.chrome} pointerEvents="box-none">
           <View style={[styles.lockup, { flexDirection: row() }]} pointerEvents="none">
             <BrandGlyph size={30} />
-            <Text style={styles.brand}>{t('brand.name')}</Text>
-            <Text style={styles.live}>{t('plate.live')}</Text>
+            <Text style={[styles.brand, { color: w.textPrimary, textShadowColor: theme.scrimStrong }]}>{t('brand.name')}</Text>
+            <Text style={[styles.live, { color: w.textMuted }]}>{t('plate.live')}</Text>
           </View>
 
           <SearchBar onSelect={selectSearchResult} />
@@ -133,12 +135,16 @@ export function HomeScreen() {
             <View
               style={[
                 styles.banner,
-                { flexDirection: row() },
-                banner.tone === 'alert' ? styles.bannerAlert : null,
+                {
+                  backgroundColor: w.raised,
+                  borderStartColor:
+                    banner.tone === 'alert' ? theme.accent.pressed : theme.accent.base,
+                  flexDirection: row(),
+                },
               ]}
             >
-              <Text style={styles.bannerMark}>!</Text>
-              <Text style={[styles.bannerText, { textAlign: align() }]}>{t(banner.key)}</Text>
+              <Text style={[styles.bannerMark, { color: theme.accent.base }]}>!</Text>
+              <Text style={[styles.bannerText, { color: w.textPrimary, textAlign: align() }]}>{t(banner.key)}</Text>
             </View>
           ) : null}
         </View>
@@ -151,9 +157,12 @@ export function HomeScreen() {
             onPress={recentre}
             accessibilityRole="button"
             accessibilityLabel={t('home.recenter')}
-            style={({ pressed }) => [styles.locate, pressed ? styles.locatePressed : null]}
+            style={({ pressed }) => [
+              styles.locate,
+              { backgroundColor: pressed ? w.pressed : w.raised, borderColor: w.divider },
+            ]}
           >
-            <LocateIcon size={21} color={colors.paper} />
+            <LocateIcon size={21} color={w.textPrimary} />
           </Pressable>
         </View>
       </SafeAreaView>
@@ -179,7 +188,6 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.ink,
   },
   overlay: {
     ...StyleSheet.absoluteFill,
@@ -196,14 +204,11 @@ const styles = StyleSheet.create({
   },
   brand: {
     ...type.subtitle,
-    color: colors.paper,
     // The lockup sits over the map, so it needs its own contrast.
-    textShadowColor: colors.scrimStrong,
     textShadowRadius: 10,
   },
   live: {
     ...type.label,
-    color: colors.rail,
     marginStart: 'auto',
   },
   banner: {
@@ -211,22 +216,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: 12,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.inkRaised,
     borderStartWidth: 3,
-    borderStartColor: colors.signal,
-  },
-  bannerAlert: {
-    borderStartColor: colors.signalDeep,
   },
   bannerMark: {
     ...type.labelStrong,
-    color: colors.signal,
   },
   bannerText: {
     flex: 1,
     ...type.labelHeSmall,
     lineHeight: 19,
-    color: colors.paper,
   },
   controls: {
     alignItems: 'flex-start',
@@ -235,14 +233,9 @@ const styles = StyleSheet.create({
   locate: {
     width: 48,
     height: 48,
-    backgroundColor: colors.inkRaised,
     borderWidth: 1,
-    borderColor: colors.inkLine,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  locatePressed: {
-    backgroundColor: colors.inkLine,
   },
   stubHost: {
     position: 'absolute',
