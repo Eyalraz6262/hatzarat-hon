@@ -58,6 +58,34 @@ export type AlarmSession = {
    * re-posting on every fix would be a wake-up per fix for no benefit.
    */
   statusDistanceLabel?: string | null;
+  /**
+   * The stop list the rail was built from, frozen at arm time.
+   *
+   * Persisted with the session rather than refetched, for two reasons. The
+   * armed alarm must never need the network, and a passenger who closes the
+   * app on a train and reopens it twenty minutes later would otherwise see an
+   * empty rail exactly when it matters most.
+   *
+   * Optional because a session written before this field existed is still a
+   * valid session, and an armed alarm must survive an app update.
+   */
+  stops?: TransitStopRecord[];
+  /** Why `stops` is empty, when it is. Shown on the rail. */
+  stopsFallback?: 'offline' | 'none-found' | 'too-far' | null;
+};
+
+/**
+ * A transit stop as stored on disk.
+ *
+ * Structurally identical to `TransitStop`, and declared here rather than
+ * imported so `types` stays free of service dependencies.
+ */
+export type TransitStopRecord = {
+  id: string;
+  name: string;
+  coords: LatLng;
+  kind: 'rail' | 'bus' | 'light-rail';
+  fromOriginM: number;
 };
 
 export type PermissionState = 'unknown' | 'granted' | 'denied' | 'blocked';

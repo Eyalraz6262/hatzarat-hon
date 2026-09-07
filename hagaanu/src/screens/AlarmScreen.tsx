@@ -1,107 +1,121 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useKeepAwake } from 'expo-keep-awake';
 
-import { useBackGuard } from '../hooks/useBackGuard';
 import { t } from '../i18n';
+import { useBackGuard } from '../hooks/useBackGuard';
+import { useReducedMotion } from '../hooks/useReducedMotion';
+import { Touch, Txt } from '../components/ui';
 import { Feedback } from '../services/feedback/Haptics';
-import { MAX_DISPLAY_SCALE, spacing, type, useTheme } from '../theme';
+import { motion, radius, space, type, useTheme } from '../theme';
 import type { Destination } from '../types';
-import { SignalBurst } from '../components/icons';
-import { SignalButton, row } from '../components/ui';
-
-type Props = {
-  destination: Destination;
-  onDismiss: () => void;
-};
 
 /**
- * The wake screen.
+ * Arrival.
  *
- * The one place the accent takes the whole surface. Every other screen rations
- * orange to a single mark, which is exactly what makes this flood read as an
- * alarm — recognisable through half-open eyes before any word is parsed.
+ * The only screen in the app that abandons the design system, and it does so
+ * on purpose: the accent stops being an accent and becomes the entire surface.
+ * Nothing else in the app is ever a flood of colour, so when this appears
+ * there is no ambiguity about what happened, even to someone opening their
+ * eyes for the first time in twenty minutes.
  *
- * Everything on it is sized for someone who just woke up: one message, one
- * enormous button, maximum contrast, nothing else to parse or mis-tap.
+ * One target, and it is enormous. A tired person reaching for a phone in a
+ * moving vehicle should not have to aim.
  */
-export function AlarmScreen({ destination, onDismiss }: Props) {
-  // The alarm does not follow the scheme. It is an event, not a surface: the
-  // same orange flood at 05:40 in winter dark and at 07:20 in summer light.
-  const { alarm } = useTheme();
-  // Someone woken by this must be able to read it without the screen dimming
-  // out from under them.
-  useKeepAwake();
-  // ...or accidentally dismiss it with a reflex back press.
-  useBackGuard(true);
-
+export function AlarmScreen({
+  destination,
+  onDismiss,
+}: {
+  destination: Destination;
+  onDismiss: () => void;
+}) {
+  const s = useTheme();
+  const reduced = useReducedMotion();
   const pulse = useRef(new Animated.Value(0)).current;
 
+  // The screen must stay lit: this is an alarm, and a display that sleeps
+  // three seconds in defeats the entire purpose.
+  useKeepAwake();
+
+  // Android back must not dismiss the alarm by reflex. Consumed here and
+  // nowhere else in the app.
+  useBackGuard(true);
+
   useEffect(() => {
+    if (reduced) return;
     const loop = Animated.loop(
-      Animated.timing(pulse, {
-        toValue: 1,
-        duration: 1400,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      })
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: motion.pulse / 2,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: motion.pulse / 2,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse]);
+  }, [pulse, reduced]);
 
-  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.5] });
-  const opacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0] });
+  const ringScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] });
+  const ringFade = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] });
 
   return (
-    <View style={[styles.screen, { backgroundColor: alarm.bg }]}>
-      {/* Platform-edge hazard marking. */}
-      <View style={styles.hazard}>
-        {Array.from({ length: 30 }, (_, index) => (
-          <View key={index} style={[styles.hazardTick, { backgroundColor: alarm.ink }]} />
-        ))}
-      </View>
-
+    <View
+      style={[styles.screen, { backgroundColor: s.alarm.bg }]}
+      accessibilityViewIsModal
+      accessibilityLiveRegion="assertive"
+    >
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={[styles.plateRow, { flexDirection: row() }]}>
-          <View style={[styles.plateDot, { backgroundColor: alarm.ink }]} />
-          <Text style={[styles.plate, { color: alarm.ink }]}>{t('plate.alarm')}</Text>
-        </View>
-
         <View style={styles.body}>
           <View style={styles.beacon}>
             <Animated.View
-              style={[styles.ring, { backgroundColor: alarm.ink, transform: [{ scale }], opacity }]}
+              style={[
+                styles.ring,
+                { borderColor: s.alarm.ink, opacity: ringFade, transform: [{ scale: ringScale }] },
+              ]}
               pointerEvents="none"
             />
-            <SignalBurst size={168} color={alarm.ink} />
+            <View style={[styles.core, { backgroundColor: s.alarm.ink }]} />
           </View>
 
-          <Text style={[styles.title, { color: alarm.ink }]} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
-            {t('alarm.title')}
-          </Text>
-          <Text style={[styles.subtitle, { color: alarm.ink }]} maxFontSizeMultiplier={MAX_DISPLAY_SCALE}>
-            {t('alarm.subtitle')}
-          </Text>
-
-          <View style={[styles.destination, { borderTopColor: alarm.line, flexDirection: row() }]}>
-            <Text style={[styles.destinationLabel, { color: alarm.muted }]}>{t('active.destination')}</Text>
-            <Text style={[styles.destinationName, { color: alarm.ink }]} numberOfLines={1}>
-              {destination.label}
-            </Text>
+          <View style={styles.copy}>
+            <Txt variant="display" tone="onAlarm" style={styles.title}>
+              {t('alarm.title')}
+            </Txt>
+            <Txt variant="body" tone="alarmDim" style={styles.title}>
+              {t('alarm.body', { destination: destination.label })}
+            </Txt>
           </View>
         </View>
 
-        <SignalButton
-          label={t('alarm.dismiss')}
-          tone="ink"
+        <Touch
+          accessibilityRole="button"
+          accessibilityLabel={t('alarm.dismiss')}
           onPress={() => {
             Feedback.release();
             onDismiss();
           }}
-          style={styles.dismiss}
-        />
+          scaleTo={0.985}
+          style={({ pressed }) => [
+            styles.dismiss,
+            {
+              backgroundColor: s.alarm.ink,
+              opacity: pressed ? 0.86 : 1,
+            },
+          ]}
+        >
+          <Txt style={[type.button, styles.dismissLabel, { color: s.alarm.bg }]}>
+            {t('alarm.dismiss')}
+          </Txt>
+        </Touch>
       </SafeAreaView>
     </View>
   );
@@ -110,81 +124,55 @@ export function AlarmScreen({ destination, onDismiss }: Props) {
 const styles = StyleSheet.create({
   screen: {
     ...StyleSheet.absoluteFill,
-  },
-  hazard: {
-    position: 'absolute',
-    top: 0,
-    start: 0,
-    end: 0,
-    height: 14,
-    flexDirection: 'row',
-    gap: 12,
-    overflow: 'hidden',
-  },
-  hazardTick: {
-    width: 9,
-    height: 14,
-    transform: [{ skewX: '-25deg' }],
+    zIndex: 100,
   },
   safe: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: spacing.xl,
-    justifyContent: 'space-between',
-  },
-  plateRow: {
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingTop: spacing.xl,
-  },
-  plateDot: {
-    width: 8,
-    height: 8,
-  },
-  plate: {
-    ...type.labelStrong,
+    paddingHorizontal: space.screen,
+    paddingBottom: space.xl,
   },
   body: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
+    gap: space.huge,
   },
   beacon: {
-    width: 168,
-    height: 168,
+    width: 132,
+    height: 132,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ring: {
     position: 'absolute',
-    width: 116,
-    height: 116,
-    borderRadius: 58,
+    width: 132,
+    height: 132,
+    borderRadius: 66,
+    borderWidth: 3,
+  },
+  core: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+  },
+  copy: {
+    gap: space.md,
+    alignItems: 'center',
   },
   title: {
-    ...type.heroAlarm,
     textAlign: 'center',
   },
-  subtitle: {
-    ...type.subtitle,
-    textAlign: 'center',
-  },
-  destination: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    borderTopWidth: 1.5,
-    paddingTop: 16,
-    maxWidth: '100%',
-  },
-  destinationLabel: {
-    ...type.labelHe,
-  },
-  destinationName: {
-    ...type.bodyStrong,
-    flexShrink: 1,
-  },
+  /**
+   * 88pt tall. Far past the 44pt floor, because the person pressing it was
+   * asleep four seconds ago and the vehicle is moving.
+   */
   dismiss: {
-    height: 76,
+    minHeight: 88,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dismissLabel: {
+    textAlign: 'center',
   },
 });

@@ -4,310 +4,302 @@ The design source of truth. Read this before any UI decision. A re-run of any
 skill in the mobile suite **refreshes** this file and reports what changed; it
 does not regenerate it from scratch.
 
-Last refreshed: 2026-09-01 · after the whole-app rebuild (`mobile-redesign-app`,
-preserve-language mode).
+Last refreshed: 2026-09-07 · the "קו" rebuild. The previous system ("כרטיס
+נסיעה": square corners, ink and paper, signal orange, IBM Plex Mono) was
+rejected outright and replaced. Nothing from it survives except the services
+layer, which never had a visual opinion.
 
 ---
 
 ## App Read
 
 ```
-APP READ: single-purpose transit alarm for Israeli public-transport passengers,
-Israeli-rail-signage language ("כרטיס נסיעה"), leaning Expo prebuild + plain
-StyleSheet tokens.
+APP READ: single-purpose transit wake-up alarm for Israeli commuters, plain and
+calm language, leaning Expo prebuild + StyleSheet tokens.
 platforms: iOS first-class · Android first-class · web none
 posture: unified-brand
+offline: N/A once armed — the alarm is a geofence and a local position stream
 ```
 
-The app has one job: wake someone who fell asleep on the bus or train before
-their stop. Everything else — accounts, payments, social, AI — is explicitly out
-of scope by the brief and stays out.
+The context of use is the design driver, not taste. Someone using this is
+holding the phone **in one hand, half asleep, on a moving vehicle, usually in
+poor light**. That single sentence produces the whole system: large targets,
+one decision per screen, the primary action always in the bottom third, and
+nothing that asks the finger for precision.
 
-`unified-brand` is a commitment, not a shrug: one look on both platforms, with
-native chrome underneath it. The two places the platforms are allowed to diverge
-are documented and deliberate:
+Two places the platforms diverge, both deliberate:
 
 | Divergence | iOS | Android | Why |
 |---|---|---|---|
 | Map provider | Apple Maps (`PROVIDER_DEFAULT`) | Google Maps (`PROVIDER_GOOGLE`) | No key, no billing account, Hebrew labels from the OS on iOS. Android has no built-in alternative. |
-| Alarm delivery | `interruptionLevel: 'timeSensitive'` | notification channel at `AndroidImportance.MAX`, `AndroidAudioUsage.ALARM`, `bypassDnd` | Each OS's own strongest sanctioned wake path. See `docs/PLATFORM-LIMITS.md`. |
-| Naming a saved stop | `Alert.prompt` | falls back to the destination's own label | Android has no `Alert.prompt` and a modal text sheet would cost the ten-second budget. |
+| Alarm delivery | `interruptionLevel: 'timeSensitive'` | channel at `AndroidImportance.MAX`, `AndroidAudioUsage.ALARM`, `bypassDnd` | Each OS's strongest sanctioned wake path. See `docs/PLATFORM-LIMITS.md`. |
 
 ---
 
 ## Nav Read
 
 ```
-App.tsx  — a state machine, not a navigator
-├── boot            (splash held until fonts + hydrate resolve)
-├── PermissionsScreen   when foreground location is not yet granted,
-│                       or background is ungranted and not yet skipped
-├── AlarmScreen         phase === 'ringing'   (wins over everything)
-├── PassScreen          phase === 'armed'
-└── HomeScreen          otherwise — map + ticket stub
+App.tsx — a state machine, not a navigator
+├── boot                (splash held until fonts + hydrate resolve)
+├── PermissionsScreen   foreground or notifications ungranted, or background
+│                       ungranted and not yet skipped this session
+├── AlarmScreen         phase === 'ringing'   (wins over everything, zIndex 100)
+├── ActiveScreen        phase === 'armed'
+└── HomeScreen          otherwise — two states on one screen, see below
 ```
 
-**Zero tabs, zero stacks, and that is correct.** The nav audit
-(`_shared/references/navigation.md` mechanical checks) found nothing to fix, so
-Phase 6 of the redesign was skipped by the skill's own rule ("if navigation is
-fine, say so and skip the phase; most redesigns should").
-
-The reasoning, so a future session does not "improve" it into a tab bar:
+**Zero tabs, zero stacks, and that is correct.** The nav audit found nothing to
+fix. The reasoning, so a future session does not "improve" this into a tab bar:
 
 - There is one destination at a time. A tab bar advertises parallel sections
-  that do not exist here.
+  that do not exist.
 - The states are mutually exclusive and driven by app phase, not by user
   navigation. A navigator would model them as pushes the user could pop, which
   is exactly wrong for `ringing`.
-- Saved destinations are a **strip**, not a screen, for the same reason: the
-  product's promise is armed-in-ten-seconds, and a route transition spends that
-  budget for nothing.
+- **HomeScreen holds two states rather than two routes.** Picking a place and
+  confirming it are one continuous act; a route transition between them would
+  spend the ten-second arming budget the product is built around.
+- Saved destinations are a strip over the map, for the same reason.
 
 **Never change silently:** the phase names (`idle` / `armed` / `ringing`) are
-persisted in storage and read by the background task handlers in a fresh JS
-context. Renaming one is a migration, not a refactor.
+persisted and read by the background task handlers in a fresh JS context.
+Renaming one is a migration, not a refactor.
 
-Back behavior: `useBackGuard` consumes Android back **on the alarm screen only**
-(a reflex press was backgrounding the app mid-alarm — FINDING-001). Everywhere
-else back is the platform default.
+Back behavior: `useBackGuard` consumes Android back **on the alarm screen
+only** — a reflex press was backgrounding the app mid-alarm. Everywhere else
+back is the platform default.
 
 ---
 
 ## The three dials
 
 ```
-DESIGN_EXPRESSION: 8
-MOTION_INTENSITY:  2
+DESIGN_EXPRESSION: 6
+MOTION_INTENSITY:  4
 VISUAL_DENSITY:    3
 ```
 
-**EXPRESSION 8** — above the 4–7 "branded-native" band, and the cost is paid
-knowingly. Custom brand faces everywhere, a custom bottom stub instead of a
-sheet library, drawn SVG marks instead of an icon font, a fully custom map
-style. Per `mobile-taste` 1.C (CHROME LAGS CONTENT), 8 is the level at which
-owning the chrome is permitted — and this app *has* no navigation chrome to
-own, which is what makes 8 affordable here. Safe areas, press states and
-accessibility roles are therefore ours: every one is set explicitly.
+**EXPRESSION 6 — branded-native.** Custom colour and type tokens, custom
+content components, and one genuinely distinctive object (the rail). Deliberately
+*not* 8: the previous system sat at 8 and read as costume. There is no
+navigation chrome to own here anyway, so the boldness budget goes entirely into
+content.
 
-**MOTION 2** — deliberately below the 3 threshold at which reduced-motion
-becomes mandatory, and `useReducedMotion` is honored anyway. The user is asleep
-or about to be. The only sustained animation in the app is the 5.2s watermark
-drift on the wake pass, and it is slow enough to read as "running" rather than
-as something asking for attention. Everything else is a 90ms-down / 170ms-up
-press scale on the UI thread.
+**MOTION 4.** Press feedback on every touchable, state changes animated,
+nothing decorative. Two ambient animations exist in the whole app and each
+answers a question: the live dot on the status chip ("is this still running
+with my screen off?") and the alarm beacon ("did something just happen?").
+`useReducedMotion` is honoured throughout.
 
-**DENSITY 3** — one decision per screen, at arm's length, in a moving vehicle,
-in the dark. The hero on the wake pass is 52pt for a reason.
+**DENSITY 3.** One decision per screen, read at arm's length, in a moving
+vehicle, in the dark.
 
 ### Signature element budget (one bold move per screen)
 
 | Screen | The one bold move | Everything else |
 |---|---|---|
-| Home | The alert zone drawn as a survey diagram — dashed ring, twelve azimuth ticks, a dimension line calling the radius | quiet ticket stub, plain chips |
-| Pass | The 52pt promise over a printed timetable | quiet board rows, quiet foot |
-| Alarm | The full-bleed signal flood | one dismiss target, nothing else |
+| Home (picking) | The map, full bleed | plain search field, plain saved strip |
+| Home (route) | **The rail** | quiet map band, plain preset row, plain CTA |
+| Active | The stop count, at 52pt | the same rail, quiet fact rows |
+| Alarm | The accent floods the entire screen | one target, nothing else |
 | Permissions | The stepped board | plain cards, plain copy |
+
+---
+
+## The rail
+
+The app's one distinctive object, and the reason this direction was chosen.
+
+It answers a question a map cannot: not "how far", but **"how many more
+stops"**, which is the unit a passenger actually thinks in. "Three stops" tells
+you whether to keep reading your book. "4.3 km" does not.
+
+**Ordering.** Everything on the rail is ordered by *distance remaining to the
+destination*, descending — `src/components/route/rail.ts`. That single measure
+is what makes it work while the vehicle is moving: it needs no route geometry,
+no memory of where the trip started and no direction of travel, and it stays
+correct when the driver detours or the passenger boarded halfway along. Eight
+tests cover the ordering rules.
+
+**The accent runs from the top of the rail down to the passenger and stops
+there**, so the coloured length *is* the progress bar. There is no separate
+meter, because the rail already is one.
+
+**Stops come from OpenStreetMap via Overpass** — `src/services/transit/`.
+Free, no key, no account; Israel's rail stations are complete in OSM. Chosen
+over the two alternatives on purpose:
+
+- Google Places would need an API key with billing enabled, and the brief says
+  not to introduce one.
+- Israel's Ministry of Transport GTFS feed is the better long-term source, but
+  it is a ~100MB static archive that needs processing and hosting. That is a
+  backend, and this app does not have one.
+
+**Network posture.** The stop list is fetched **once**, when a destination is
+chosen, while the user still has signal and attention, and is then **frozen
+into the persisted alarm session**. Once armed, the app never touches the
+network again: arrival detection is the OS geofence plus the local position
+stream, and neither knows the stops service exists. This also means the rail
+survives a cold start mid-journey, which is exactly when it matters most.
+
+**Degradation is a designed state, not an error.** No stops found, no network,
+or a route too long: the rail still shows you, the wake point and the
+destination, and prints one line saying why the names are missing. An app that
+quietly shows less than it promised is worse than one that says why.
 
 ---
 
 ## Design System
 
-### The three rules
-
-Everything below serves one of these. They are enforced structurally where
-possible, not just written down.
-
-1. **Square corners only.** There is deliberately **no `radii` token** — a
-   component cannot reach for one. The only round things are station nodes and
-   perforation punches, which are circles by nature and take an explicit
-   `borderRadius` equal to half their size at the point of use.
-2. **One orange per screen.** It is the primary action, *or* the status mark,
-   *or* (on the alarm) the entire surface. Never two.
-3. **No emoji.** Every mark is drawn SVG in `src/components/icons`.
-
 ### Token file locations
 
 | What | Where |
 |---|---|
-| Raw pigments | `src/theme/palette.ts` — **components never import this** |
-| Semantic schemes (night + day) | `src/theme/schemes.ts` |
-| Scheme hook | `src/theme/useTheme.ts` — `useTheme()`, `useSurface('world' \| 'ticket')` |
-| Spacing, type scale, faces, a11y constants | `src/theme/index.ts` |
-| Google Maps style, derived from the scheme | `src/theme/mapStyle.ts` — `mapStyleFor(scheme)` |
+| Colour, both schemes | `src/theme/colors.ts` |
+| Space, shape, type, elevation, motion, touch, icons | `src/theme/index.ts` |
+| Google Maps style, derived from the scheme | `src/theme/mapStyle.ts` |
 | Primitives | `src/components/ui/index.tsx` |
-| Marks | `src/components/icons/index.tsx` |
+| The rail: data model / view | `src/components/route/rail.ts` / `RouteRail.tsx` |
 | Strings | `src/i18n/translations/{he,en}.ts` |
 
-The palette → schemes indirection is the load-bearing part. The earlier system
-named its tokens after the *material* (`ink`, `paper`, `rail`), which meant every
-component hard-coded a material and no second scheme was possible at all.
+### Colour
 
-### The two-surface architecture
+**Light-first with a full dark scheme.** Both defined from day one; `useTheme()`
+reads `useColorScheme()`.
 
-Unusual, and specific to this design: **two materials are on screen at once** —
-the ink world of the map, and the paper of the ticket docked over it. A single
-flat `textPrimary` would be wrong on one of them. So each scheme carries two
-`Surface` sets and a component asks for the surface it is drawn on:
-
-- `world` — the map, its chrome, the permission board
-- `ticket` — every paper surface: the stub, the wake pass, the saved stubs
-
-```ts
-type Surface = {
-  bg; raised;
-  textPrimary; textSecondary; textMuted;
-  border;   // control outlines — a drawn line, not a hairline
-  divider;  // hairline rules between rows
-  faint;    // perforations, dotted leaders, watermarks — NON-TEXT, unconstrained
-  pressed;
-};
-```
-
-`faint` is the escape hatch that keeps the contrast rules honest: anything too
-light to be text is named as such and can never be handed to a `<Text>` by
-accident.
-
-### The two schemes
-
-**Day is not an inversion.** It is the same two objects under different light: a
-paper ticket lying on a warmer, heavier counter stock, separated by value and by
-the perforation rather than by a jump to a dark ground.
-
-| | `night` — the unlit carriage, 23:00 | `day` — the lit platform, 07:00 |
+| | light | dark |
 |---|---|---|
-| world bg | `#14161C` ink | `#DED7C9` counter |
-| ticket bg | `#F2EDE4` paper | `#FBF8F1` bright paper |
-| statusBar | light | dark |
+| bg | `#F6F6F3` | `#0F1315` |
+| surface | `#FFFFFF` | `#171C1F` |
+| ink | `#14171A` | `#ECEFEE` |
+| accent fill | `#0EA36F` | `#22C88A` |
 
-`alarm` is **scheme-independent** in both — it is an event, not a surface. A
+**The one rule to preserve if this file is ever edited: the green is a FILL,
+and what sits on it is dark ink `#06251A`, never white.** White on a green this
+fresh measures 3.24:1 and fails AA. The usual remedy is to darken the green
+until white works, which costs the colour its entire character. Dark-on-green
+keeps the green and clears AA at 5.04:1 in light and 7.53:1 in dark — and it is
+also the less generic choice.
+
+`accent.text` (`#0B7A54` light, `#3FD69B` dark) is a *different value* from
+`accent.base`, because the accent as text on the page ground is a different
+contrast problem from the accent as a fill. Both are solved, not picked.
+
+Every text value was checked against its own ground before it was written:
+
+| pair | ratio |
+|---|---|
+| ink on bg | 16.62 : 1 |
+| inkMuted on bg / on surface | 5.64 / 6.11 : 1 |
+| accent.text on bg / on surface / on soft | 4.94 / 5.35 / 4.79 : 1 |
+| accent.on on accent.base | 5.04 : 1 |
+| danger on bg | 5.01 : 1 |
+
+`inkFaint` is the escape hatch that keeps this honest: anything too light to be
+text is named as such and can never be handed to a `<Text>` by accident.
+
+The **alarm palette is scheme-independent**. It is an event, not a surface: a
 person woken at 02:00 gets the same flood they would at 14:00.
-
-### Color: the accent, and the contrast solve
-
-One accent, `signal #FF6B1A`, one grey family per material, no gradients, no
-indigo, saturation under 80%.
-
-Four values in the shipped palette failed WCAG AA and were solved rather than
-re-picked — hue and saturation held, lightness moved until the ratio cleared
-4.5:1, so each fix is *the same colour at a different lightness*:
-
-| Token | Was | Measured | Now |
-|---|---|---|---|
-| `paperMuted` | `#A79E8E` | 2.27:1 | `#746B5B` |
-| `signalOnPaper` | `#FF6B1A` | 2.44:1 | `#BE4300` |
-| `rail` | `#6B7280` | 3.74:1 | `#78808E` |
-| `paperSub` | `#8C8478` | 4.15:1 | `#666C7A` |
-
-`signalOnPaper` exists because the rule is about **text**: fills, rules and
-shapes keep `signal`. The old values survive as `paperFaint` / `railFaint` for
-non-text use, which is why those names exist.
 
 ### Type
 
-Two Hebrew families and one Latin mono. Weight is **always** a face, never
-`fontWeight` — Android does not synthesise weights for a named family and would
-silently fall back to the system font.
+Two families, each with a job. Weight is **always** a face, never `fontWeight`
+— Android does not synthesise weights for a named family and silently falls
+back to the system font.
 
-| Role | Face |
-|---|---|
-| Headline voice | Heebo 900 Black / 800 ExtraBold |
-| Running Hebrew | Assistant 600 SemiBold / 700 Bold |
-| Numerals + Latin codes | IBM Plex Mono 400 / 500 |
+- **Heebo** — display, numerals, anything structural.
+- **Assistant** — running copy. The permission screens have real paragraphs and
+  Heebo is not a reading face at 16px.
 
-**IBM Plex Mono has no Hebrew coverage.** Hebrew set in it falls back without
-warning while keeping the Latin letter-spacing, which is how eight sites of it
-shipped unnoticed. The primitives now make the mistake structurally impossible:
+Ten roles, all in `type`, and **no component sets `fontSize`**. Dynamic Type is
+honoured everywhere; `MAX_CHROME_SCALE = 1.35` bounds it only on chrome the app
+draws itself, so a 200% system scale cannot push the primary action off the
+bottom. Body copy is deliberately unbounded, and every screen scrolls.
 
-- `<Label>` — Hebrew, Assistant, zero tracking
-- `<Plate>` — Latin/digits, mono, wide tracking
+Fonts are imported by **weight subpath** (`@expo-google-fonts/heebo/700Bold/...`).
+The package root indexes re-export every weight; importing from them would
+bundle 17 `.ttf` to use 5.
 
-They are separate components; you cannot pass Hebrew to the mono path without
-deliberately reaching past both.
+### Shape
 
-**Ten sizes, all of them in `type`. No component sets `fontSize` inline.** An
-earlier pass had twenty distinct sizes once one-off overrides were counted,
-which is not a scale, it is a pile. Dynamic Type is honored, with
-`MAX_DISPLAY_SCALE = 1.3` capping only the display faces so a 200% system scale
-cannot push the distance readout off-screen; body copy scales unbounded and
-every screen scrolls.
+One radius scale applied by role: `control 12` · `card 18` · `sheet 24` ·
+`pill 999`. A pill CTA on one screen and a rounded-rectangle CTA on the next is
+the shape drift that makes an interface feel assembled rather than designed, so
+those four roles are the whole vocabulary.
 
-Fonts are imported by **weight subpath**
-(`@expo-google-fonts/heebo/900Black/Heebo_900Black.ttf`). The package root
-indexes re-export every weight — importing from them bundled 30 `.ttf` to use 6
-(assets 4.0MB → 1.7MB).
+### Space
 
-### Spacing
-
-`4 · 8 · 12 · 16 · 24 · 32`, on the grid, no off-scale values.
-
-### Touch targets
-
-`HIT_SIZE = 48` (above the 44pt floor, which survives every density level).
-Checked rather than assumed, because signage-style square controls make it easy
-to draw something that looks tappable and is 32px tall.
+`4 · 8 · 12 · 16 · 20 · 24 · 32 · 40`. Screen padding is `space.screen = 20`,
+picked once and never varied.
 
 ### Elevation
 
-There is none. No `shadowColor`, no `elevation`. Separation comes from the
-perforation, the border, and the value difference between the two materials —
-which is what a paper ticket lying on a counter actually does.
+Two levels, and **each one is an iOS shadow AND an Android elevation** —
+`elevation(level, scheme)`. A `shadowColor` without a sibling `elevation`
+renders as nothing on Android, which is how apps designed on a Mac end up flat
+on half their install base.
 
-### Haptics vocabulary
+### Icons
 
-| | When |
-|---|---|
-| `tick` | a value changed under your thumb (radius, a chip, picking a saved stub) |
-| `commit` | the alarm is armed — the last thing felt before the phone goes in a pocket |
-| `release` | the alarm was cancelled or dismissed |
-| `error` | the action failed |
+**One family: Lucide** (`lucide-react-native`). Three sizes (16/20/24) and one
+stroke (2), set in `theme.icon` so a component cannot introduce a fourth. No
+hand-drawn SVG paths, no emoji anywhere in the app.
+
+### Touch
+
+`HIT = 48`, above the 44pt platform floor on purpose: the floor assumes a
+steady hand. Small glyphs get `hitSlop` so their target is 48 even when the
+mark is 20. The alarm's dismiss target is **88pt tall** — the person pressing
+it was asleep four seconds ago.
 
 ### Motion
 
-- Press: scale to 0.97 (0.98 on large surfaces), 90ms down / 170ms up,
-  `Easing.out(Easing.quad)`, native driver, gated on `useReducedMotion`.
-- The watermark drift on the wake pass: 5.2s each way, native driver.
-- Nothing else animates. `useNativeDriver: false` appears nowhere.
+Press: scale to 0.97 (0.98 on large surfaces), 90ms down / 180ms up,
+`Easing.out(Easing.quad)`, native driver, gated on `useReducedMotion`. Down is
+faster than up because the finger arrives instantly and leaves gradually.
+`useNativeDriver: false` appears nowhere.
+
+### Haptics
+
+`tick` (a value changed under your thumb) · `commit` (armed — the last thing
+felt before the phone goes in a pocket) · `release` (cancelled or dismissed) ·
+`error`. Never on plain taps or navigation.
 
 ---
 
 ## The SAFE / RISK register
 
-The approved proposal, kept so a future session knows which departures were
-chosen on purpose.
+**SAFE choices** — light-first with a full dark scheme, one accent, one grey
+ramp per scheme, on-grid spacing, system-honoured Dynamic Type, native alert
+dialogs for destructive confirms only, platform-native maps, no custom
+navigation chrome because there is no navigation, one icon family.
 
-**SAFE choices** — square-on-grid spacing, one accent, one grey family per
-material, both schemes from day one, system-honored Dynamic Type, native alert
-dialogs for destructive confirms, platform-native maps, no custom navigation
-chrome because there is no navigation.
+**RISK 1 — dark ink on the accent instead of white**
+- *gain:* keeps a fresh, saturated green that clears AA at 5.04:1, and reads as
+  a deliberate choice rather than the default.
+- *cost:* it is unusual enough that a future contributor will "fix" it to white
+  unless they read `colors.ts`. The reason is written at the top of that file
+  and repeated here.
 
-**RISK 1 — square corners everywhere, no radius token at all**
-- *gain:* the single decision that stopped the screens reading as a generic
-  rounded-card template; it is also literally what rail signage does.
-- *cost:* a square control does not read as tappable from shape alone, so every
-  interactive surface has to earn it through border weight, press state and hit
-  size. There is no fallback if the language is ever abandoned — this is a
-  system-wide commitment, not a component style.
+**RISK 2 — the rail depends on a third-party open data source**
+- *gain:* the one thing this app offers that a plain geofence alarm does not.
+- *cost:* Overpass is a volunteer-run service with no SLA, and OSM bus-stop
+  coverage on intercity routes is uneven. Mitigated three ways: two mirrors, a
+  9s timeout, and a degraded rail that still tells the truth. Never blocks
+  arming, and never runs after arming.
 
-**RISK 2 — two Surface sets per scheme instead of one flat token set**
-- *gain:* the map and the ticket can both be correct at once, and `day` becomes
-  a real second material rather than an inversion.
-- *cost:* every component must know which surface it is drawn on. A component
-  that forgets and calls bare `useTheme().ticket` while sitting on the world
-  will look almost right, which is the worst kind of wrong. `useSurface()`
-  exists to make the choice explicit at the call site.
+**RISK 3 — two states on one screen instead of two routes**
+- *gain:* the ten-second arming budget survives.
+- *cost:* `HomeScreen` is the largest file in the UI layer and will keep
+  wanting to be split. Splitting it into routes is the one refactor that would
+  undo the product's core promise; splitting it into components is fine.
 
-**RISK 3 — a Hebrew/Latin split at the component level, not the style level**
-- *gain:* makes the IBM-Plex-has-no-Hebrew failure unrepresentable.
-- *cost:* two components where most systems have one, and a reviewer who does
-  not know why will "simplify" them back together.
-
-**RISK 4 — the alert zone drawn from polylines rather than a map `Circle`**
-- *gain:* a dashed survey ring with azimuth ticks and a dimension line, in the
-  map's own coordinate space, geographically true at every zoom.
-- *cost:* it is recomputed geometry rather than a native overlay, and it is
-  memoised on `[destination, radiusM]` precisely so a pan does not rebuild it.
-  Neither platform can dash a `Circle`, which is why the safe version was not
-  available in the first place.
+**RISK 4 — the alarm screen abandons the design system entirely**
+- *gain:* zero ambiguity about what just happened, to someone opening their
+  eyes for the first time in twenty minutes.
+- *cost:* it is the one screen whose colours do not come from the active
+  scheme, so a theme change will never affect it. That is intended and is why
+  `alarm` sits outside the light/dark split in `colors.ts`.
 
 No RISK was rejected; nothing here is a SAFE swap-in.
 
@@ -316,19 +308,23 @@ No RISK was rejected; nothing here is a SAFE swap-in.
 ## Standing gaps
 
 - **The alarm sound is synthesised sine waves** (`assets/sounds/alarm.wav`,
-  generated with Python). It is functionally correct — routed to the alarm
-  stream, bypassing DND — but it is the single largest quality gap in an app
-  whose entire job is a sound that wakes someone. It needs a real recording.
-- **Not verified on device.** The environment has no Android SDK and no reachable
-  Expo build service, so the live checks (splash, keyboard, scroll perf at 1.3×
-  font scale, edge-to-edge, actual geofence delivery latency) are unverified.
-  See `docs/PLATFORM-LIMITS.md` for what the OS does and does not promise.
-- **`GOOGLE_MAPS_API_KEY`** is the only external credential in the project and is
-  required for Android only. See `README.md`.
+  generated with Python). Functionally correct — routed to the alarm stream,
+  bypassing DND — but it is the largest remaining quality gap in an app whose
+  entire job is a sound that wakes someone. It needs a real recording.
+- **Not verified on device.** The environment has no Android SDK and no
+  reachable build service, so the live checks are unverified: keyboard
+  behaviour, splash-to-first-frame, scroll performance, 1.3× font scale,
+  edge-to-edge insets, and actual geofence delivery latency.
+- **The Overpass call itself is unverified.** The environment's network policy
+  blocks `overpass-api.de`, so the query was written against the documented API
+  and the degradation path, not against a live response. Worth confirming on
+  the first real device run.
+- **`GOOGLE_MAPS_API_KEY`** is the only external credential and is required for
+  Android only. See `README.md`.
 
 ---
 
 ## Baseline
 
-`design-baseline.json` at the project root is the regression record — categories,
-findings, and their status. It is refreshed in place, never forked.
+`design-baseline.json` at the project root is the regression record. It is
+refreshed in place, never forked.

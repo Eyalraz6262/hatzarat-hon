@@ -2,7 +2,7 @@ import * as Location from 'expo-location';
 
 import { POLLING_TIERS, TASKS, type PollingTier } from '../../constants/config';
 import { t } from '../../i18n';
-import { palette } from '../../theme';
+import { light } from '../../theme';
 import type { PositionSample } from '../../types';
 import { log } from '../../utils/logger';
 
@@ -104,7 +104,10 @@ export const LocationService = {
       foregroundService: {
         notificationTitle: t('active.serviceTitle'),
         notificationBody: t('active.serviceBody'),
-        notificationColor: palette.signal,
+        // The Android notification tint. Read from the light scheme rather than a
+        // hook: this runs in a background JS context with no React tree, and the
+        // accent is the same value in both schemes anyway.
+        notificationColor: light.accent.base,
         killServiceOnDestroy: false,
       },
       mayShowUserSettingsDialog: false,

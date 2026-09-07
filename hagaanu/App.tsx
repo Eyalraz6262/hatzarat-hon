@@ -7,7 +7,7 @@ import * as SystemUI from 'expo-system-ui';
 
 import { AlarmScreen } from './src/screens/AlarmScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
-import { PassScreen } from './src/screens/PassScreen';
+import { ActiveScreen } from './src/screens/ActiveScreen';
 import { PermissionsScreen } from './src/screens/PermissionsScreen';
 import { ArrivalCoordinator } from './src/services/alarm/ArrivalCoordinator';
 import { useAppFonts } from './src/hooks/useAppFonts';
@@ -17,7 +17,7 @@ import { useForegroundArrivalCheck } from './src/hooks/useForegroundArrivalCheck
 import { NotificationService } from './src/services/notifications/NotificationService';
 import { useAlarmStore } from './src/state/useAlarmStore';
 import { usePermissionsStore } from './src/state/usePermissionsStore';
-import { palette, useTheme } from './src/theme';
+import { light, useTheme } from './src/theme';
 import { log } from './src/utils/logger';
 
 void SplashScreen.preventAutoHideAsync();
@@ -44,6 +44,9 @@ export default function App() {
   const destination = useAlarmStore((state) => state.destination);
   const radiusM = useAlarmStore((state) => state.radiusM);
   const distanceM = useAlarmStore((state) => state.distanceM);
+  const position = useAlarmStore((state) => state.position);
+  const stops = useAlarmStore((state) => state.stops);
+  const stopsFallback = useAlarmStore((state) => state.stopsFallback);
   const hydrate = useAlarmStore((state) => state.hydrate);
   const cancel = useAlarmStore((state) => state.cancel);
   const dismissAlarm = useAlarmStore((state) => state.dismissAlarm);
@@ -60,11 +63,11 @@ export default function App() {
   useEffect(() => {
     void (async () => {
       try {
-        // Paints the window behind React with the app's own background, so a
-        // cold start never flashes white before the first frame.
-        // The native window ground. Painted from the pigment rather than the
-        // scheme: this runs before React renders, so there is no hook to read.
-        await SystemUI.setBackgroundColorAsync(palette.ink);
+        // Paints the native window behind React with the app's own ground, so
+        // a cold start never flashes white before the first frame. Read from
+        // the light scheme directly: this runs before React renders, so there
+        // is no hook to ask, and the splash itself is the light ground.
+        await SystemUI.setBackgroundColorAsync(light.bg);
 
         // Channels before anything else: a geofence event arriving in the next
         // second must find the alarm channel already created.
@@ -88,7 +91,7 @@ export default function App() {
   const onDismissAlarm = useCallback(() => void dismissAlarm(), [dismissAlarm]);
 
   if (!ready) {
-    return <View style={[styles.boot, { backgroundColor: theme.world.bg }]} />;
+    return <View style={[styles.boot, { backgroundColor: theme.bg }]} />;
   }
 
   // Foreground location and notifications are non-negotiable. Background location
@@ -101,7 +104,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style={theme.statusBar} />
-      <View style={[styles.root, { backgroundColor: theme.world.bg }]}>
+      <View style={[styles.root, { backgroundColor: theme.bg }]}>
         {/*
           A plain state machine rather than a navigator: there are only four
           destinations, and the alarm has to be able to take the screen from any
@@ -110,10 +113,13 @@ export default function App() {
         {needsPermissions ? (
           <PermissionsScreen onSkipBackground={() => setSkippedBackground(true)} />
         ) : status === 'armed' && destination ? (
-          <PassScreen
+          <ActiveScreen
             destination={destination}
             radiusM={radiusM}
             distanceM={distanceM}
+            here={position?.coords ?? null}
+            stops={stops}
+            stopsFallback={stopsFallback}
             onCancel={() => void cancel()}
             onSimulateArrival={() => void ArrivalCoordinator.trigger('manual')}
           />

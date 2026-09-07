@@ -1,57 +1,129 @@
-import { useCallback, useMemo, useRef, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Animated,
   Easing,
+  I18nManager,
   Pressable,
   StyleSheet,
-  Text,
+  Text as RNText,
   View,
+  type PressableProps,
   type StyleProp,
+  type TextProps,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
 
 import { useReducedMotion } from '../../hooks/useReducedMotion';
-import { isRTL } from '../../i18n';
-import { Feedback } from '../../services/feedback/Haptics';
-import { HIT_SIZE, spacing, type, useTheme, type Scheme, type Surface } from '../../theme';
+import {
+  HIT,
+  MAX_CHROME_SCALE,
+  elevation,
+  motion,
+  radius,
+  space,
+  tabular,
+  type,
+  useTheme,
+  type Scheme,
+} from '../../theme';
 
 /**
- * The primitives the signage system is built from.
+ * The primitives.
  *
- * Everything here is square, because that single rule is what stops the app
- * reading as a generic card template. The only circles in the app are station
- * nodes and perforation punches, which are circles by nature.
- *
- * Colour comes from the active scheme at render time; layout and type stay in
- * a static StyleSheet. That split is deliberate — geometry does not change
- * between night and day, so only the values that do are recomputed.
+ * Every visible surface in the app is built from what is in this file, which
+ * is how the shape, spacing and press behaviour stay identical across screens.
+ * Nothing here takes a colour: each component reads the active scheme itself,
+ * so a screen cannot hand a component the wrong theme.
  */
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-/** Row direction for the active language. */
-export const row = (): ViewStyle['flexDirection'] => (isRTL() ? 'row-reverse' : 'row');
-
-/** Text alignment for the active language. */
-export const align = (): TextStyle['textAlign'] => (isRTL() ? 'right' : 'left');
+/* ------------------------------------------------------------------ *
+ * Direction
+ * ------------------------------------------------------------------ */
 
 /**
- * Physical press feedback: the control gives under the thumb and springs back.
+ * The app is Hebrew-first, so RTL is the normal case rather than a mode.
+ * These read `I18nManager` instead of hardcoding, so an English build lays
+ * out correctly without touching a single screen.
+ */
+export const align = (): TextStyle['textAlign'] => (I18nManager.isRTL ? 'right' : 'left');
+export const row = (): ViewStyle['flexDirection'] => (I18nManager.isRTL ? 'row-reverse' : 'row');
+
+/* ------------------------------------------------------------------ *
+ * Text
+ * ------------------------------------------------------------------ */
+
+type Variant = keyof typeof type;
+type Tone = 'ink' | 'muted' | 'accent' | 'danger' | 'onAccent' | 'onAlarm' | 'alarmDim';
+
+function toneColor(tone: Tone, s: Scheme): string {
+  switch (tone) {
+    case 'muted':
+      return s.inkMuted;
+    case 'accent':
+      return s.accent.text;
+    case 'danger':
+      return s.danger;
+    case 'onAccent':
+      return s.accent.on;
+    case 'onAlarm':
+      return s.alarm.ink;
+    case 'alarmDim':
+      return s.alarm.dim;
+    default:
+      return s.ink;
+  }
+}
+
+type TxtProps = TextProps & {
+  variant?: Variant;
+  tone?: Tone;
+  /** Digits that line up in a column. */
+  nums?: boolean;
+  children?: ReactNode;
+};
+
+/**
+ * The only way text is set in this app.
  *
- * Colour-only pressed states read as a state change; a scale reads as a button
- * being pushed, which is the difference between an interface that responds and
- * one that feels built. Fast down (90ms) and slower up (170ms) — the asymmetry
- * is what makes it feel like weight rather than a blink.
+ * `maxFontSizeMultiplier` is applied to chrome sizes but never to body copy:
+ * a button label that grows past its pill becomes unreadable, while a
+ * paragraph that grows is exactly what the setting is for.
+ */
+export function Txt({ variant = 'body', tone = 'ink', nums, style, ...rest }: TxtProps) {
+  const scheme = useTheme();
+  const isChrome = variant === 'button' || variant === 'caption' || variant === 'captionStrong';
+  return (
+    <RNText
+      maxFontSizeMultiplier={isChrome ? MAX_CHROME_SCALE : undefined}
+      style={[
+        type[variant],
+        { color: toneColor(tone, scheme), textAlign: align() },
+        nums ? tabular : null,
+        style,
+      ]}
+      {...rest}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Press
+ * ------------------------------------------------------------------ */
+
+/**
+ * The press scale, native-driven, on every touchable in the app.
  *
- * Runs on the native driver, and collapses to a no-op under reduce motion.
+ * Down is faster than up on purpose: the finger arrives instantly and leaves
+ * gradually, and matching that is the difference between a control that feels
+ * responsive and one that feels springy.
  */
 function usePressScale(to = 0.97) {
   const scale = useRef(new Animated.Value(1)).current;
   const reduced = useReducedMotion();
 
-  const animate = useCallback(
+  const run = useCallback(
     (value: number, duration: number) => {
       if (reduced) return;
       Animated.timing(scale, {
@@ -64,406 +136,313 @@ function usePressScale(to = 0.97) {
     [scale, reduced]
   );
 
-  return {
-    style: { transform: [{ scale }] },
-    onPressIn: () => animate(to, 90),
-    onPressOut: () => animate(1, 170),
-  };
+  return useMemo(
+    () => ({
+      style: { transform: [{ scale }] },
+      onPressIn: () => run(to, motion.pressIn),
+      onPressOut: () => run(1, motion.pressOut),
+    }),
+    [scale, run, to]
+  );
+}
+
+type TouchProps = PressableProps & {
+  scaleTo?: number;
+  children: ReactNode;
+};
+
+/** A Pressable with the app's press feedback already on it. */
+export function Touch({ style, scaleTo, children, ...rest }: TouchProps) {
+  const press = usePressScale(scaleTo);
+  return (
+    <Animated.View style={press.style}>
+      <Pressable style={style} onPressIn={press.onPressIn} onPressOut={press.onPressOut} {...rest}>
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 /* ------------------------------------------------------------------ *
  * Buttons
  * ------------------------------------------------------------------ */
 
-type SignalButtonProps = {
+type ButtonProps = {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  loading?: boolean;
-  /** `signal` on any normal surface, or `ink` when it sits on the alarm flood. */
-  tone?: 'signal' | 'ink';
+  busy?: boolean;
+  icon?: ReactNode;
   style?: StyleProp<ViewStyle>;
 };
 
 /**
- * The primary action. There is exactly one of these on any screen — it is the
- * screen's single orange, and it is what the ten-second promise rests on.
+ * The primary action. One per screen, always in the bottom third.
+ *
+ * Dark ink on the accent rather than white: white on a green this fresh
+ * measures 3.24:1 and the usual remedy is to darken the green until white
+ * works, which costs the colour its character. See theme/colors.ts.
  */
-export function SignalButton({
-  label,
-  onPress,
-  disabled,
-  loading,
-  tone = 'signal',
-  style,
-}: SignalButtonProps) {
-  const theme = useTheme();
-  const inert = disabled || loading;
-  const onInk = tone === 'ink';
-  const press = usePressScale();
-
-  const base = onInk ? theme.alarm.ink : theme.accent.base;
-  const pressedBg = onInk ? theme.world.raised : theme.accent.pressed;
-  const labelColor = onInk ? theme.accent.base : theme.accent.contrast;
-
+export function PrimaryButton({ label, onPress, disabled, busy, icon, style }: ButtonProps) {
+  const s = useTheme();
+  const off = disabled || busy;
   return (
-    <AnimatedPressable
+    <Touch
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: Boolean(inert) }}
-      onPressIn={inert ? undefined : press.onPressIn}
-      onPressOut={inert ? undefined : press.onPressOut}
-      onPress={
-        inert
-          ? undefined
-          : () => {
-              Feedback.tick();
-              onPress();
-            }
-      }
+      accessibilityState={{ disabled: !!off, busy: !!busy }}
+      disabled={off}
+      onPress={onPress}
+      scaleTo={0.98}
       style={({ pressed }) => [
-        styles.signalButton,
-        { backgroundColor: inert ? theme.world.divider : pressed ? pressedBg : base },
-        press.style,
+        styles.btn,
+        elevation(1, s),
+        {
+          backgroundColor: pressed ? s.accent.pressed : s.accent.base,
+          opacity: off ? 0.5 : 1,
+          flexDirection: row(),
+        },
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={labelColor} />
+      {busy ? (
+        <ActivityIndicator color={s.accent.on} />
       ) : (
-        <Text
-          style={[styles.signalButtonLabel, { color: inert ? theme.world.textMuted : labelColor }]}
-        >
-          {label}
-        </Text>
+        <>
+          {icon}
+          <Txt variant="button" tone="onAccent">
+            {label}
+          </Txt>
+        </>
       )}
-    </AnimatedPressable>
+    </Touch>
   );
 }
 
-/** The quiet counterpart: an outlined action, drawn on whichever surface it sits on. */
-export function OutlineButton({
-  label,
-  onPress,
-  surface,
-  style,
-}: {
-  label: string;
-  onPress: () => void;
-  surface: Surface;
-  style?: StyleProp<ViewStyle>;
-}) {
-  const press = usePressScale(0.98);
+/** The secondary action: cancel, skip, not now. Never competes with primary. */
+export function GhostButton({ label, onPress, disabled, icon, style }: ButtonProps) {
+  const s = useTheme();
   return (
-    <AnimatedPressable
+    <Touch
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
+      disabled={disabled}
       onPress={onPress}
-      onPressIn={press.onPressIn}
-      onPressOut={press.onPressOut}
+      scaleTo={0.98}
       style={({ pressed }) => [
-        styles.outlineButton,
-        { borderColor: surface.border, backgroundColor: pressed ? surface.pressed : 'transparent' },
-        press.style,
+        styles.btn,
+        {
+          borderWidth: 1.5,
+          borderColor: s.line,
+          backgroundColor: pressed ? s.sunk : 'transparent',
+          opacity: disabled ? 0.5 : 1,
+          flexDirection: row(),
+        },
         style,
       ]}
     >
-      <Text style={[styles.outlineButtonLabel, { color: surface.textPrimary }]}>{label}</Text>
-    </AnimatedPressable>
+      {icon}
+      <Txt variant="button" tone="muted">
+        {label}
+      </Txt>
+    </Touch>
   );
 }
 
-/** Text-only, for "not now" and other dismissals. */
-export function GhostButton({
-  label,
-  onPress,
-  surface,
-  style,
-}: {
-  label: string;
-  onPress: () => void;
-  surface: Surface;
-  style?: StyleProp<ViewStyle>;
-}) {
+/** A destructive action, styled as quietly as its consequence is loud. */
+export function DangerButton({ label, onPress, style }: ButtonProps) {
+  const s = useTheme();
   return (
-    <Pressable
+    <Touch
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
+      scaleTo={0.98}
       style={({ pressed }) => [
-        styles.ghostButton,
-        pressed ? { backgroundColor: surface.pressed } : null,
+        styles.btn,
+        { borderWidth: 1.5, borderColor: s.line, backgroundColor: pressed ? s.sunk : 'transparent' },
         style,
       ]}
     >
-      <Text style={[styles.ghostButtonLabel, { color: surface.textMuted }]}>{label}</Text>
-    </Pressable>
+      <Txt variant="button" tone="danger">
+        {label}
+      </Txt>
+    </Touch>
   );
 }
 
 /* ------------------------------------------------------------------ *
- * Signage type
+ * Surfaces
  * ------------------------------------------------------------------ */
 
 /**
- * A Hebrew label. Assistant, no tracking.
+ * A raised plane.
  *
- * Kept separate from `Plate` on purpose: the two look interchangeable in a
- * component tree and are not. Passing Hebrew to the mono face silently falls
- * back to a system font while keeping tracking meant for Latin caps.
+ * Not every group is a card. Rows separated by a hairline inside ONE card
+ * is the pattern for a list of facts; three cards each holding one fact is
+ * the pattern this app deliberately avoids.
  */
-export function Label({
+export function Card({
   children,
-  color,
   style,
+  padded = true,
 }: {
   children: ReactNode;
-  color: string;
-  style?: StyleProp<TextStyle>;
+  style?: StyleProp<ViewStyle>;
+  padded?: boolean;
 }) {
-  return (
-    <Text style={[type.labelHe, { color, textAlign: align() }, style]} numberOfLines={1}>
-      {children}
-    </Text>
-  );
-}
-
-/**
- * A Latin signage plate — mono, all caps, wide tracking. LATIN ONLY: these are
- * the printed codes on a ticket ("DESTINATION", "WAKE PASS") and stay Latin in
- * every language. For Hebrew use `Label`.
- */
-export function Plate({
-  children,
-  color,
-  style,
-}: {
-  children: ReactNode;
-  color: string;
-  style?: StyleProp<TextStyle>;
-}) {
-  return (
-    <Text style={[type.label, { color, textAlign: align() }, style]} numberOfLines={1}>
-      {children}
-    </Text>
-  );
-}
-
-/**
- * A departures-board readout: a large mono figure with its unit set small
- * beside it, so a column of them lines up on the digits.
- */
-export function Readout({
-  value,
-  unit,
-  color,
-  unitColor,
-  size = 'large',
-}: {
-  value: string;
-  unit?: string;
-  color: string;
-  unitColor: string;
-  size?: 'large' | 'small';
-}) {
-  return (
-    <View style={[styles.readout, { flexDirection: row() }]}>
-      <Text style={[size === 'large' ? type.readout : type.readoutSmall, { color }]}>{value}</Text>
-      {unit ? <Text style={[styles.readoutUnit, { color: unitColor }]}>{unit}</Text> : null}
-    </View>
-  );
-}
-
-/* ------------------------------------------------------------------ *
- * Ticket furniture
- * ------------------------------------------------------------------ */
-
-/**
- * A tear line: two punched notches and a run of dashes.
- *
- * `behind` is the colour showing through the punches — the world outside the
- * ticket. On a full-bleed pass the notches sit half off-screen and read as two
- * bites taken out of the paper's edge, which is the printed-ticket effect
- * intended.
- */
-export function Perforation({ behind, dashes }: { behind: string; dashes: string }) {
-  return (
-    <View style={styles.perforation}>
-      <View style={[styles.notch, styles.notchStart, { backgroundColor: behind }]} />
-      <View style={[styles.notch, styles.notchEnd, { backgroundColor: behind }]} />
-      <View style={styles.perfDashes}>
-        {Array.from({ length: 26 }, (_, index) => (
-          <View key={index} style={[styles.perfDash, { backgroundColor: dashes }]} />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-/** The dotted leader between a timetable label and its value. */
-export function DottedLeader({ color }: { color: string }) {
-  return (
-    <View style={styles.leader}>
-      {Array.from({ length: 40 }, (_, index) => (
-        <View key={index} style={[styles.leaderDot, { backgroundColor: color }]} />
-      ))}
-    </View>
-  );
-}
-
-/**
- * One row of the departures board: label, leader, value.
- * `children` is the value side, so it can be a Readout or plain heading text.
- */
-export function BoardRow({
-  label,
-  surface,
-  children,
-  divided = true,
-}: {
-  label: string;
-  surface: Surface;
-  children: ReactNode;
-  divided?: boolean;
-}) {
+  const s = useTheme();
   return (
     <View
       style={[
-        styles.boardRow,
-        { flexDirection: row() },
-        divided ? { borderTopWidth: 1, borderTopColor: surface.divider } : null,
+        styles.card,
+        elevation(1, s),
+        { backgroundColor: s.surface, padding: padded ? space.xl : 0 },
+        style,
       ]}
     >
-      <Label color={surface.textMuted} style={styles.boardLabel}>
-        {label}
-      </Label>
-      <DottedLeader color={surface.faint} />
-      <View style={styles.boardValue}>{children}</View>
+      {children}
     </View>
   );
 }
 
-/** The live-status mark: a solid signal dot with a tracked caption. */
-export function StatusMark({ label, surface }: { label: string; surface: Surface }) {
-  const theme = useTheme();
+/** A label/value line inside a Card. Hairline above every row but the first. */
+export function Row({
+  label,
+  children,
+  first,
+}: {
+  label: string;
+  children: ReactNode;
+  first?: boolean;
+}) {
+  const s = useTheme();
   return (
-    <View style={[styles.statusMark, { flexDirection: row() }]}>
-      <View style={[styles.statusDot, { backgroundColor: theme.accent.base }]} />
-      <Text style={[styles.statusLabel, { color: surface.textPrimary }]} numberOfLines={1}>
+    <View
+      style={[
+        styles.rowLine,
+        { flexDirection: row(), borderTopColor: s.line, borderTopWidth: first ? 0 : StyleSheet.hairlineWidth },
+      ]}
+    >
+      <Txt variant="label" tone="muted">
         {label}
-      </Text>
+      </Txt>
+      <View style={styles.rowValue}>{children}</View>
+    </View>
+  );
+}
+
+/** A status chip. Used once per screen, next to the thing it describes. */
+export function Chip({ label, live }: { label: string; live?: boolean }) {
+  const s = useTheme();
+  return (
+    <View
+      style={[
+        styles.chip,
+        { backgroundColor: s.accent.soft, flexDirection: row() },
+      ]}
+    >
+      {live ? <LiveDot /> : null}
+      <Txt variant="captionStrong" tone="accent">
+        {label}
+      </Txt>
     </View>
   );
 }
 
 /**
- * Convenience for a screen that needs the whole scheme plus one surface.
- * Saves every screen writing the same two lines.
+ * The one ambient animation in the app: a slow fade on the live indicator.
+ *
+ * It earns its place because "is this still running while my screen is off?"
+ * is the single question the armed state has to answer, and a dot that
+ * breathes answers it without a word.
  */
-export function useScreenTheme(which: 'world' | 'ticket'): { theme: Scheme; surface: Surface } {
-  const theme = useTheme();
-  return useMemo(() => ({ theme, surface: theme[which] }), [theme, which]);
+export function LiveDot({ size = 7 }: { size?: number }) {
+  const s = useTheme();
+  const reduced = useReducedMotion();
+  const fade = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (reduced) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(fade, {
+          toValue: 0.3,
+          duration: motion.pulse,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(fade, {
+          toValue: 1,
+          duration: motion.pulse,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [fade, reduced]);
+
+  return (
+    <Animated.View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: s.accent.base,
+        opacity: fade,
+      }}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Skeleton
+ * ------------------------------------------------------------------ */
+
+/**
+ * A placeholder shaped like the thing that is coming.
+ *
+ * Static rather than shimmering: a shimmer is motion with nothing to say,
+ * and on the screen where the user is waiting to find out whether the app
+ * knows their stops, calm is the right register.
+ */
+export function Skeleton({ width, height = 14 }: { width: number | `${number}%`; height?: number }) {
+  const s = useTheme();
+  return <View style={{ width, height, borderRadius: 6, backgroundColor: s.sunk }} />;
 }
 
 const styles = StyleSheet.create({
-  signalButton: {
-    height: 62,
+  btn: {
+    minHeight: 56,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.xxl,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
+    gap: space.sm,
   },
-  signalButtonLabel: {
-    ...type.button,
+  card: {
+    borderRadius: radius.card,
   },
-
-  outlineButton: {
-    height: 52,
-    borderWidth: 1.5,
+  rowLine: {
+    minHeight: HIT,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  outlineButtonLabel: {
-    ...type.buttonSmall,
-  },
-
-  ghostButton: {
-    height: HIT_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  ghostButtonLabel: {
-    ...type.buttonSmall,
-  },
-
-  readout: {
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  readoutUnit: {
-    fontFamily: type.labelHe.fontFamily,
-    fontSize: type.labelHe.fontSize,
-  },
-
-  perforation: {
-    height: 2,
-    justifyContent: 'center',
-  },
-  notch: {
-    position: 'absolute',
-    top: -13,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-  },
-  notchStart: { start: -13 },
-  notchEnd: { end: -13 },
-  perfDashes: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 16,
+    gap: space.lg,
+    paddingVertical: space.md,
   },
-  perfDash: {
-    width: 6,
-    height: 2,
-  },
-
-  leader: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    overflow: 'hidden',
-    transform: [{ translateY: -3 }],
-  },
-  leaderDot: {
-    width: 1,
-    height: 1,
-  },
-
-  boardRow: {
-    alignItems: 'baseline',
-    gap: spacing.sm,
-    paddingVertical: 12,
-  },
-  boardLabel: {
-    flexShrink: 0,
-  },
-  boardValue: {
+  rowValue: {
     flexShrink: 1,
+    alignItems: 'flex-end',
   },
-
-  statusMark: {
+  chip: {
+    alignSelf: 'flex-start',
     alignItems: 'center',
-    gap: spacing.sm,
-  },
-  statusDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-  },
-  statusLabel: {
-    ...type.labelHe,
+    gap: space.sm,
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm - 2,
+    borderRadius: radius.pill,
   },
 });

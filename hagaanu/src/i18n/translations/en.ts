@@ -1,30 +1,21 @@
 import type { TranslationSchema } from './he';
 
 /**
- * English — a structural placeholder proving the schema is language-agnostic.
- * Not wired into the language picker yet (Hebrew only in v1); adding it later is
- * a one-line change in `src/i18n/index.ts`.
+ * English.
+ *
+ * Typed against the Hebrew source, so a key added there fails the build here
+ * until it is translated rather than falling back silently at runtime.
  */
 export const en: TranslationSchema = {
   brand: {
     name: 'Are we there?',
-    slogan: 'Sleep. We’ll wake you up.',
-  },
-
-  plate: {
-    destination: 'DESTINATION',
-    metres: 'METRES',
-    permissions: 'PERMISSIONS',
-    wakePass: 'WAKE PASS',
-    live: 'LIVE',
-    saved: 'SAVED',
-    alarm: 'ALARM',
+    slogan: 'Sleep. We will wake you.',
   },
 
   common: {
     cancel: 'Cancel',
     close: 'Close',
-    confirm: 'OK',
+    confirm: 'Confirm',
     continue: 'Continue',
     notNow: 'Not now',
     openSettings: 'Open settings',
@@ -35,117 +26,116 @@ export const en: TranslationSchema = {
   },
 
   home: {
-    searchPlaceholder: 'Search an address or station',
-    pickDestinationHint: 'Tap the map to pick a destination',
-    tapToChoose: 'Where should we wake you?',
-    tapToChooseSub: 'Search an address or tap the map',
-    recenter: 'My location',
-    locating: 'Finding your location…',
+    searchPlaceholder: 'Where are you going?',
+    searching: 'Searching…',
+    noResults: 'No match. Try a station or street name.',
+    myLocation: 'My location',
+    clearSearch: 'Clear',
+    pickOnMap: 'Search for your destination or tap the map',
+    emptyTitle: 'Where are you headed?',
+    emptyBody: 'Pick a destination and we will wake you before it.',
+    locating: 'Finding you…',
   },
 
-  setup: {
-    destinationTitle: 'Your destination',
-    radiusTitle: 'How close should we wake you?',
-    radiusHint: 'We’ll wake you when you get this close to the destination',
-    custom: 'Custom',
-    customTitle: 'Custom distance',
-    customPlaceholder: 'Distance in meters',
-    customRange: 'Between {min} and {max} meters',
-    customInvalid: 'Enter a distance between {min} and {max} meters',
-    armButton: 'Wake me up here',
-    arming: 'Arming…',
-    distanceFromYou: 'Distance from you: {distance}',
+  route: {
+    title: 'Your journey',
     changeDestination: 'Change destination',
+    wakeRange: 'When should we wake you?',
+    arm: 'Wake me',
+    arming: 'Setting up…',
+    saveDestination: 'Save destination',
+    savedDestinations: 'Saved destinations',
+  },
+
+  rail: {
+    here: 'You are here',
+    wakeHere: 'We wake you here, {distance} before',
+    loading: 'Loading the stops on your route',
+    fallback: {
+      offline: 'We could not load the stops on this route. The alarm itself works exactly the same.',
+      'none-found': 'No mapped stops on this stretch. The alarm will use distance instead.',
+      'too-far': 'This route is too long for a stop list. The alarm will use distance instead.',
+    },
   },
 
   active: {
-    sleepTitle: 'You can sleep',
-    sleepSubtitle: 'We’ll wake you before your stop.',
+    title: 'We have got you.',
+    body: 'Lock your phone. The alarm works with the app closed.',
+    stopsToGo: 'stops until we wake you',
+    stopsToGoOne: 'stop until we wake you',
+    almostThere: 'Waking you in a moment',
+    distanceLeft: 'Distance to go',
+    wakeRange: 'Alert range',
     destination: 'Destination',
-    currentDistance: 'Current distance',
-    alertRadius: 'Alarm triggers within',
-    statusActive: 'Alarm is armed',
-    statusWaitingFix: 'Waiting for a location fix…',
-    cancelAlarm: 'Cancel the alarm',
+    waitingFix: 'Finding you…',
+    cancel: 'Cancel alarm',
     cancelConfirmTitle: 'Cancel the alarm?',
-    cancelConfirmBody: 'We won’t wake you at your destination.',
+    cancelConfirmBody: 'We will not wake you at your destination.',
     cancelConfirmYes: 'Yes, cancel',
-    notificationTitle: 'Are we there? — alarm armed',
-    notificationTitleLive: '{distance} to go',
-    notificationBody: 'We’ll wake you {radius} before {destination}.',
-    serviceTitle: 'Are we there? is tracking your trip',
-    serviceBody: 'We’ll wake you as you approach your destination.',
+
+    statusActive: 'Alarm active',
+    notificationTitle: 'We will wake you at {destination}',
+    notificationTitleLive: '{distance} to {destination}',
+    notificationBody: 'You can lock your phone.',
+    serviceTitle: 'Are we there? tracking your trip',
+    serviceBody: 'Location updates run in the background so we can wake you in time.',
   },
 
   alarm: {
-    title: 'We’re here!',
-    subtitle: 'Time to wake up',
-    destination: 'Destination: {destination}',
-    dismiss: 'I’m awake',
-    notificationTitle: 'We’re here!',
-    notificationBody: 'Time to wake up — {destination}',
-    ticketCode: 'HGN·{radius}',
+    title: 'You are here.',
+    body: '{destination} is right here.',
+    dismiss: 'I am awake',
+    notificationTitle: 'You have reached {destination}',
+    notificationBody: 'Time to get off.',
   },
 
   permissions: {
-    locationTitle: 'We need to see where you are',
-    locationBody:
-      'To know when you’re approaching your destination, “Are we there?” needs your location. We never store or share it — it stays on your device.',
-    locationCta: 'Allow location',
+    title: 'Two things, so we can wake you',
+    intro: 'Without either one there is no way to know when you have arrived.',
 
-    backgroundTitle: 'Even when the screen is off',
-    backgroundBody:
-      'To wake you before your stop, “Are we there?” needs to detect when you approach the destination even while the screen is off and the phone is in your pocket. Without it we can only wake you while the app is open.',
-    backgroundBodyIOS: 'On the next screen choose “Always”. That’s what lets us wake you while the phone is locked.',
-    backgroundBodyAndroid:
-      'On the next screen choose “Allow all the time”. That’s what lets us wake you while the phone is locked.',
-    backgroundCta: 'Allow background access',
+    locationTitle: 'Location',
+    locationBody: 'We check how far you are from your destination. It stays on your device and is never sent anywhere.',
+    locationAction: 'Allow location',
 
-    notificationsTitle: 'How we’ll wake you',
-    notificationsBody:
-      'The alarm arrives as a notification with sound and vibration — even while the phone is locked. Without notification permission we can’t wake you.',
-    notificationsCta: 'Allow notifications',
+    backgroundTitle: 'Location in the background',
+    backgroundBody: 'This is what lets us wake you with the screen off and the phone in your pocket. Without it we can only wake you while the app is open.',
+    backgroundAction: 'Allow in the background',
+    backgroundWhy: 'Why this is needed',
 
-    blockedTitle: 'Permission is blocked',
-    blockedBody: 'Enable the permission in your device settings so “Are we there?” can wake you.',
+    notificationsTitle: 'Notifications',
+    notificationsBody: 'The alarm itself. Without it we can only make a sound while the app is open.',
+    notificationsAction: 'Allow notifications',
 
+    blockedTitle: 'Permission blocked',
+    blockedBody: 'Enable the permission in your device settings so we can wake you.',
+    granted: 'Allowed',
     stepOf: 'Step {current} of {total}',
   },
 
   saved: {
     title: 'Saved destinations',
-    subtitle: 'One tap arms the alarm.',
-    add: 'Add a destination',
+    add: 'Save destination',
     addTitle: 'Save this destination',
     addPrompt: 'What should we call it?',
-    empty: 'No saved destinations yet.',
-    emptyHint: 'Save one after you pick it on the map.',
-    removeHint: 'Long-press to delete.',
     remove: 'Delete',
+    removeHint: 'Long-press to delete.',
     removeConfirm: 'Delete “{name}”?',
     home: 'Home',
     work: 'Work',
     station: 'Station',
     favourite: 'Favourite',
-    saveCurrent: 'Save destination',
     savedConfirm: 'Saved',
   },
 
   errors: {
-    locationUnavailable: 'We couldn’t find your location. Check that GPS is on.',
-    searchFailed: 'Search failed. Check your internet connection.',
-    searchEmpty: 'No matching address found.',
-    geofenceFailed: 'We couldn’t arm the alarm. Please try again.',
-    servicesDisabled: 'Location services are off. Turn them on and try again.',
-    unknownPlace: 'Selected destination',
+    locationUnavailable: 'We could not find you. Check that GPS is on.',
+    searchFailed: 'Search failed. Check your connection.',
+    armFailed: 'We could not start the alarm. Try again.',
+    unknownPlace: 'Your destination',
   },
 
   warnings: {
-    batteryOptimizationTitle: 'Android may suspend the app',
-    batteryOptimizationBody:
-      'For the alarm to fire reliably, disable battery optimization for “Are we there?” in your device settings.',
     foregroundOnly: 'Without background location we can only wake you while the app is open.',
-    preciseLocationTitle: 'Precise location is off',
-    preciseLocationBody: 'Without precise location the alarm may be late. You can enable it in settings.',
+    batteryOptimisation: 'Android may stop background apps. If the alarm did not fire, turn off battery optimisation for this app.',
   },
 };
