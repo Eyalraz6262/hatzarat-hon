@@ -2,6 +2,7 @@ import { AlarmService } from './AlarmService';
 import { NotificationService } from '../notifications/NotificationService';
 import { GeofencingService } from '../geofencing/GeofencingService';
 import { LocationService } from '../location/LocationService';
+import { Journal } from '../debug/Journal';
 import { AlarmStorage } from '../storage/AlarmStorage';
 import { MIN_RADIUS_M } from '../../constants/config';
 import type { AlarmReason, AlarmSession, LatLng } from '../../types';
@@ -62,6 +63,14 @@ export const ArrivalCoordinator = {
     };
     await AlarmStorage.write(ringingSession);
     log.debug('alarm', `${reason} confirmed by ${triggeredBy}`);
+    void Journal.record(
+      'alarm',
+      `${reason} — fired by ${triggeredBy}, ${
+        session.lastDistanceM === null || session.lastDistanceM === undefined
+          ? 'no fix on record'
+          : `${Math.round(session.lastDistanceM)}m out`
+      }`
+    );
 
     await NotificationService.presentAlarm(session.destination.label, reason, {
       distance: session.lastDistanceM,
@@ -98,6 +107,7 @@ export const ArrivalCoordinator = {
       session.earlyRadiusM ?? session.radiusM
     );
     log.debug('alarm', 'early heads-up sent');
+    void Journal.record('early', `heads-up sent at ${session.earlyRadiusM ?? session.radiusM}m`);
   },
 
   /**
@@ -204,6 +214,10 @@ export const ArrivalCoordinator = {
       }
       await NotificationService.presentArmedStatus(continued.destination.label);
       log.debug('alarm', `advanced to next leg: ${continued.destination.label}`);
+      void Journal.record(
+        'leg',
+        `next leg armed: ${continued.destination.label} r=${continued.radiusM}m tier=${tier.id}`
+      );
       return true;
     } catch (error) {
       log.error('alarm', 'failed to arm the next leg', error);
@@ -219,5 +233,6 @@ export const ArrivalCoordinator = {
     await NotificationService.dismissAll();
     await AlarmStorage.clear();
     log.debug('alarm', 'stood down');
+    void Journal.record('stood-down', 'everything stopped, session cleared');
   },
 };

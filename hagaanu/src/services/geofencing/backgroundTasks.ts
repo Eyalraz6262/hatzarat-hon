@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 
 import { GEOFENCE_REGION_ID, MAX_ACCURACY_MARGIN_M, TASKS } from '../../constants/config';
 import { ArrivalCoordinator } from '../alarm/ArrivalCoordinator';
+import { Journal } from '../debug/Journal';
 import { applyFix, onFix, type TripState } from '../alarm/watchdog';
 import { LocationService } from '../location/LocationService';
 import { NotificationService } from '../notifications/NotificationService';
@@ -61,6 +62,9 @@ TaskManager.defineTask<GeofenceEventData>(TASKS.GEOFENCE, async ({ data, error }
   }
 
   log.debug('geofence', 'ENTER event received');
+  // Written before the trigger, not after: this is the line that proves the OS
+  // woke us, and it must survive even if everything after it fails.
+  await Journal.record('geofence', 'OS delivered ENTER for our region');
   await ArrivalCoordinator.trigger('geofence', 'arrived');
 });
 
@@ -106,6 +110,17 @@ TaskManager.defineTask<LocationEventData>(TASKS.LOCATION, async ({ data, error }
     // rather than staying quiet because it already had its turn.
     staleNoticed: false,
   });
+
+  // One line per fix. That is the whole point of the journal: it is the only
+  // way to see, afterwards, that fixes were arriving at all while the phone was
+  // locked — and how far apart they were.
+  void Journal.record(
+    'fix',
+    `${Math.round(distance)}m` +
+      `${accuracyMargin ? ` ±${Math.round(accuracyMargin)}m` : ''}` +
+      ` · ${signal.kind}` +
+      `${latest.coords.speed ? ` · ${latest.coords.speed.toFixed(1)}m/s` : ''}`
+  );
 
   switch (signal.kind) {
     case 'arrive':

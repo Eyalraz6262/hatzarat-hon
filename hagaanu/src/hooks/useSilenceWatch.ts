@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 
 import { ArrivalCoordinator } from '../services/alarm/ArrivalCoordinator';
 import { onSilence } from '../services/alarm/watchdog';
+import { Journal } from '../services/debug/Journal';
 import { tripStateOf } from '../services/geofencing/backgroundTasks';
 import { NotificationService } from '../services/notifications/NotificationService';
 import { AlarmStorage } from '../services/storage/AlarmStorage';
@@ -51,6 +52,16 @@ export function useSilenceWatch(): void {
 
         const signal = onSilence(tripStateOf(session), Date.now());
         setStale(signal.kind === 'stale-warn' || signal.kind === 'stale-ring');
+
+        if (signal.kind === 'stale-warn' || signal.kind === 'stale-ring') {
+          if (!session.staleNoticed) {
+            void Journal.record(
+              'stale',
+              `no fix for ${Math.round((Date.now() - (session.lastFixAt ?? Date.now())) / 1000)}s ` +
+                `at ${Math.round(signal.lastDistanceM)}m — ${signal.kind}`
+            );
+          }
+        }
 
         if (signal.kind === 'stale-ring') {
           log.debug('location', `silence watchdog ringing at ${Math.round(signal.lastDistanceM)}m`);

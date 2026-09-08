@@ -38,7 +38,13 @@ import { Card, Touch, Txt, row } from '../components/ui';
 const VOLUME_STEPS = [0.4, 0.6, 0.8, 1.0] as const;
 const THEME_MODES: ThemeMode[] = ['system', 'light', 'dark'];
 
-export function SettingsScreen({ onClose }: { onClose: () => void }) {
+export function SettingsScreen({
+  onClose,
+  onOpenDebug,
+}: {
+  onClose: () => void;
+  onOpenDebug: () => void;
+}) {
   const s = useTheme();
   const settings = useSettingsStore();
   const stopPreview = useRef<(() => void) | null>(null);
@@ -256,6 +262,24 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
               </Card>
             ) : null}
           </Section>
+
+          {/*
+            Development builds only. `__DEV__` is a compile-time constant under
+            Metro, so the row and the screen behind it are dropped from a
+            release bundle rather than merely hidden in one.
+          */}
+          {__DEV__ ? (
+            <Section title="Development">
+              <Card padded={false}>
+                <ActionRow
+                  first
+                  label="Debug"
+                  note="Monitor state, last fix, the trip journal, and a button for each detection layer."
+                  onPress={onOpenDebug}
+                />
+              </Card>
+            </Section>
+          ) : null}
 
           <Txt variant="caption" tone="muted" style={styles.version} nums>
             {t('settings.version', { version })}

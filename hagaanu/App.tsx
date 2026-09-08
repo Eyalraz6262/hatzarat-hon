@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Linking, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -29,6 +29,20 @@ import { log } from './src/utils/logger';
 void SplashScreen.preventAutoHideAsync();
 
 /**
+ * The debug screen, in development builds only.
+ *
+ * Loaded through a guarded `require` rather than an import because Metro folds
+ * `__DEV__` to a literal and drops unreachable branches BEFORE it collects
+ * dependencies — so in a release build the module never enters the bundle at
+ * all. A static import would ship the whole screen and its strings and merely
+ * hide it, which is not the same thing.
+ */
+const DebugScreen: (props: { onClose: () => void }) => ReactNode = __DEV__
+  ? // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('./src/screens/DebugScreen').DebugScreen
+  : () => null;
+
+/**
  * Root of the app.
  *
  * Screen selection is a plain state machine rather than a navigator: there are
@@ -42,6 +56,7 @@ export default function App() {
   // persisted, so the next cold start asks once more — the ask matters too much.
   const [skippedBackground, setSkippedBackground] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   const permissionsReady = usePermissionsStore((state) => state.ready);
   const snapshot = usePermissionsStore((state) => state.snapshot);
@@ -162,7 +177,15 @@ export default function App() {
           <HomeScreen onOpenSettings={() => setShowSettings(true)} />
         )}
 
-        {showSettings ? <SettingsScreen onClose={() => setShowSettings(false)} /> : null}
+        {showSettings ? (
+          <SettingsScreen
+            onClose={() => setShowSettings(false)}
+            onOpenDebug={() => setShowDebug(true)}
+          />
+        ) : null}
+
+        {/* Above settings, below the alarm: the alarm outranks everything. */}
+        {__DEV__ && showDebug ? <DebugScreen onClose={() => setShowDebug(false)} /> : null}
 
         {status === 'ringing' && destination ? (
           <AlarmScreen

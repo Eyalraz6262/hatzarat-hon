@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
 
+import { Journal } from '../services/debug/Journal';
 import { GeofencingService } from '../services/geofencing/GeofencingService';
 import { LocationService } from '../services/location/LocationService';
 import { AlarmStorage } from '../services/storage/AlarmStorage';
@@ -57,6 +58,11 @@ export function useProcessGuard(): void {
         log.warn(
           'location',
           `monitors lost while armed (geofence=${geofenceLive}, stream=${streamLive}); repairing`
+        );
+        void Journal.record(
+          'repair',
+          `monitors were down (geofence=${geofenceLive ? 'up' : 'DOWN'}, ` +
+            `stream=${streamLive ? 'up' : 'DOWN'}); restarting`
         );
 
         if (!geofenceLive) {

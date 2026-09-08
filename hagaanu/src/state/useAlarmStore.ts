@@ -4,6 +4,7 @@ import { DEFAULT_RADIUS_M, EARLY_RADIUS_M, MIN_RADIUS_M } from '../constants/con
 import { t } from '../i18n';
 import { AlarmService } from '../services/alarm/AlarmService';
 import { ArrivalCoordinator } from '../services/alarm/ArrivalCoordinator';
+import { Journal } from '../services/debug/Journal';
 import { GeofencingService } from '../services/geofencing/GeofencingService';
 import { LocationService } from '../services/location/LocationService';
 import { NotificationService } from '../services/notifications/NotificationService';
@@ -314,6 +315,13 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
         await LocationService.startBackgroundTracking(tier);
       }
       await NotificationService.presentArmedStatus(session.destination.label);
+
+      void Journal.record(
+        'armed',
+        `${session.destination.label} r=${radiusM}m tier=${tier.id}` +
+          `${remaining.length ? ` · then ${destination.label}` : ''}` +
+          `${foregroundOnly ? ' · FOREGROUND ONLY' : ''}`
+      );
 
       AlarmService.confirmationBuzz();
       set({ status: 'armed', session, destination: session.destination, busy: false });
