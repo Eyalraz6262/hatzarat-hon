@@ -35,6 +35,12 @@ export type AlarmStatus =
   /** We are inside the region — sound, vibration and the wake screen are on. */
   | 'ringing';
 
+/** One target on a journey: where to wake, and how close is close enough. */
+export type Leg = {
+  destination: Destination;
+  radiusM: number;
+};
+
 /**
  * The armed alarm, persisted to disk.
  *
@@ -44,8 +50,20 @@ export type AlarmStatus =
  */
 export type AlarmSession = {
   id: string;
+  /** The leg we are watching for RIGHT NOW. */
   destination: Destination;
   radiusM: number;
+  /**
+   * Legs still to come, in order.
+   *
+   * A journey with a change is one journey with two targets, not two alarms.
+   * Running them in sequence rather than in parallel means one OS region at a
+   * time, which is both simpler and more reliable: iOS caps monitored regions
+   * per app, and two live geofences on one trip doubles every way the OS has
+   * to disappoint us. When a leg fires and the user dismisses it, the next one
+   * arms automatically.
+   */
+  remaining: Leg[];
   status: Exclude<AlarmStatus, 'idle'>;
   /** Epoch ms when the user armed the alarm. */
   armedAt: number;

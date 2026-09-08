@@ -8,7 +8,7 @@ import { t } from '../../i18n';
 import type { StopsResult } from '../../services/transit/StopsService';
 import { icon, radius, space, useTheme } from '../../theme';
 import { formatDistance } from '../../utils/geo';
-import { Skeleton, Txt, row } from '../ui';
+import { Skeleton, Touch, Txt, row } from '../ui';
 import type { Rail, RailItem } from './rail';
 
 /**
@@ -29,12 +29,19 @@ const LINE_W = 2;
 
 type Props = {
   rail: Rail;
+  /**
+   * Turns the stops into buttons that set a change of vehicle.
+   *
+   * Absent on the armed screen, where the journey is settled and a tappable
+   * stop would only invite someone to change it by accident.
+   */
+  onPickStop?: (name: string) => void;
   /** Present when the stop list could not be built. The rail says so rather than pretending. */
   fallback: Extract<StopsResult, { ok: false }>['reason'] | null;
   loading: boolean;
 };
 
-export function RouteRail({ rail, fallback, loading }: Props) {
+export function RouteRail({ rail, fallback, loading, onPickStop }: Props) {
   const s = useTheme();
 
   if (loading) {
@@ -68,6 +75,7 @@ export function RouteRail({ rail, fallback, loading }: Props) {
           first={index === 0}
           last={index === rail.items.length - 1}
           travelled={hereIndex === -1 ? false : index <= hereIndex}
+          onPickStop={onPickStop}
         />
       ))}
 
@@ -87,17 +95,38 @@ function RailLine({
   first,
   last,
   travelled,
+  onPickStop,
 }: {
   item: RailItem;
   first: boolean;
   last: boolean;
   travelled: boolean;
+  onPickStop?: (name: string) => void;
 }) {
   const s = useTheme();
   const trackColor = travelled ? s.accent.base : s.line;
 
+  // Only a stop still ahead can become a change. Offering one already behind
+  // would be an invitation to set an alarm for a place we have left.
+  const pickable =
+    onPickStop && item.kind === 'stop' && !item.passed
+      ? () => onPickStop(item.name)
+      : null;
+
+  const Line = pickable ? Touch : View;
+
   return (
-    <View style={[styles.line, { flexDirection: row() }]}>
+    <Line
+      {...(pickable
+        ? {
+            accessibilityRole: 'button' as const,
+            accessibilityLabel: item.kind === 'stop' ? item.name : undefined,
+            accessibilityHint: t('route.addStop'),
+            onPress: pickable,
+          }
+        : {})}
+      style={[styles.line, { flexDirection: row() }]}
+    >
       <View style={styles.track}>
         <View
           style={[
@@ -115,7 +144,7 @@ function RailLine({
       <View style={styles.body}>
         <Body item={item} />
       </View>
-    </View>
+    </Line>
   );
 }
 
@@ -144,6 +173,15 @@ function Node({ item, travelled }: { item: RailItem; travelled: boolean }) {
 
   if (item.kind === 'wake') {
     return <View style={[styles.node, styles.nodeWake, { backgroundColor: s.bg, borderColor: s.accent.base }]} />;
+  }
+
+  if (item.kind === 'transfer') {
+    // Drawn like the destination, because it is one — just not the last one.
+    return (
+      <View
+        style={[styles.node, styles.nodeGoal, { backgroundColor: s.bg, borderColor: s.accent.base }]}
+      />
+    );
   }
 
   return (
@@ -191,6 +229,19 @@ function Body({ item }: { item: RailItem }) {
       <View style={[styles.bodyRow, { flexDirection: row() }]}>
         <Txt variant="heading" numberOfLines={1} style={styles.grow}>
           {item.name}
+        </Txt>
+      </View>
+    );
+  }
+
+  if (item.kind === 'transfer') {
+    return (
+      <View style={[styles.bodyRow, { flexDirection: row() }]}>
+        <Txt variant="heading" numberOfLines={1} style={styles.grow}>
+          {item.name}
+        </Txt>
+        <Txt variant="caption" tone="accent">
+          {t('rail.transfer')}
         </Txt>
       </View>
     );

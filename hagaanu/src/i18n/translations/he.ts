@@ -170,7 +170,6 @@ export const he = {
     addPrompt: 'איך לקרוא ליעד הזה?',
     remove: 'מחיקה',
     removeHint: 'לחיצה ארוכה לאפשרויות.',
-    removeConfirm: 'למחוק את ״{name}״?',
     pin: 'קיבוע בראש',
     unpin: 'ביטול הקיבוע',
     pinned: 'מקובע',

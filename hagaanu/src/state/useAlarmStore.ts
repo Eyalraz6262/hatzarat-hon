@@ -11,7 +11,7 @@ import { AlarmStorage } from '../services/storage/AlarmStorage';
 import { SavedStorage, type SavedDestination, type SavedKind } from '../services/storage/SavedStorage';
 import { fetchStopsAlongRoute, type StopsResult, type TransitStop } from '../services/transit/StopsService';
 import { usePermissionsStore } from './usePermissionsStore';
-import type { AlarmSession, AlarmStatus, Destination, PositionSample } from '../types';
+import type { AlarmSession, AlarmStatus, Destination, Leg, PositionSample } from '../types';
 import { distanceMeters } from '../utils/geo';
 import { log } from '../utils/logger';
 
@@ -26,6 +26,14 @@ type AlarmState = {
    * cost paid by everyone to serve a few.
    */
   earlyWarning: boolean;
+  /**
+   * The change of vehicle, when the journey has one.
+   *
+   * Held next to the destination rather than inside it because it is a
+   * property of the JOURNEY, not of the place: the same station is a transfer
+   * on one trip and the destination on another.
+   */
+  transfer: Destination | null;
   /** Newest position we have, from the foreground watcher. */
   position: PositionSample | null;
   /** Meters to the destination, or null when either endpoint is unknown. */
@@ -46,6 +54,7 @@ type AlarmState = {
   setDestination: (destination: Destination | null) => void;
   setRadius: (radiusM: number) => void;
   setEarlyWarning: (on: boolean) => void;
+  setTransfer: (transfer: Destination | null) => void;
   setPosition: (position: PositionSample) => void;
   setError: (error: string | null) => void;
   /**
@@ -62,6 +71,8 @@ type AlarmState = {
   saveCurrent: (name: string, kind: SavedKind) => Promise<void>;
   useSaved: (item: SavedDestination) => Promise<void>;
   removeSaved: (id: string) => Promise<void>;
+  /** Pins a route to the front of the list, or unpins it. */
+  pinSaved: (id: string, pinned: boolean) => Promise<void>;
   arm: () => Promise<boolean>;
   cancel: () => Promise<void>;
   dismissAlarm: () => Promise<void>;
@@ -99,6 +110,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   destination: null,
   radiusM: DEFAULT_RADIUS_M,
   earlyWarning: false,
+  transfer: null,
   position: null,
   distanceM: null,
   session: null,
@@ -122,6 +134,10 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       stops: [],
       stopsState: destination ? 'loading' : 'idle',
       stopsFallback: null,
+      // A change belongs to a journey. Choosing a new destination ends the old
+      // journey, so a transfer left over from it would be a stop on a route
+      // nobody is taking.
+      transfer: null,
     })),
 
   async loadStops() {
@@ -144,6 +160,8 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   setRadius: (radiusM) => set({ radiusM }),
 
   setEarlyWarning: (earlyWarning) => set({ earlyWarning }),
+
+  setTransfer: (transfer) => set({ transfer }),
 
   setPosition: (position) =>
     set((state) => ({
@@ -229,18 +247,27 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ saved: await SavedStorage.touch(item.id) });
   },
 
+  async pinSaved(id, pinned) {
+    set({ saved: await SavedStorage.setPinned(id, pinned) });
+  },
+
   async removeSaved(id) {
     set({ saved: await SavedStorage.remove(id) });
   },
 
   async arm() {
-    const { destination, radiusM, position, stops, stopsFallback } = get();
+    const { destination, radiusM, position, stops, stopsFallback, transfer } = get();
     if (!destination || get().busy) return false;
 
     set({ busy: true, error: null });
 
     try {
-      const distance = computeDistance(position, destination) ?? Number.POSITIVE_INFINITY;
+      // With a change, the FIRST thing we watch for is the transfer, and the
+      // chosen destination waits its turn. One OS region at a time.
+      const first = transfer ?? destination;
+      const remaining: Leg[] = transfer ? [{ destination, radiusM }] : [];
+
+      const distance = computeDistance(position, first) ?? Number.POSITIVE_INFINITY;
       const tier = LocationService.tierForDistance(distance);
 
       // Both OS geofencing and the background stream require "Always" location.
@@ -251,8 +278,9 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
       const session: AlarmSession = {
         id: `${Date.now()}`,
-        destination,
+        destination: first,
         radiusM,
+        remaining,
         status: 'armed',
         armedAt: Date.now(),
         triggeredAt: null,
@@ -282,13 +310,13 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       await AlarmStorage.write(session);
 
       if (!foregroundOnly) {
-        await GeofencingService.start(destination, radiusM);
+        await GeofencingService.start(session.destination, radiusM);
         await LocationService.startBackgroundTracking(tier);
       }
-      await NotificationService.presentArmedStatus(destination.label);
+      await NotificationService.presentArmedStatus(session.destination.label);
 
       AlarmService.confirmationBuzz();
-      set({ status: 'armed', session, busy: false });
+      set({ status: 'armed', session, destination: session.destination, busy: false });
       return true;
     } catch (error) {
       log.error('store', 'failed to arm alarm', error);
@@ -308,6 +336,25 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
   async dismissAlarm() {
     set({ busy: true });
+
+    // A journey with a change carries on. Dismissing the alarm at the transfer
+    // is the passenger acknowledging one leg, not ending the trip, so the next
+    // leg arms itself rather than making them set it up again on a platform.
+    if (await ArrivalCoordinator.advanceLeg(get().position?.coords ?? null)) {
+      const next = await AlarmStorage.read();
+      set({
+        status: 'armed',
+        session: next,
+        destination: next?.destination ?? null,
+        radiusM: next?.radiusM ?? DEFAULT_RADIUS_M,
+        distanceM: computeDistance(get().position, next?.destination ?? null),
+        stale: false,
+        busy: false,
+        error: null,
+      });
+      return;
+    }
+
     await ArrivalCoordinator.standDown();
     // The destination is cleared, unlike a cancel.
     //

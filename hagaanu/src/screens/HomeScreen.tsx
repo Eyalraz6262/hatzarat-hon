@@ -26,7 +26,7 @@ import { Feedback } from '../services/feedback/Haptics';
 import { formatDistance } from '../utils/geo';
 import { useAlarmStore } from '../state/useAlarmStore';
 import { usePermissionsStore } from '../state/usePermissionsStore';
-import { elevation, hitSlop, icon, radius, space, useTheme } from '../theme';
+import { HIT, elevation, hitSlop, icon, radius, space, useTheme } from '../theme';
 
 /**
  * Everything before the alarm is armed.
@@ -68,6 +68,9 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   const saveCurrent = useAlarmStore((state) => state.saveCurrent);
   const useSaved = useAlarmStore((state) => state.useSaved);
   const removeSaved = useAlarmStore((state) => state.removeSaved);
+  const pinSaved = useAlarmStore((state) => state.pinSaved);
+  const transfer = useAlarmStore((state) => state.transfer);
+  const setTransfer = useAlarmStore((state) => state.setTransfer);
 
   const backgroundGranted =
     usePermissionsStore((state) => state.snapshot.backgroundLocation) === 'granted';
@@ -89,8 +92,28 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   }, [destination, radiusM]);
 
   const rail = useMemo(
-    () => (destination ? buildRail(stops, position?.coords ?? null, destination, radiusM) : null),
-    [stops, position, destination, radiusM]
+    () =>
+      destination
+        ? buildRail(stops, position?.coords ?? null, destination, radiusM, transfer, radiusM)
+        : null,
+    [stops, position, destination, radiusM, transfer]
+  );
+
+  /**
+   * Turns a stop on the rail into a change of vehicle.
+   *
+   * The coordinates come from the stop list we already fetched, so this needs
+   * no lookup and no network — tapping a name on the rail is the whole
+   * interaction, which is why the rail is where it lives.
+   */
+  const pickTransfer = useCallback(
+    (name: string) => {
+      const stop = stops.find((item) => item.name === name);
+      if (!stop) return;
+      Feedback.tick();
+      setTransfer({ coords: stop.coords, label: stop.name });
+    },
+    [stops, setTransfer]
   );
 
   const onSave = useCallback(() => {
@@ -186,7 +209,24 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
                 rail={rail}
                 fallback={stopsFallback}
                 loading={stopsState === 'loading'}
+                onPickStop={transfer ? undefined : pickTransfer}
               />
+
+              {transfer ? (
+                <Touch
+                  accessibilityRole="button"
+                  accessibilityLabel={t('route.removeStop')}
+                  onPress={() => {
+                    Feedback.tick();
+                    setTransfer(null);
+                  }}
+                  style={[styles.removeStop, { borderTopColor: s.line, flexDirection: row() }]}
+                >
+                  <Txt variant="caption" tone="muted">
+                    {t('route.removeStop')}
+                  </Txt>
+                </Touch>
+              ) : null}
             </Card>
 
             <RangePicker value={radiusM} onChange={setRadius} />
@@ -255,7 +295,7 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
           </ScrollView>
         ) : (
           <View style={styles.savedDock} pointerEvents="box-none">
-            <SavedList items={saved} onPick={useSaved} onRemove={removeSaved} />
+            <SavedList items={saved} onPick={useSaved} onRemove={removeSaved} onPin={pinSaved} />
           </View>
         )}
 
@@ -405,6 +445,14 @@ const styles = StyleSheet.create({
   },
   earlyText: { flex: 1, gap: 2 },
   earlyNote: { marginTop: 1 },
+  removeStop: {
+    marginTop: space.md,
+    paddingTop: space.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    minHeight: HIT,
+  },
   warn: {
     borderRadius: radius.control,
     padding: space.lg,

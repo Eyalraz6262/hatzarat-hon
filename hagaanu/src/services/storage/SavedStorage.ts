@@ -1,34 +1,23 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { Destination } from '../../types';
 import { log } from '../../utils/logger';
+import { orderSaved, savedId, withSaved, type SavedDestination } from './saved';
+
+export { orderSaved } from './saved';
+export type { SavedDestination, SavedKind } from './saved';
 
 const KEY = '@hagaanu/saved-destinations/v1';
-const MAX = 12;
-
-/** The drawn mark a saved destination is filed under. */
-export type SavedKind = 'home' | 'work' | 'station' | 'favourite';
-
-export type SavedDestination = {
-  id: string;
-  name: string;
-  kind: SavedKind;
-  destination: Destination;
-  radiusM: number;
-  /** Epoch ms, so the list can lead with what the user actually uses. */
-  lastUsedAt: number;
-};
 
 /**
- * Saved destinations.
+ * Saved destinations, on disk.
  *
  * The whole point is the repeat commuter: someone riding the same line every
- * morning should arm tomorrow's alarm in one tap, not five. So the list is
- * ordered by last use rather than by creation — the trip you took yesterday is
- * the one you are most likely taking now.
+ * morning should arm tomorrow's alarm in one tap, not five. So the list leads
+ * with what the user actually uses rather than with what they created first —
+ * and with what they pinned above even that.
  *
- * Capped at MAX. A saved-places list that grows without limit stops being a
- * shortcut and becomes another thing to search.
+ * The ordering and the cap live in `./saved` so they can be tested on their
+ * own; everything here is the read and the write around them.
  */
 export const SavedStorage = {
   async readAll(): Promise<SavedDestination[]> {
@@ -36,9 +25,7 @@ export const SavedStorage = {
       const raw = await AsyncStorage.getItem(KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw) as SavedDestination[];
-      return Array.isArray(parsed)
-        ? [...parsed].sort((a, b) => b.lastUsedAt - a.lastUsedAt)
-        : [];
+      return Array.isArray(parsed) ? orderSaved(parsed) : [];
     } catch (error) {
       log.error('store', 'failed to read saved destinations', error);
       return [];
@@ -47,24 +34,26 @@ export const SavedStorage = {
 
   async save(entry: Omit<SavedDestination, 'id' | 'lastUsedAt'>): Promise<SavedDestination[]> {
     const existing = await SavedStorage.readAll();
-    const record: SavedDestination = {
-      ...entry,
-      id: `${Date.now()}`,
-      lastUsedAt: Date.now(),
-    };
-    // Drop the oldest-used when the cap is reached, never the newest.
-    const next = [record, ...existing].slice(0, MAX);
+    const next = withSaved(existing, { ...entry, id: savedId(), lastUsedAt: Date.now() });
     await SavedStorage.write(next);
     return next;
   },
 
   async touch(id: string): Promise<SavedDestination[]> {
     const existing = await SavedStorage.readAll();
-    const next = existing.map((item) =>
-      item.id === id ? { ...item, lastUsedAt: Date.now() } : item
+    const next = orderSaved(
+      existing.map((item) => (item.id === id ? { ...item, lastUsedAt: Date.now() } : item))
     );
     await SavedStorage.write(next);
-    return next.sort((a, b) => b.lastUsedAt - a.lastUsedAt);
+    return next;
+  },
+
+  /** Pins or unpins a saved route. */
+  async setPinned(id: string, pinned: boolean): Promise<SavedDestination[]> {
+    const existing = await SavedStorage.readAll();
+    const next = orderSaved(existing.map((item) => (item.id === id ? { ...item, pinned } : item)));
+    await SavedStorage.write(next);
+    return next;
   },
 
   async remove(id: string): Promise<SavedDestination[]> {

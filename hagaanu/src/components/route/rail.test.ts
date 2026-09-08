@@ -102,3 +102,46 @@ test('puts the here marker last when every stop is behind the passenger', () => 
   assert.equal(order[order.length - 2], 'wake');
   assert.equal(order[order.length - 1], 'destination');
 });
+
+/* ── transfers ───────────────────────────────────────────────────── */
+
+const LOD = { coords: { latitude: 31.9482, longitude: 34.8797 }, label: 'לוד' };
+
+test('a transfer lands between the stops, by its own distance to the destination', () => {
+  // Tel Aviv to Haifa, changing at Netanya. Netanya is 54 km from Haifa, so it
+  // belongs after the stop 78 km out and before the one 39 km out.
+  const netanya = { coords: { latitude: 32.3186, longitude: 34.8541 }, label: 'נתניה' };
+  const rail = buildRail(LINE, { latitude: 32.0836, longitude: 34.7981 }, HAIFA, 500, netanya);
+
+  const named = rail.items
+    .filter((i) => i.kind === 'stop' || i.kind === 'transfer' || i.kind === 'destination')
+    .map((i) => (i as { name: string }).name);
+
+  assert.deepEqual(named, ['נתניה', 'נתניה', 'חדרה מערב', 'בנימינה', 'עתלית', 'חיפה חוף הכרמל']);
+});
+
+test('a journey with a change has two wake points, the transfer first', () => {
+  const rail = buildRail([], { latitude: 32.0836, longitude: 34.7981 }, HAIFA, 500, LOD, 300);
+  const wakes = rail.items.filter((i) => i.kind === 'wake');
+
+  assert.equal(wakes.length, 2);
+  assert.equal(wakes[0].id, 'wake-transfer');
+  assert.equal(wakes[0].remainingM, 300, 'the transfer keeps its own radius');
+  assert.equal(wakes[1].id, 'wake-final');
+  assert.equal(wakes[1].remainingM, 500);
+});
+
+test('the transfer sits immediately before its own wake marker', () => {
+  const rail = buildRail(LINE, { latitude: 32.0836, longitude: 34.7981 }, HAIFA, 500, LOD);
+  const order = rail.items.map((i) => i.kind);
+  const at = order.indexOf('transfer');
+
+  assert.ok(at >= 0, 'the transfer must appear');
+  assert.equal(order[at + 1], 'wake');
+});
+
+test('a journey with no change has exactly one wake point', () => {
+  const rail = buildRail(LINE, { latitude: 32.0836, longitude: 34.7981 }, HAIFA, 500);
+  assert.equal(rail.items.filter((i) => i.kind === 'wake').length, 1);
+  assert.ok(!rail.items.some((i) => i.kind === 'transfer'));
+});

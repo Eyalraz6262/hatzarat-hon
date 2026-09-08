@@ -171,7 +171,6 @@ export const ar: TranslationSchema = {
     addPrompt: 'ماذا نسمّيها؟',
     remove: 'حذف',
     removeHint: 'اضغط مطوّلاً للخيارات.',
-    removeConfirm: 'حذف «{name}»؟',
     pin: 'تثبيت في المقدمة',
     unpin: 'إلغاء التثبيت',
     pinned: 'مثبّت',

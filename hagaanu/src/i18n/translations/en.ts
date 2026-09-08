@@ -161,7 +161,6 @@ export const en: TranslationSchema = {
     addPrompt: 'What should we call it?',
     remove: 'Delete',
     removeHint: 'Long-press for options.',
-    removeConfirm: 'Delete “{name}”?',
     pin: 'Pin to the front',
     unpin: 'Unpin',
     pinned: 'Pinned',

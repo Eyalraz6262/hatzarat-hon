@@ -4,7 +4,8 @@ import { GeofencingService } from '../geofencing/GeofencingService';
 import { LocationService } from '../location/LocationService';
 import { AlarmStorage } from '../storage/AlarmStorage';
 import { MIN_RADIUS_M } from '../../constants/config';
-import type { AlarmReason, AlarmSession } from '../../types';
+import type { AlarmReason, AlarmSession, LatLng } from '../../types';
+import { distanceMeters } from '../../utils/geo';
 import { log } from '../../utils/logger';
 
 type Listener = (session: AlarmSession) => void;
@@ -143,6 +144,69 @@ export const ArrivalCoordinator = {
       return true;
     } catch (error) {
       log.error('alarm', 'failed to re-arm', error);
+      await ArrivalCoordinator.standDown();
+      return false;
+    }
+  },
+
+  /**
+   * Moves on to the next leg of the journey, if there is one.
+   *
+   * Called when the user dismisses an alarm. Returns false when the journey is
+   * over, which is the caller's cue to stand down properly.
+   *
+   * `from` is where the passenger is standing right now, when the app knows.
+   * It only picks the starting sample rate — a leg that is two stops long must
+   * not begin on the tier meant for a trip across the country.
+   */
+  async advanceLeg(from: LatLng | null = null): Promise<boolean> {
+    const session = await AlarmStorage.read();
+    const next = session?.remaining?.[0];
+    if (!session || !next) return false;
+
+    await AlarmService.stop();
+    await NotificationService.dismissAll();
+
+    // Unknown position means the coarsest tier, which is the safe default: the
+    // first background fix re-tiers within one sample, and the geofence is
+    // watching regardless.
+    const tier = LocationService.tierForDistance(
+      from ? distanceMeters(from, next.destination.coords) : Number.POSITIVE_INFINITY
+    );
+
+    const continued: AlarmSession = {
+      ...session,
+      status: 'armed',
+      destination: next.destination,
+      radiusM: next.radiusM,
+      remaining: session.remaining.slice(1),
+      triggeredAt: null,
+      triggeredBy: null,
+      reason: null,
+      // Everything measured against the previous leg is meaningless against
+      // this one. A stale low-water mark would read as an instant overshoot.
+      closestM: null,
+      lastDistanceM: null,
+      lastFixAt: null,
+      lastSpeedMps: null,
+      staleNoticed: false,
+      statusDistanceLabel: null,
+      earlySent: false,
+      pollingTierId: tier.id,
+    };
+
+    await AlarmStorage.write(continued);
+
+    try {
+      if (!continued.foregroundOnly) {
+        await GeofencingService.start(continued.destination, continued.radiusM);
+        await LocationService.startBackgroundTracking(tier);
+      }
+      await NotificationService.presentArmedStatus(continued.destination.label);
+      log.debug('alarm', `advanced to next leg: ${continued.destination.label}`);
+      return true;
+    } catch (error) {
+      log.error('alarm', 'failed to arm the next leg', error);
       await ArrivalCoordinator.standDown();
       return false;
     }

@@ -173,7 +173,6 @@ export const ru: TranslationSchema = {
     addPrompt: 'Как его назвать?',
     remove: 'Удалить',
     removeHint: 'Долгое нажатие — параметры.',
-    removeConfirm: 'Удалить «{name}»?',
     pin: 'Закрепить в начале',
     unpin: 'Открепить',
     pinned: 'Закреплено',

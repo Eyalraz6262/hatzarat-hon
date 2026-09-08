@@ -20,8 +20,13 @@ export type RailItem =
   | { kind: 'stop'; id: string; name: string; remainingM: number; passed: boolean; transit: TransitStop['kind'] }
   /** Where the passenger is right now. */
   | { kind: 'here'; id: 'here'; remainingM: number }
-  /** Where the alarm will fire. */
-  | { kind: 'wake'; id: 'wake'; remainingM: number }
+  /**
+   * Where an alarm will fire. There are two on a journey with a change: one at
+   * the transfer and one at the destination, so the id is not a constant.
+   */
+  | { kind: 'wake'; id: string; remainingM: number }
+  /** A change of vehicle: the first leg's target, on the way to the last. */
+  | { kind: 'transfer'; id: 'transfer'; name: string; remainingM: number }
   | { kind: 'destination'; id: 'destination'; name: string; remainingM: number };
 
 export type Rail = {
@@ -41,7 +46,16 @@ export function buildRail(
   stops: TransitStop[],
   here: LatLng | null,
   destination: Destination,
-  radiusM: number
+  radiusM: number,
+  /**
+   * The change of vehicle, when the journey has one.
+   *
+   * Placed by its own distance to the final destination, so it lands in the
+   * right place among the stops without needing any route geometry — the same
+   * measure everything else on the rail is ordered by.
+   */
+  transfer: Destination | null = null,
+  transferRadiusM: number = radiusM
 ): Rail {
   const withRemaining = stops
     .map((stop) => ({ stop, remainingM: distanceMeters(stop.coords, destination.coords) }))
@@ -51,14 +65,32 @@ export function buildRail(
     .sort((a, b) => b.remainingM - a.remainingM);
 
   const hereRemaining = here ? distanceMeters(here, destination.coords) : null;
+  const transferRemaining = transfer
+    ? distanceMeters(transfer.coords, destination.coords)
+    : null;
 
   const items: RailItem[] = [];
+  let transferPlaced = false;
+
+  const placeTransfer = (beforeRemaining: number | null) => {
+    if (!transfer || transferPlaced || transferRemaining === null) return;
+    if (beforeRemaining !== null && transferRemaining < beforeRemaining) return;
+    transferPlaced = true;
+    items.push({
+      kind: 'transfer',
+      id: 'transfer',
+      name: transfer.label,
+      remainingM: transferRemaining,
+    });
+    items.push({ kind: 'wake', id: 'wake-transfer', remainingM: transferRadiusM });
+  };
 
   for (const { stop, remainingM } of withRemaining) {
     // Inserted before the first stop the passenger has NOT yet reached.
     if (hereRemaining !== null && hereRemaining > remainingM && !items.some((i) => i.kind === 'here')) {
       items.push({ kind: 'here', id: 'here', remainingM: hereRemaining });
     }
+    placeTransfer(remainingM);
     items.push({
       kind: 'stop',
       id: stop.id,
@@ -75,7 +107,10 @@ export function buildRail(
     items.push({ kind: 'here', id: 'here', remainingM: hereRemaining });
   }
 
-  items.push({ kind: 'wake', id: 'wake', remainingM: radiusM });
+  // Past every listed stop, or there were none.
+  placeTransfer(null);
+
+  items.push({ kind: 'wake', id: 'wake-final', remainingM: radiusM });
   items.push({ kind: 'destination', id: 'destination', name: destination.label, remainingM: 0 });
 
   return {

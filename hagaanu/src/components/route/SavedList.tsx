@@ -1,6 +1,7 @@
 import Briefcase from 'lucide-react-native/icons/briefcase';
 import House from 'lucide-react-native/icons/house';
 import Star from 'lucide-react-native/icons/star';
+import Pin from 'lucide-react-native/icons/pin';
 import TrainFront from 'lucide-react-native/icons/train-front';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -32,22 +33,28 @@ export function SavedList({
   items,
   onPick,
   onRemove,
+  onPin,
 }: {
   items: SavedDestination[];
   onPick: (item: SavedDestination) => void;
   onRemove: (id: string) => void;
+  onPin: (id: string, pinned: boolean) => void;
 }) {
   const s = useTheme();
 
   if (items.length === 0) return null;
 
-  // Long-press rather than a delete button on every card: the strip lives on
-  // the screen the ten-second budget belongs to, and a row of X buttons would
-  // put "throw this away" beside "use this" at the same weight.
-  const confirmRemove = (item: SavedDestination) => {
-    Alert.alert(t('saved.removeConfirm', { name: item.name }), undefined, [
-      { text: t('common.cancel'), style: 'cancel' },
+  // Long-press rather than buttons on every card: the strip lives on the
+  // screen the ten-second budget belongs to, and a row of controls would put
+  // "throw this away" beside "use this" at the same weight.
+  const options = (item: SavedDestination) => {
+    Alert.alert(item.name, undefined, [
+      {
+        text: item.pinned ? t('saved.unpin') : t('saved.pin'),
+        onPress: () => onPin(item.id, !item.pinned),
+      },
       { text: t('saved.remove'), style: 'destructive', onPress: () => onRemove(item.id) },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   };
 
@@ -72,7 +79,7 @@ export function SavedList({
             }}
             onLongPress={() => {
               Feedback.tick();
-              confirmRemove(item);
+              options(item);
             }}
             style={({ pressed }) => [
               styles.card,
@@ -85,9 +92,19 @@ export function SavedList({
           >
             <Mark size={icon.md} strokeWidth={icon.stroke} color={s.accent.text} />
             <View style={styles.text}>
-              <Txt variant="labelStrong" numberOfLines={1}>
-                {item.name}
-              </Txt>
+              <View style={[styles.name, { flexDirection: row() }]}>
+                {/*
+                  Recency is right for almost everyone and wrong for exactly the
+                  person this feature is for: one weekend outing pushes the
+                  weekday commute down the list. A pin is the user overriding it.
+                */}
+                {item.pinned ? (
+                  <Pin size={icon.sm - 2} strokeWidth={icon.stroke} color={s.accent.text} />
+                ) : null}
+                <Txt variant="labelStrong" numberOfLines={1} style={styles.nameText}>
+                  {item.name}
+                </Txt>
+              </View>
               <Txt variant="caption" tone="muted" nums>
                 {formatDistance(item.radiusM)}
               </Txt>
@@ -116,5 +133,12 @@ const styles = StyleSheet.create({
   text: {
     flexShrink: 1,
     gap: 1,
+  },
+  name: {
+    alignItems: 'center',
+    gap: 5,
+  },
+  nameText: {
+    flexShrink: 1,
   },
 });
