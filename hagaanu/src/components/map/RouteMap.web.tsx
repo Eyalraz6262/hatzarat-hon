@@ -4,7 +4,9 @@ import { LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import { t } from '../../i18n';
 import { space, useTheme } from '../../theme';
 import type { Destination, LatLng } from '../../types';
-import { Txt } from '../ui';
+import { formatDistance } from '../../utils/geo';
+import { LANDMARKS } from './landmarks';
+import { Txt, row } from '../ui';
 
 export type RouteMapHandle = {
   frameRoute: (from: LatLng | null, to: Destination, radiusM: number) => void;
@@ -37,7 +39,7 @@ type Props = {
  * Tapping still picks a destination, so the whole flow can be operated.
  */
 export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
-  { initialRegion, destination, radiusM, here, mode, onPickPoint },
+  { destination, radiusM, here, mode, onPickPoint },
   ref
 ) {
   const s = useTheme();
@@ -64,12 +66,16 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
    * A real map does the same thing when you drop a pin: it zooms to the pin.
    */
   const span = useMemo(() => {
-    if (!destination) return initialRegion.latitudeDelta;
+    // No destination: wide enough to hold the corridor the landmarks describe,
+    // so the first thing on screen is a recognisable stretch of the country
+    // rather than an empty grid.
+    if (!destination) return 2.1;
     // Roughly six ring-widths across, so the circle owns about a third of it.
     return Math.max((radiusM * 6) / 111_000, 0.004);
-  }, [destination, radiusM, initialRegion.latitudeDelta]);
+  }, [destination, radiusM]);
 
-  const centre = destination?.coords ?? here ?? initialRegion;
+  // Centred on the coastal corridor until there is somewhere to go.
+  const centre = destination?.coords ?? here ?? { latitude: 32.2, longitude: 34.95 };
 
   /**
    * The destination sits above the middle, not at it: the sheet covers the
@@ -90,6 +96,15 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
 
   // One degree of latitude is ~111 km everywhere, which is all this needs.
   const ringPx = (radiusM / (span * 111_000)) * size.height;
+
+  // A round number of metres that lands near a sixth of the width.
+  const metresPerPx = (span * 111_000) / Math.max(size.height, 1);
+  const rough = metresPerPx * (size.width / 6);
+  const scaleBarM = [100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000].reduce(
+    (best, step) => (Math.abs(step - rough) < Math.abs(best - rough) ? step : best),
+    100
+  );
+  const scaleBarPx = scaleBarM / metresPerPx;
 
   const goal = destination ? project(destination.coords) : null;
   const me = here ? project(here) : null;
@@ -164,6 +179,42 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
         />
       ) : null}
 
+      {/*
+        Real places at their real coordinates. Not decoration and not invented
+        cartography: the tiles a map would normally draw cannot be loaded here,
+        so what is drawn is the part that can be drawn truthfully.
+      */}
+      {LANDMARKS.map((landmark) => {
+        const at = project(landmark.coords);
+        if (at.left < -40 || at.left > size.width + 40 || at.top < -20 || at.top > size.height + 20) {
+          return null;
+        }
+        const near = destination
+          ? Math.abs(at.left - (goal?.left ?? 0)) < 2 && Math.abs(at.top - (goal?.top ?? 0)) < 2
+          : false;
+        if (near) return null;
+        return (
+          <View
+            key={landmark.name}
+            pointerEvents="none"
+            style={[styles.landmark, { left: at.left, top: at.top }]}
+          >
+            <View
+              style={[
+                styles.landmarkDot,
+                {
+                  backgroundColor: landmark.kind === 'station' ? s.inkMuted : 'transparent',
+                  borderColor: s.inkMuted,
+                },
+              ]}
+            />
+            <Txt variant="caption" tone="muted" numberOfLines={1} style={styles.landmarkName}>
+              {landmark.name}
+            </Txt>
+          </View>
+        );
+      })}
+
       {goal ? (
         <>
           <View
@@ -198,6 +249,16 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
         />
       ) : null}
 
+      {/* What a distance on this map actually is. */}
+      {size.height > 0 ? (
+        <View pointerEvents="none" style={[styles.scale, { flexDirection: row() }]}>
+          <View style={[styles.scaleBar, { borderColor: s.inkMuted, width: scaleBarPx }]} />
+          <Txt variant="caption" tone="muted" nums>
+            {formatDistance(scaleBarM)}
+          </Txt>
+        </View>
+      ) : null}
+
       {mode === 'picker' ? (
         <View pointerEvents="none" style={[styles.hint, { backgroundColor: s.surface, borderColor: s.line }]}>
           <Txt variant="caption" tone="muted">
@@ -216,6 +277,36 @@ const styles = StyleSheet.create({
   ring: { position: 'absolute', borderWidth: 2 },
   goal: { position: 'absolute', width: 18, height: 18, borderRadius: 9, borderWidth: 4 },
   me: { position: 'absolute', width: 14, height: 14, borderRadius: 7, borderWidth: 3 },
+  landmark: {
+    position: 'absolute',
+    alignItems: 'center',
+    marginLeft: -40,
+    marginTop: -4,
+    width: 80,
+    gap: 2,
+  },
+  landmarkDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    borderWidth: 1.5,
+  },
+  landmarkName: { textAlign: 'center' },
+  scale: {
+    position: 'absolute',
+    // Top, not bottom: the sheet owns the lower half of this screen and a
+    // scale bar down there is a scale bar nobody ever sees.
+    top: 96,
+    left: 16,
+    alignItems: 'center',
+    gap: 6,
+  },
+  scaleBar: {
+    height: 7,
+    borderBottomWidth: 1.5,
+    borderLeftWidth: 1.5,
+    borderRightWidth: 1.5,
+  },
   hint: {
     position: 'absolute',
     bottom: space.xxl,

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DemoBanner } from '../components/DemoBanner';
 import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
+import { nearestLandmark } from '../components/map/landmarks';
 import { SearchField } from '../components/map/SearchField';
 import { ApproachGauge } from '../components/route/ApproachGauge';
 import { RangeSlider } from '../components/route/RangeSlider';
@@ -88,7 +89,15 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
    */
   const pickPoint = useCallback(
     (coords: LatLng) => {
-      setDestination({ coords, label: t('errors.unknownPlace') });
+      // A tap next to a real station takes its name straight away. Without it
+      // every demo destination is "the place you chose", which tells the reader
+      // nothing about where they are going.
+      const near = nearestLandmark(coords);
+      setDestination({
+        coords: near ? near.coords : coords,
+        label: near ? near.name : t('errors.unknownPlace'),
+      });
+      if (near) return;
       void (async () => {
         const label = await GeocodingService.describe(coords);
         const current = useAlarmStore.getState().destination;
