@@ -63,3 +63,4 @@ skills-lock.json
 # `expo export --platform web`. Regenerable, and 2MB of it is a base64 copy
 # of the fonts and the alarm sounds.
 docs/app-demo.html
+scripts/network.json

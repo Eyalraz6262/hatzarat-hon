@@ -50,14 +50,22 @@ export type Scheme = {
   /**
    * Cartography, for the browser demo's drawn map.
    *
-   * Desaturated on purpose. A map is the backdrop the alert ring and the
-   * destination pin sit on, and a convincing sea-blue would fight the one
-   * brand colour for attention — on the screen where that colour is doing the
-   * most work. Land is a shade off the page so the coast reads as an edge
-   * rather than a border.
+   * Warm land against cool water, which is what every map anyone trusts does
+   * and what the first attempt got wrong: two greys off the UI's own ramp gave
+   * the map no figure and no ground, and it read as a placeholder. The whole
+   * set stays desaturated, because the map is the surface the alert ring and
+   * the destination pin sit on — a convincing sea blue would fight the one
+   * brand colour on the screen where that colour is doing the most work.
+   *
+   * Roads are drawn twice, casing then fill, which is how a road reads as a
+   * road rather than a scratch.
    */
   water: string;
   land: string;
+  urban: string;
+  roadCase: string;
+  road: string;
+  rail: string;
   coast: string;
 
   /** The brand. One per screen. */
@@ -115,9 +123,13 @@ export const light: Scheme = {
 
   line: '#E6E9EF',
   lineStrong: '#D3D8E0',
-  water: '#C2D3E5',
-  land: '#EFF2F7',
-  coast: '#9FB2C7',
+  water: '#AFC9DF',
+  land: '#F2F0EA',
+  urban: '#E7E1D4',
+  roadCase: '#DAD4C6',
+  road: '#FFFFFF',
+  rail: '#9AA3B2',
+  coast: '#93AEC6',
 
   primary: {
     base: '#6A2C91',
@@ -180,9 +192,13 @@ export const dark: Scheme = {
 
   line: '#242A33',
   lineStrong: '#333B47',
-  water: '#080C12',
-  land: '#1C222B',
-  coast: '#333D4A',
+  water: '#070D14',
+  land: '#191C21',
+  urban: '#23272E',
+  roadCase: '#2B3038',
+  road: '#3D444F',
+  rail: '#4E5766',
+  coast: '#2B3947',
 
   primary: {
     base: '#B69CFF',

@@ -42,7 +42,34 @@ type Index = {
   words: string[];
   /** For each word, the stops whose name or town contains it. */
   postings: Int32Array[];
+  /** Built-up area, as a count of stops per ~1km cell. See `urbanCells`. */
+  cells: Map<number, number>;
+  /** Every town with somewhere to stop, at the centre of its own stops. */
+  towns: TownMark[];
 };
+
+/**
+ * A town, placed and weighted by its own stops.
+ *
+ * There is no population figure anywhere in this app and no need for one: the
+ * number of stops a town has is a fair stand-in for how big it is, and it comes
+ * from the same data as everything else. Jerusalem has 2,511, Tel Aviv 1,262,
+ * a village has four — which is the order a map would label them in anyway.
+ */
+export type TownMark = {
+  name: string;
+  coords: LatLng;
+  stops: number;
+};
+
+/** ~1.1km. Fine enough that a city has a shape, coarse enough to stay cheap. */
+const CELL = 0.01;
+
+/** Cells are keyed by one number so the map has no string garbage in it. */
+const cellKey = (lat: number, lon: number) =>
+  Math.round(lat / CELL) * 100_000 + Math.round(lon / CELL);
+const cellLat = (key: number) => Math.round(key / 100_000) * CELL;
+const cellLon = (key: number) => (key - Math.round(key / 100_000) * 100_000) * CELL;
 
 let index: Index | null = null;
 
@@ -91,7 +118,38 @@ function build(): Index {
   const words = [...buckets.keys()].sort();
   const postings = words.map((word) => Int32Array.from(buckets.get(word)!));
 
-  return { names, hay, town, lat, lon, words, postings };
+  // Two aggregates over the same pass's worth of data: where the country is
+  // built up, and where each town is. Both are what makes the demo map read as
+  // a map rather than a coastline with pins on it.
+  const cells = new Map<number, number>();
+  const sums = new Map<number, { lat: number; lon: number; n: number }>();
+  for (let i = 0; i < count; i++) {
+    const key = cellKey(lat[i], lon[i]);
+    cells.set(key, (cells.get(key) ?? 0) + 1);
+    const t = town[i];
+    const sum = sums.get(t);
+    if (sum) {
+      sum.lat += lat[i];
+      sum.lon += lon[i];
+      sum.n += 1;
+    } else {
+      sums.set(t, { lat: lat[i], lon: lon[i], n: 1 });
+    }
+  }
+
+  const towns: TownMark[] = [];
+  for (const [t, sum] of sums) {
+    const name = TOWNS[t];
+    if (!name) continue;
+    towns.push({
+      name,
+      coords: { latitude: sum.lat / sum.n, longitude: sum.lon / sum.n },
+      stops: sum.n,
+    });
+  }
+  towns.sort((a, b) => b.stops - a.stops);
+
+  return { names, hay, town, lat, lon, words, postings, cells, towns };
 }
 
 function ensure(): Index {
@@ -288,4 +346,50 @@ export function nearestStop(coords: LatLng, withinM: number): StopHit | null {
 /** How many places the index holds. Exposed for the tests and the about screen. */
 export function stopCount(): number {
   return ensure().names.length;
+}
+
+/**
+ * The built-up areas, as one-kilometre cells with a stop in them.
+ *
+ * A settlement layer without a settlement dataset. Bus stops exist where people
+ * do, so the cells they fall in trace the shape of every town in the country —
+ * and the count in each is how densely served it is, which is the closest thing
+ * this app has to how urban somewhere is.
+ */
+export function urbanCells(): { lat: number; lon: number; weight: number }[] {
+  const idx = ensure();
+  const out: { lat: number; lon: number; weight: number }[] = [];
+  for (const [key, weight] of idx.cells) {
+    out.push({ lat: cellLat(key), lon: cellLon(key), weight });
+  }
+  return out;
+}
+
+/** Towns, biggest first. See TownMark for what "biggest" means here. */
+export function townMarks(): TownMark[] {
+  return ensure().towns;
+}
+
+/**
+ * Stops inside a rectangle, for the close zooms where individual ones fit.
+ *
+ * Capped rather than sorted: at a zoom where this is drawn the rectangle holds
+ * a few dozen stops, and past a couple of hundred the answer is that the view
+ * is too wide for this layer, not that the caller wants the nearest 200.
+ */
+export function stopsIn(
+  south: number,
+  west: number,
+  north: number,
+  east: number,
+  limit: number
+): { name: string; coords: LatLng }[] {
+  const idx = ensure();
+  const out: { name: string; coords: LatLng }[] = [];
+  for (let i = 0; i < idx.names.length && out.length < limit; i++) {
+    if (idx.lat[i] < south || idx.lat[i] > north) continue;
+    if (idx.lon[i] < west || idx.lon[i] > east) continue;
+    out.push({ name: idx.names[i], coords: { latitude: idx.lat[i], longitude: idx.lon[i] } });
+  }
+  return out;
 }

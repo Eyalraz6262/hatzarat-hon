@@ -5,8 +5,9 @@ import { t } from '../../i18n';
 import { space, useTheme } from '../../theme';
 import type { Destination, LatLng } from '../../types';
 import { formatDistance } from '../../utils/geo';
+import { stopsIn, townMarks, urbanCells } from '../../services/places/stops';
 import { LAKE_RINGS, LAND_RINGS } from './coastline.generated';
-import { LANDMARKS } from './landmarks';
+import { LIGHT_RAIL, ROADS } from './network.generated';
 import { Txt, row } from '../ui';
 
 export type RouteMapHandle = {
@@ -115,24 +116,103 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
 
   // One degree of latitude is ~111 km everywhere, which is all this needs.
   /**
-   * One SVG path covering every ring in a layer.
+   * How much of the map is worth drawing at this zoom.
    *
-   * Batched into a single `d` rather than a path per ring: the land is one
-   * shape and the lakes are three, and four <path> nodes that never change
-   * independently are three more than the browser needs.
+   * Every real map does this. A kilometre-square settlement cell is a third of
+   * the screen when you are looking at one street, and an individual bus stop
+   * is a sub-pixel smudge when you are looking at the country — so each layer
+   * appears only across the range where it says something. The thresholds are
+   * in degrees of latitude across the viewport, which is what `span` is.
    */
-  const pathOf = (rings: string[]): string => {
+  const detail = useMemo(
+    () => ({
+      urban: span > 0.12,
+      stops: span < 0.12,
+      towns: span > 0.02,
+      // Roads keep a constant apparent width rather than a constant real one:
+      // a hairline at country scale, a street you could drive down up close.
+      roadWidth: span > 1.2 ? 1 : span > 0.3 ? 1.6 : span > 0.06 ? 3 : 5,
+      // Labelling every village at country scale is illegible; the cut rises
+      // as the view widens, and the collision pass thins whatever survives it.
+      minStops: span > 2 ? 240 : span > 0.8 ? 60 : span > 0.25 ? 18 : 1,
+    }),
+    [span]
+  );
+
+  /**
+   * A packed "lat,lon,…" line as one SVG subpath.
+   *
+   * Everything drawn here — coast, lakes, roads, rail — ships in that one
+   * format, and every layer is a single <path> made of many subpaths rather
+   * than many nodes: the browser has 320 road corridors to draw and no reason
+   * to keep 320 elements around to do it.
+   */
+  const subpath = (packed: string, close: boolean, latFirst: boolean): string => {
+    const flat = packed.split(',');
     let d = '';
-    for (const ring of rings) {
-      const flat = ring.split(',');
-      for (let i = 0; i < flat.length; i += 2) {
-        const at = project({ latitude: Number(flat[i + 1]), longitude: Number(flat[i]) });
-        d += `${i === 0 ? 'M' : 'L'}${at.left.toFixed(1)} ${at.top.toFixed(1)}`;
+    for (let i = 0; i < flat.length; i += 2) {
+      const at = project({
+        latitude: Number(flat[latFirst ? i : i + 1]),
+        longitude: Number(flat[latFirst ? i + 1 : i]),
+      });
+      d += `${i === 0 ? 'M' : 'L'}${at.left.toFixed(1)} ${at.top.toFixed(1)}`;
+    }
+    return close ? `${d}Z` : d;
+  };
+
+  const ringPath = (rings: string[]) => rings.map((r) => subpath(r, true, false)).join('');
+  const linePath = (lines: string[]) => lines.map((l) => subpath(l, false, true)).join('');
+
+  /**
+   * Roads, clipped to what is on screen before anything is measured.
+   *
+   * At street zoom all but a handful of the corridors are somewhere else in the
+   * country, and projecting fifteen thousand points to discover that is work
+   * done for nothing on every frame.
+   */
+  const roadPath = useMemo(() => {
+    const margin = span * 0.6;
+    let d = '';
+    for (const line of ROADS) {
+      const flat = line.split(',');
+      let visible = false;
+      for (let i = 0; i < flat.length && !visible; i += 2) {
+        const dLat = Math.abs(Number(flat[i]) - centre.latitude);
+        const dLon = Math.abs(Number(flat[i + 1]) - centre.longitude);
+        visible = dLat < span / 2 + margin && dLon < span / 2 + margin;
       }
-      d += 'Z';
+      if (visible) d += subpath(line, false, true);
     }
     return d;
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [span, centre.latitude, centre.longitude, focusY, size.width, size.height]);
+
+  /** The settlement layer: one square per kilometre cell that has a stop in it. */
+  const urbanPath = useMemo(() => {
+    if (!detail.urban) return '';
+    const side = Math.max((0.01 / span) * size.height, 1.5);
+    let d = '';
+    for (const cell of urbanCells()) {
+      if (Math.abs(cell.lat - centre.latitude) > span) continue;
+      if (Math.abs(cell.lon - centre.longitude) > span) continue;
+      const at = project({ latitude: cell.lat, longitude: cell.lon });
+      d += `M${(at.left - side / 2).toFixed(1)} ${(at.top - side / 2).toFixed(1)}h${side.toFixed(1)}v${side.toFixed(1)}h${(-side).toFixed(1)}Z`;
+    }
+    return d;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail.urban, span, centre.latitude, centre.longitude, focusY, size.width, size.height]);
+
+  const nearbyStops = useMemo(() => {
+    if (!detail.stops || !size.height) return [];
+    const half = span * 0.7;
+    return stopsIn(
+      centre.latitude - half,
+      centre.longitude - half,
+      centre.latitude + half,
+      centre.longitude + half,
+      200
+    );
+  }, [detail.stops, span, centre.latitude, centre.longitude, size.height]);
 
   const ringPx = (radiusM / (span * 111_000)) * size.height;
 
@@ -148,36 +228,42 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
   const goal = destination ? project(destination.coords) : null;
 
   /**
-   * Which place labels actually get drawn.
+   * Which place labels get drawn, and how loudly.
    *
-   * Zoomed out to the whole country, Nahariya through Hadera is nine labels in
-   * two centimetres and they pile into an unreadable stack. A label is only
-   * worth drawing if it can be read, so each one claims a box and the next one
-   * that would land inside it is dropped. LANDMARKS runs north to south, which
-   * makes the choice stable as the view moves rather than flickering.
+   * Fifteen hand-listed landmarks is not a labelling scheme, it is a caption.
+   * Every town in the country is a candidate now, placed at the middle of its
+   * own stops and ranked by how many it has — the closest thing this app has to
+   * how big somewhere is, out of the same data as the rest of the map.
+   *
+   * Two passes, in that order, because that is what makes a map legible: take
+   * them biggest first so the name that matters wins the space, then drop any
+   * that would land inside a box already claimed.
    */
   const placed = useMemo(() => {
     const taken: { left: number; top: number }[] = [];
-    const out: { landmark: (typeof LANDMARKS)[number]; at: { left: number; top: number } }[] = [];
+    const out: { name: string; major: boolean; at: { left: number; top: number } }[] = [];
 
-    for (const landmark of LANDMARKS) {
-      const at = project(landmark.coords);
-      if (at.left < -40 || at.left > size.width + 40) continue;
-      if (at.top < -20 || at.top > size.height + 20) continue;
-      // The chosen destination has its own pin and label; a place name printed
-      // underneath it is the same thing said twice.
-      if (goal && Math.abs(at.left - goal.left) < 24 && Math.abs(at.top - goal.top) < 24) continue;
-      if (taken.some((p) => Math.abs(p.left - at.left) < 64 && Math.abs(p.top - at.top) < 30)) {
+    for (const mark of townMarks()) {
+      // Sorted biggest first, so nothing after the first miss can qualify.
+      if (mark.stops < detail.minStops) break;
+      const at = project(mark.coords);
+      if (at.left < 8 || at.left > size.width - 8) continue;
+      if (at.top < 8 || at.top > size.height - 8) continue;
+      // The chosen destination has its own pin and label; the town name printed
+      // under it is the same thing said twice.
+      if (goal && Math.abs(at.left - goal.left) < 30 && Math.abs(at.top - goal.top) < 30) continue;
+      if (taken.some((p) => Math.abs(p.left - at.left) < 62 && Math.abs(p.top - at.top) < 26)) {
         continue;
       }
       taken.push(at);
-      out.push({ landmark, at });
+      out.push({ name: mark.name, major: mark.stops >= detail.minStops * 4, at });
+      if (out.length >= 26) break;
     }
     return out;
     // `project` closes over exactly these, and rebuilding on every render would
-    // re-measure fifteen labels for a frame that has not moved.
+    // re-measure every label for a frame that has not moved.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size.width, size.height, span, centre.latitude, centre.longitude, focusY, goal?.left, goal?.top]);
+  }, [detail.minStops, size.width, size.height, span, centre.latitude, centre.longitude, focusY, goal?.left, goal?.top]);
   const me = here ? project(here) : null;
 
   return (
@@ -210,17 +296,17 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
       style={[styles.ground, { backgroundColor: s.water }]}
     >
       {/*
-        Real coastline, drawn rather than fetched.
+        The map, drawn rather than fetched.
 
-        This file renders through react-dom — react-native-web *is* react-dom —
-        so an <svg> is an ordinary element here in a way it would not be on a
-        device. That matters, because the alternative was the grid this
-        replaced: a sheet of ruled paper with dots on it, which answered the
-        question "where am I going" with a diagram and read as a broken map
-        rather than a sparse one.
+        react-native-maps has no web build and this page cannot load a tile from
+        anywhere, so the alternative to drawing it is not having one. This file
+        renders through react-dom — react-native-web *is* react-dom — so an
+        <svg> is an ordinary element here in a way it would not be on a device.
 
-        The ground is the sea; these are the land over it and the two inland
-        seas over that. No borders — see coastline.generated.ts.
+        Painter's order, and each layer is real data rather than decoration:
+        land from Natural Earth, the built-up areas from where the country's
+        26,699 bus stops actually are, roads from the paths those buses drive,
+        and the light rail from its own published geometry.
       */}
       {size.width > 0 ? (
         <svg
@@ -229,9 +315,62 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
           style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
           aria-hidden="true"
         >
-          <path d={pathOf(LAND_RINGS)} fill={s.land} />
-          <path d={pathOf(LAND_RINGS)} fill="none" stroke={s.coast} strokeWidth={1} />
-          <path d={pathOf(LAKE_RINGS)} fill={s.water} stroke={s.coast} strokeWidth={1} />
+          <path d={ringPath(LAND_RINGS)} fill={s.land} />
+
+          {/* Where people are. Square cells, because that is the honest shape
+              of the evidence — one stop somewhere in this kilometre. */}
+          {detail.urban ? <path d={urbanPath} fill={s.urban} /> : null}
+
+          <path d={ringPath(LAKE_RINGS)} fill={s.water} />
+          <path
+            d={ringPath(LAND_RINGS) + ringPath(LAKE_RINGS)}
+            fill="none"
+            stroke={s.coast}
+            strokeWidth={1}
+          />
+
+          {/* Casing under fill: a road reads as a road because it has an edge. */}
+          <path
+            d={roadPath}
+            fill="none"
+            stroke={s.roadCase}
+            strokeWidth={detail.roadWidth + 2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d={roadPath}
+            fill="none"
+            stroke={s.road}
+            strokeWidth={detail.roadWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d={linePath(LIGHT_RAIL)}
+            fill="none"
+            stroke={s.rail}
+            strokeWidth={1.4}
+            strokeDasharray="5 3"
+            strokeLinecap="round"
+          />
+
+          {/* Close in, the stops themselves — which is the one thing on this
+              map the user can actually be woken at. */}
+          {detail.stops
+            ? nearbyStops.map((stop) => {
+                const at = project(stop.coords);
+                return (
+                  <circle
+                    key={`${stop.name}-${at.left}-${at.top}`}
+                    cx={at.left}
+                    cy={at.top}
+                    r={2.4}
+                    fill={s.rail}
+                  />
+                );
+              })
+            : null}
         </svg>
       ) : null}
 
@@ -265,20 +404,39 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
         cartography: the tiles a map would normally draw cannot be loaded here,
         so what is drawn is the part that can be drawn truthfully.
       */}
-      {placed.map(({ landmark, at }) => (
-        <View
-          key={landmark.name}
-          pointerEvents="none"
-          style={[styles.landmark, { left: at.left, top: at.top }]}
-        >
-          <View
-            style={[styles.landmarkDot, { backgroundColor: s.inkMuted, borderColor: s.inkMuted }]}
-          />
-          <Txt variant="caption" tone="muted" numberOfLines={1} style={styles.landmarkName}>
-            {landmark.name}
-          </Txt>
-        </View>
-      ))}
+      {detail.towns
+        ? placed.map(({ name, major, at }) => (
+            <View
+              key={name}
+              pointerEvents="none"
+              style={[styles.landmark, { left: at.left, top: at.top }]}
+            >
+              <View
+                style={[
+                  styles.landmarkDot,
+                  {
+                    backgroundColor: major ? s.ink : s.inkMuted,
+                    width: major ? 5 : 4,
+                    height: major ? 5 : 4,
+                  },
+                ]}
+              />
+              <Txt
+                numberOfLines={1}
+                style={[
+                  styles.landmarkName,
+                  {
+                    color: major ? s.ink : s.inkMuted,
+                    fontWeight: major ? '600' : '400',
+                    fontSize: major ? 12 : 10.5,
+                  },
+                ]}
+              >
+                {name}
+              </Txt>
+            </View>
+          ))
+        : null}
 
       {goal ? (
         <>
@@ -289,6 +447,10 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
               {
                 borderColor: s.primary.base,
                 backgroundColor: s.primary.soft,
+                // The ring covers the ground the user most wants to look at —
+                // which streets are inside it — so it tints the map rather than
+                // replacing it. The border is what carries the edge.
+                opacity: 0.55,
                 width: Math.max(ringPx * 2, 12),
                 height: Math.max(ringPx * 2, 12),
                 left: goal.left - Math.max(ringPx, 6),
