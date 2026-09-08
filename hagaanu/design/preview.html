@@ -170,42 +170,23 @@ h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
         font-size: 11.5px; }
 .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); flex: none; }
 
-/* ── the rail ─────────────────────────────────────────────────── */
-.rail { display: flex; flex-direction: column; }
-.rl   { display: flex; gap: 12px; min-height: 40px; align-items: stretch; }
-.rl > .track { width: 26px; flex: none; position: relative;
-               display: flex; align-items: center; justify-content: center; }
-.rl > .track::before, .rl > .track::after {
-  content: ''; position: absolute; width: 2px; background: var(--line-2);
-  left: 50%; transform: translateX(-50%);
-}
-.rl > .track::before { top: 0; height: 50%; }
-.rl > .track::after  { bottom: 0; height: 50%; }
-.rl.done > .track::before, .rl.done > .track::after { background: var(--accent); }
-.rl.first > .track::before, .rl.last > .track::after { background: transparent; }
-.rl > .cell { flex: 1; min-width: 0; display: flex; flex-direction: column;
-              justify-content: center; padding: 7px 0; }
-.rrow { display: flex; align-items: center; gap: 8px; }
-.grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
-        white-space: nowrap; }
-
-.n      { border-radius: 999px; position: relative; z-index: 2; }
-.n-sm   { width: 9px;  height: 9px;  background: var(--line-2); }
-.n-sm.p { background: var(--accent); }
-.n-here { width: 26px; height: 26px; border-radius: 999px; background: var(--accent-sf);
-          display: flex; align-items: center; justify-content: center; }
-.n-here i { width: 14px; height: 14px; border-radius: 999px; background: var(--accent);
-            border: 3px solid var(--bg); box-sizing: content-box; display: block; }
-.n-wake { width: 11px; height: 11px; background: var(--bg);
-          border: 2.5px solid var(--accent); }
-.n-goal { width: 16px; height: 16px; background: var(--bg);
-          border: 3.5px solid var(--accent); }
-.wakepill { align-self: flex-start; display: flex; align-items: center; gap: 6px;
-            padding: 5px 10px; border-radius: 999px;
-            border: 1px solid var(--accent); background: var(--accent-sf);
-            color: var(--accent-tx); font-family: var(--body); font-weight: 700;
-            font-size: 11.5px; }
-.past { color: var(--ink-muted); }
+/* ── the approach gauge ──────────────────────────────────────── */
+.gauge { display: flex; gap: 16px; padding: 4px 0; }
+.gauge .scale { width: 22px; flex: none; position: relative; height: 176px; }
+.gauge .scale i { position: absolute; left: 50%; margin-left: -1.5px; width: 3px;
+                  border-radius: 3px; background: var(--line); top: 0; bottom: 0; }
+.gauge .scale i.done { background: var(--accent); bottom: auto; }
+.gauge .band { position: absolute; left: 0; right: 0; bottom: 0;
+               background: var(--accent-sf); border-top: 2px solid var(--accent);
+               border-radius: 10px; }
+.gauge .you { position: absolute; left: 0; right: 0; display: flex;
+              justify-content: center; margin-top: -7px; }
+.gauge .you b { width: 14px; height: 14px; border-radius: 999px;
+                background: var(--accent); border: 3px solid var(--bg);
+                box-sizing: content-box; display: block; }
+.gauge .labels { flex: 1; min-width: 0; position: relative; height: 176px; }
+.gauge .labels .bandlabel { position: absolute; left: 0; right: 0; margin-top: 3px; }
+.gauge .labels .foot { position: absolute; bottom: 0; left: 0; right: 0; }
 
 /* the little transit glyphs, drawn rather than iconed */
 .gly { width: 14px; height: 14px; flex: none; opacity: .85; }
@@ -346,9 +327,11 @@ h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
   <section class="shelf">
     <h2>המסלול הראשי</h2>
     <p>
-      בוחרים יעד, בוחרים טווח, מפעילים, נועלים. שלושת המסכים האלה הם כל מה
-      שהמשתמש רואה בנסיעה רגילה — והמסך האמצעי הוא הטענה של כל העיצוב: ברגע
-      שיש יעד, המפה מתכווצת לרצועה והקו לוקח את המסך.
+      בוחרים יעד, בוחרים טווח, מפעילים, נועלים. שני המסכים האחרונים הם אותו
+      מסך בשני מרחקים, וזאת הטענה של כל העיצוב: <strong>המסך מתעורר לפני
+      שאתה מתעורר</strong>. רוב הנסיעה הוא כמעט ריק, כי רחוק מהיעד באמת אין מה
+      להחליט — ומסך שממלא את הקטע הזה בדברים לקרוא הוא מסך שנסגר לפני החלק
+      שחשוב.
     </p>
 
     <div class="rack">
@@ -451,35 +434,24 @@ h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
 
             <div class="pad" style="padding-top:12px;overflow:hidden;flex:1">
               <div class="card">
-                <div class="t-label muted" style="margin-bottom:10px">הדרך שלכם</div>
-                <div class="rail">
-                  <div class="rl first done"><div class="track"><span class="n-here"><i></i></span></div>
-                    <div class="cell"><div class="rrow"><span class="t-labelS acc">אתם כאן</span></div></div></div>
-                  <div class="rl done"><div class="track"><span class="n n-sm p"></span></div>
-                    <div class="cell"><div class="rrow">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-muted)"><rect x="4" y="3" width="16" height="14" rx="2"/><path d="M4 11h16M7 21l2-3M17 21l-2-3"/></svg>
-                      <span class="t-labelS grow">בנימינה</span><span class="t-cap muted nums">39 ק״מ</span></div></div></div>
-                  <div class="rl done"><div class="track"><span class="n n-goal"></span></div>
-                    <div class="cell"><div class="rrow">
-                      <span class="t-heading grow">עתלית</span>
-                      <span class="t-cap acc">החלפה</span></div></div></div>
-                  <div class="rl done"><div class="track"><span class="n n-wake"></span></div>
-                    <div class="cell"><span class="wakepill">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:12px;height:12px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M5 3L2 6M19 3l3 3"/></svg>
-                      כאן נעיר אתכם, 500 מ׳ לפני</span></div></div>
-                  <div class="rl"><div class="track"><span class="n n-sm"></span></div>
-                    <div class="cell"><div class="rrow">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-muted)"><rect x="4" y="3" width="16" height="14" rx="2"/><path d="M4 11h16M7 21l2-3M17 21l-2-3"/></svg>
-                      <span class="t-labelS grow">חוף הכרמל</span><span class="t-cap muted nums">3.1 ק״מ</span></div></div></div>
-                  <div class="rl"><div class="track"><span class="n n-wake"></span></div>
-                    <div class="cell"><span class="wakepill">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:12px;height:12px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M5 3L2 6M19 3l3 3"/></svg>
-                      כאן נעיר אתכם, 500 מ׳ לפני</span></div></div>
-                  <div class="rl last"><div class="track"><span class="n n-goal"></span></div>
-                    <div class="cell"><div class="rrow"><span class="t-heading grow">תחנה מרכזית חיפה</span></div></div></div>
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span class="t-label muted grow">מרחק ליעד</span>
+                  <span class="t-labelS nums">54 ק״מ</span>
                 </div>
-                <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px;
-                            text-align:center" class="t-cap muted">הסרת העצירה</div>
+                <div class="t-body muted" style="margin-top:5px">
+                  נעיר אתכם 500 מ׳ לפני היעד.</div>
+                <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:16px">
+                  <div class="t-cap muted">אם מחליפים כלי באמצע, אפשר להוסיף את
+                    נקודת ההחלפה. נעיר גם שם.</div>
+                  <div style="margin-top:10px;height:42px;border-radius:12px;
+                              background:var(--sunk);display:flex;align-items:center;
+                              gap:9px;padding:0 13px">
+                    <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.2" style="color:var(--ink-muted)">
+                      <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                    <span class="t-label muted">הוספת עצירה בדרך</span>
+                  </div>
+                </div>
               </div>
 
               <div class="card" style="margin-top:12px;padding:14px 16px">
@@ -496,58 +468,33 @@ h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
             </div>
           </div>
         </div></div>
-        <p class="caption">תחנה שעדיין לפניכם היא לחיצה והופכת להחלפה. תחנה שכבר
-          עברתם — לא. הצעה להעיר במקום שכבר עזבנו היא לא הצעה.</p>
+        <p class="caption">שתי עובדות ושדה אחד. כאן הייתה רשימת תחנות שנשלפה
+          מ‑OpenStreetMap לפי הקו הישר ליעד — האפליקציה לא יודעת באיזה קו אתם,
+          אז היא לא יכלה לדעת שהכלי עוצר באף אחת מהן. היא נמחקה.</p>
       </div>
 
-      <!-- ── 3. פעיל ─────────────────────────────────────── -->
+      <!-- ── 3. פעיל, רחוק ───────────────────────────────── -->
       <div class="slot">
-        <h3>פעיל — אפשר לנעול</h3>
-        <p>מספר אחד גדול על המסך, וזה מספר התחנות. לא המרחק — אף אחד לא סופר מטרים.</p>
+        <h3>פעיל — רחוק</h3>
+        <p>רוב הנסיעה נראית ככה. כמעט ריק, בכוונה.</p>
         <div class="phone"><div class="screen"><div class="island"></div>
           <div class="statusbar"><span>9:52</span><i>▮▮▮ ᯤ ▰</i></div>
           <div class="body">
             <div class="pad" style="padding-top:16px;flex:1;overflow:hidden">
               <span class="chip"><span class="dot"></span>ההתראה פעילה</span>
-              <div class="t-display" style="margin-top:12px">אנחנו שומרים עליכם.</div>
-              <div class="t-body muted" style="margin-top:6px">
-                אפשר לנעול את הטלפון. ההתראה תפעל גם אם האפליקציה סגורה.</div>
 
-              <div style="display:flex;align-items:baseline;gap:10px;margin:20px 0 18px">
-                <span class="t-counter acc">3</span>
-                <span class="t-label muted">תחנות עד שנעיר אתכם</span>
+              <div style="display:flex;align-items:flex-end;gap:12px;margin:18px 0 12px">
+                <span class="t-counter acc">54</span>
+                <span class="t-label muted" style="padding-bottom:6px">ק״מ<br>ליעד</span>
               </div>
+              <div class="t-body muted">
+                אפשר לישון · אפשר לנעול את הטלפון. ההתראה תפעל גם אם האפליקציה סגורה.</div>
 
-              <div class="card">
-                <div class="rail">
-                  <div class="rl first done"><div class="track"><span class="n-here"><i></i></span></div>
-                    <div class="cell"><div class="rrow"><span class="t-labelS acc">אתם כאן</span></div></div></div>
-                  <div class="rl"><div class="track"><span class="n n-sm"></span></div>
-                    <div class="cell"><div class="rrow">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-muted)"><rect x="4" y="3" width="16" height="14" rx="2"/><path d="M4 11h16M7 21l2-3M17 21l-2-3"/></svg>
-                      <span class="t-labelS grow">עתלית</span><span class="t-cap muted nums">11 ק״מ</span></div></div></div>
-                  <div class="rl"><div class="track"><span class="n n-sm"></span></div>
-                    <div class="cell"><div class="rrow">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-muted)"><rect x="4" y="3" width="16" height="14" rx="2"/><path d="M4 11h16M7 21l2-3M17 21l-2-3"/></svg>
-                      <span class="t-labelS grow">חוף הכרמל</span><span class="t-cap muted nums">3.1 ק״מ</span></div></div></div>
-                  <div class="rl"><div class="track"><span class="n n-sm"></span></div>
-                    <div class="cell"><div class="rrow">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-muted)"><rect x="4" y="3" width="16" height="14" rx="2"/><path d="M4 11h16M7 21l2-3M17 21l-2-3"/></svg>
-                      <span class="t-labelS grow">בת גלים</span><span class="t-cap muted nums">1.4 ק״מ</span></div></div></div>
-                  <div class="rl"><div class="track"><span class="n n-wake"></span></div>
-                    <div class="cell"><span class="wakepill">
-                      <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:12px;height:12px"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M5 3L2 6M19 3l3 3"/></svg>
-                      כאן נעיר אתכם, 500 מ׳ לפני</span></div></div>
-                  <div class="rl last"><div class="track"><span class="n n-goal"></span></div>
-                    <div class="cell"><div class="rrow"><span class="t-heading grow">תחנה מרכזית חיפה</span></div></div></div>
-                </div>
-              </div>
-
-              <div class="card flush" style="margin-top:12px">
+              <div class="card flush" style="margin-top:18px">
                 <div class="row"><span class="t-label muted rt">היעד</span>
                   <span class="t-labelS">תחנה מרכזית חיפה</span></div>
                 <div class="row"><span class="t-label muted rt">מרחק ליעד</span>
-                  <span class="t-labelS nums">4.2 ק״מ</span></div>
+                  <span class="t-labelS nums">54 ק״מ</span></div>
                 <div class="row"><span class="t-label muted rt">טווח ההתראה</span>
                   <span class="t-labelS acc nums">500 מ׳</span></div>
               </div>
@@ -558,8 +505,61 @@ h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
             </div>
           </div>
         </div></div>
-        <p class="caption">״ההתראה פעילה״ עם נקודה חיה, ואז המספר. אם אין רשימת
-          תחנות המספר הופך למרחק — ולעולם לא ל״0 תחנות״, שנקרא ככישלון.</p>
+        <p class="caption">אין מד, כי בטווח הזה הוא לא יכול להיות נכון: טווח של
+          500 מ׳ מתוך 54 ק״מ הוא 0.9% מהגובה. מד שהסימן החשוב בו בלתי נראה גרוע
+          ממד שלא קיים.</p>
+      </div>
+
+      <!-- ── 4. פעיל, מתקרבים ────────────────────────────── -->
+      <div class="slot">
+        <h3>פעיל — מתקרבים</h3>
+        <p>המד מופיע ברגע שהוא יכול להיות מצויר בקנה מידה אמיתי.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>10:31</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body">
+            <div class="pad" style="padding-top:16px;flex:1;overflow:hidden">
+              <span class="chip"><span class="dot"></span>מתקרבים</span>
+
+              <div style="display:flex;align-items:flex-end;gap:12px;margin:18px 0 12px">
+                <span class="t-counter acc">2.1</span>
+                <span class="t-label muted" style="padding-bottom:6px">ק״מ<br>ליעד</span>
+              </div>
+              <div class="t-body muted">
+                אפשר לישון · אפשר לנעול את הטלפון.</div>
+
+              <div class="card" style="margin-top:16px">
+                <div class="gauge">
+                  <div class="scale">
+                    <i></i>
+                    <i class="done" style="height:58%"></i>
+                    <div class="band" style="top:90%"></div>
+                    <div class="you" style="top:58%"><b></b></div>
+                  </div>
+                  <div class="labels">
+                    <div class="t-cap muted nums">התצוגה: 5 ק״מ האחרונים</div>
+                    <div class="bandlabel t-capS acc nums" style="top:90%">
+                      כאן נעיר אתכם · 500 מ׳</div>
+                    <div class="foot t-capS">תחנה מרכזית חיפה</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card flush" style="margin-top:12px">
+                <div class="row"><span class="t-label muted rt">מרחק ליעד</span>
+                  <span class="t-labelS nums">2.1 ק״מ</span></div>
+                <div class="row"><span class="t-label muted rt">טווח ההתראה</span>
+                  <span class="t-labelS acc nums">500 מ׳</span></div>
+              </div>
+            </div>
+
+            <div style="padding:12px 20px 18px;border-top:1px solid var(--line)">
+              <div class="btn danger">ביטול ההתראה</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">הפס הירוק הוא הטווח שביקשתם, בפרופורציה האמיתית שלו
+          מתוך החלון שכתוב מעליו. הנקודה היא הקיבוע האחרון. שום דבר כאן לא נגזר
+          ממסלול, מלוח זמנים או מסוג הכלי — כי האפליקציה לא יודעת אף אחד מהם.</p>
       </div>
 
     </div>
@@ -622,7 +622,7 @@ h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
               </div>
               <div class="txt">
                 <b>תחנה מרכזית חיפה</b>
-                <small>עוד 3 תחנות</small>
+                <small>נעיר אתכם 500 מ׳ לפני היעד.</small>
               </div>
               <span class="d">4.2 ק״מ</span>
             </div>
