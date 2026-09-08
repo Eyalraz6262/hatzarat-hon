@@ -209,7 +209,8 @@ export const en: TranslationSchema = {
     crashReportsNote: 'Helps fix faults that stop the alarm working. No location, no identifier, no usage tracking.',
 
     privacyTitle: 'What leaves your device',
-    privacyBody: 'Your location stays on the phone and is never sent to any server. The one exception: when you pick a destination, two coordinates go to OpenStreetMap to fetch the stops on the way. Once, with no identifier. From the moment the alarm is armed the app does not touch the network at all.',
+    privacyBody:
+      'Your location stays on the phone and is never sent to a server of ours. The one exception is searching an address or tapping the map: the text or the two coordinates go to the device’s own mapping service — Apple on iOS, Google on Android — to get a place name back. Once armed, the app does not touch the network at all.',
 
     whyNotWork: 'Why did the alarm not fire?',
     whyNotWorkBody: 'Both operating systems reserve the right to delay background events to save battery, and Android also closes background apps. We use three detection layers to narrow that gap, but no app can promise a hundred percent.',
