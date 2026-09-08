@@ -5,6 +5,7 @@ import { t } from '../../i18n';
 import { space, useTheme } from '../../theme';
 import type { Destination, LatLng } from '../../types';
 import { formatDistance } from '../../utils/geo';
+import { LAKE_RINGS, LAND_RINGS } from './coastline.generated';
 import { LANDMARKS } from './landmarks';
 import { Txt, row } from '../ui';
 
@@ -38,6 +39,18 @@ type Props = {
  *
  * Tapping still picks a destination, so the whole flow can be operated.
  */
+/**
+ * The idle frame: Nahariya down to the northern Negev, sized to the part of the
+ * map the bottom sheet leaves visible.
+ *
+ * Not the whole country. Framing all of it down to Eilat spends a third of the
+ * screen on the Arava, where there is nothing to be woken for — this holds the
+ * populated corridor the app is actually about, and still shows enough coast,
+ * the Dead Sea and the Sea of Galilee to be recognisable at a glance.
+ */
+const IDLE_SPAN = 5;
+const IDLE_CENTRE = { latitude: 31.95, longitude: 34.95 };
+
 export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
   { destination, radiusM, here, mode, onPickPoint },
   ref
@@ -66,23 +79,29 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
    * A real map does the same thing when you drop a pin: it zooms to the pin.
    */
   const span = useMemo(() => {
-    // No destination: wide enough to hold the corridor the landmarks describe,
-    // so the first thing on screen is a recognisable stretch of the country
-    // rather than an empty grid.
-    if (!destination) return 2.1;
+    // No destination: the whole country, framed to the part of the map the
+    // sheet is not covering. Recognising the shape is the point — a closer
+    // view of one stretch of coast could be anywhere.
+    if (!destination) return IDLE_SPAN;
     // Roughly six ring-widths across, so the circle owns about a third of it.
     return Math.max((radiusM * 6) / 111_000, 0.004);
   }, [destination, radiusM]);
 
   // Centred on the coastal corridor until there is somewhere to go.
-  const centre = destination?.coords ?? here ?? { latitude: 32.2, longitude: 34.95 };
+  // With nothing chosen, the map shows the country rather than following the
+  // user: at this scale their own dot is a few pixels either way, and what is
+  // worth looking at is the shape they are somewhere inside. Once there is a
+  // destination the view belongs to it.
+  const centre = destination?.coords ?? IDLE_CENTRE;
 
   /**
    * The destination sits above the middle, not at it: the sheet covers the
    * lower half of the map, and a ring centred in the viewport is a ring you
    * are looking at the top edge of.
    */
-  const focusY = destination ? size.height * 0.27 : size.height / 2;
+  // The sheet covers the bottom of the map, so neither view is centred on the
+  // middle of the screen: both aim at the middle of what can actually be seen.
+  const focusY = size.height * (destination ? 0.27 : 0.33);
 
   const project = (p: LatLng) => ({
     left: size.width / 2 + ((p.longitude - centre.longitude) * 0.85 / span) * size.height,
@@ -95,6 +114,26 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
   });
 
   // One degree of latitude is ~111 km everywhere, which is all this needs.
+  /**
+   * One SVG path covering every ring in a layer.
+   *
+   * Batched into a single `d` rather than a path per ring: the land is one
+   * shape and the lakes are three, and four <path> nodes that never change
+   * independently are three more than the browser needs.
+   */
+  const pathOf = (rings: string[]): string => {
+    let d = '';
+    for (const ring of rings) {
+      const flat = ring.split(',');
+      for (let i = 0; i < flat.length; i += 2) {
+        const at = project({ latitude: Number(flat[i + 1]), longitude: Number(flat[i]) });
+        d += `${i === 0 ? 'M' : 'L'}${at.left.toFixed(1)} ${at.top.toFixed(1)}`;
+      }
+      d += 'Z';
+    }
+    return d;
+  };
+
   const ringPx = (radiusM / (span * 111_000)) * size.height;
 
   // A round number of metres that lands near a sixth of the width.
@@ -107,6 +146,38 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
   const scaleBarPx = scaleBarM / metresPerPx;
 
   const goal = destination ? project(destination.coords) : null;
+
+  /**
+   * Which place labels actually get drawn.
+   *
+   * Zoomed out to the whole country, Nahariya through Hadera is nine labels in
+   * two centimetres and they pile into an unreadable stack. A label is only
+   * worth drawing if it can be read, so each one claims a box and the next one
+   * that would land inside it is dropped. LANDMARKS runs north to south, which
+   * makes the choice stable as the view moves rather than flickering.
+   */
+  const placed = useMemo(() => {
+    const taken: { left: number; top: number }[] = [];
+    const out: { landmark: (typeof LANDMARKS)[number]; at: { left: number; top: number } }[] = [];
+
+    for (const landmark of LANDMARKS) {
+      const at = project(landmark.coords);
+      if (at.left < -40 || at.left > size.width + 40) continue;
+      if (at.top < -20 || at.top > size.height + 20) continue;
+      // The chosen destination has its own pin and label; a place name printed
+      // underneath it is the same thing said twice.
+      if (goal && Math.abs(at.left - goal.left) < 24 && Math.abs(at.top - goal.top) < 24) continue;
+      if (taken.some((p) => Math.abs(p.left - at.left) < 64 && Math.abs(p.top - at.top) < 30)) {
+        continue;
+      }
+      taken.push(at);
+      out.push({ landmark, at });
+    }
+    return out;
+    // `project` closes over exactly these, and rebuilding on every render would
+    // re-measure fifteen labels for a frame that has not moved.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [size.width, size.height, span, centre.latitude, centre.longitude, focusY, goal?.left, goal?.top]);
   const me = here ? project(here) : null;
 
   return (
@@ -136,23 +207,33 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
         if (!Number.isFinite(picked.latitude) || !Number.isFinite(picked.longitude)) return;
         onPickPoint(picked);
       }}
-      style={[styles.ground, { backgroundColor: s.sunk }]}
+      style={[styles.ground, { backgroundColor: s.water }]}
     >
-      {/* A quiet grid. Not streets: a sheet of paper with a scale on it. */}
-      {Array.from({ length: 9 }).map((_, i) => (
-        <View
-          key={`h${i}`}
-          pointerEvents="none"
-          style={[styles.grid, { backgroundColor: s.line, top: `${(i + 1) * 10}%`, height: 1 }]}
-        />
-      ))}
-      {Array.from({ length: 9 }).map((_, i) => (
-        <View
-          key={`v${i}`}
-          pointerEvents="none"
-          style={[styles.grid, { backgroundColor: s.line, left: `${(i + 1) * 10}%`, width: 1 }]}
-        />
-      ))}
+      {/*
+        Real coastline, drawn rather than fetched.
+
+        This file renders through react-dom — react-native-web *is* react-dom —
+        so an <svg> is an ordinary element here in a way it would not be on a
+        device. That matters, because the alternative was the grid this
+        replaced: a sheet of ruled paper with dots on it, which answered the
+        question "where am I going" with a diagram and read as a broken map
+        rather than a sparse one.
+
+        The ground is the sea; these are the land over it and the two inland
+        seas over that. No borders — see coastline.generated.ts.
+      */}
+      {size.width > 0 ? (
+        <svg
+          width={size.width}
+          height={size.height}
+          style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+          aria-hidden="true"
+        >
+          <path d={pathOf(LAND_RINGS)} fill={s.land} />
+          <path d={pathOf(LAND_RINGS)} fill="none" stroke={s.coast} strokeWidth={1} />
+          <path d={pathOf(LAKE_RINGS)} fill={s.water} stroke={s.coast} strokeWidth={1} />
+        </svg>
+      ) : null}
 
       {/*
         The line between the two points is drawn as a thin rotated bar rather
@@ -184,33 +265,20 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
         cartography: the tiles a map would normally draw cannot be loaded here,
         so what is drawn is the part that can be drawn truthfully.
       */}
-      {LANDMARKS.map((landmark) => {
-        const at = project(landmark.coords);
-        if (at.left < -40 || at.left > size.width + 40 || at.top < -20 || at.top > size.height + 20) {
-          return null;
-        }
-        const near = destination
-          ? Math.abs(at.left - (goal?.left ?? 0)) < 2 && Math.abs(at.top - (goal?.top ?? 0)) < 2
-          : false;
-        if (near) return null;
-        return (
+      {placed.map(({ landmark, at }) => (
+        <View
+          key={landmark.name}
+          pointerEvents="none"
+          style={[styles.landmark, { left: at.left, top: at.top }]}
+        >
           <View
-            key={landmark.name}
-            pointerEvents="none"
-            style={[styles.landmark, { left: at.left, top: at.top }]}
-          >
-            <View
-              style={[
-                styles.landmarkDot,
-                { backgroundColor: s.inkMuted, borderColor: s.inkMuted },
-              ]}
-            />
-            <Txt variant="caption" tone="muted" numberOfLines={1} style={styles.landmarkName}>
-              {landmark.name}
-            </Txt>
-          </View>
-        );
-      })}
+            style={[styles.landmarkDot, { backgroundColor: s.inkMuted, borderColor: s.inkMuted }]}
+          />
+          <Txt variant="caption" tone="muted" numberOfLines={1} style={styles.landmarkName}>
+            {landmark.name}
+          </Txt>
+        </View>
+      ))}
 
       {goal ? (
         <>
@@ -269,7 +337,6 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
 
 const styles = StyleSheet.create({
   ground: { ...StyleSheet.absoluteFill, overflow: 'hidden' },
-  grid: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, opacity: 0.7 },
   leg: { position: 'absolute', height: 2, borderRadius: 2, opacity: 0.42 },
   ring: { position: 'absolute', borderWidth: 2 },
   goal: { position: 'absolute', width: 18, height: 18, borderRadius: 9, borderWidth: 4 },

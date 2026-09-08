@@ -47,6 +47,18 @@ export type Scheme = {
 
   line: string;
   lineStrong: string;
+  /**
+   * Cartography, for the browser demo's drawn map.
+   *
+   * Desaturated on purpose. A map is the backdrop the alert ring and the
+   * destination pin sit on, and a convincing sea-blue would fight the one
+   * brand colour for attention — on the screen where that colour is doing the
+   * most work. Land is a shade off the page so the coast reads as an edge
+   * rather than a border.
+   */
+  water: string;
+  land: string;
+  coast: string;
 
   /** The brand. One per screen. */
   primary: Tone;
@@ -103,6 +115,9 @@ export const light: Scheme = {
 
   line: '#E6E9EF',
   lineStrong: '#D3D8E0',
+  water: '#C2D3E5',
+  land: '#EFF2F7',
+  coast: '#9FB2C7',
 
   primary: {
     base: '#6A2C91',
@@ -165,6 +180,9 @@ export const dark: Scheme = {
 
   line: '#242A33',
   lineStrong: '#333B47',
+  water: '#080C12',
+  land: '#1C222B',
+  coast: '#333D4A',
 
   primary: {
     base: '#B69CFF',
