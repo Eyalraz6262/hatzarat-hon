@@ -113,11 +113,16 @@ const config: ExpoConfig = {
       'expo-notifications',
       {
         icon: './assets/notification-icon.png',
-        color: '#FF6B1A',
-        // Copies the alarm tone into res/raw (Android) and the app bundle (iOS)
-        // so the notification itself can play it — including when our JS process
-        // is gone by the time the notification is shown.
-        sounds: ['./assets/sounds/alarm.wav'],
+        color: '#0EA36F',
+        // Copies every tone into res/raw (Android) and the app bundle (iOS) so
+        // the notification itself can play the one the user chose — including
+        // when our JS process is gone by the time the notification is shown.
+        // Keep in sync with src/services/audio/sounds.ts.
+        sounds: [
+          './assets/sounds/alarm-soft.wav',
+          './assets/sounds/alarm-normal.wav',
+          './assets/sounds/alarm-sharp.wav',
+        ],
       },
     ],
     [

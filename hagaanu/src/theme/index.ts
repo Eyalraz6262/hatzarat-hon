@@ -1,5 +1,6 @@
 import { Platform, useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
 
+import { useSettingsStore } from '../state/useSettingsStore';
 import { dark, light, type Scheme } from './colors';
 
 export { light, dark, schemes, type Scheme } from './colors';
@@ -20,8 +21,30 @@ export { mapStyleFor } from './mapStyle';
  * with it.
  */
 
+/**
+ * The active scheme.
+ *
+ * The user's explicit choice wins; "system" follows the device. Read through
+ * the store rather than a context so a change in settings repaints every
+ * screen at once without a provider wrapping the app.
+ */
 export function useTheme(): Scheme {
-  return useColorScheme() === 'dark' ? dark : light;
+  const device = useColorScheme();
+  const mode = useSettingsStore((state) => state.theme);
+  if (mode === 'light') return light;
+  if (mode === 'dark') return dark;
+  return device === 'dark' ? dark : light;
+}
+
+/**
+ * The scheme, outside React.
+ *
+ * For the services that paint something before or without a render: the native
+ * window background at boot, the notification tint from a background task.
+ */
+export function currentScheme(): Scheme {
+  const mode = useSettingsStore.getState().theme;
+  return mode === 'dark' ? dark : light;
 }
 
 /* ------------------------------------------------------------------ *

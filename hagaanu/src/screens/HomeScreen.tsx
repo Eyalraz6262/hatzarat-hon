@@ -1,4 +1,5 @@
 import LocateFixed from 'lucide-react-native/icons/locate-fixed';
+import Settings from 'lucide-react-native/icons/settings';
 import X from 'lucide-react-native/icons/x';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -41,7 +42,7 @@ import { elevation, hitSlop, icon, radius, space, useTheme } from '../theme';
  * know where you are going, the useful question stops being "where am I" and
  * becomes "how many stops until I need to stand up".
  */
-export function HomeScreen() {
+export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   const s = useTheme();
   const mapRef = useRef<RouteMapHandle>(null);
 
@@ -128,7 +129,25 @@ export function HomeScreen() {
           />
         ) : (
           <View style={styles.floating} pointerEvents="box-none">
-            <SearchField onPick={setDestination} />
+            <View style={[styles.chrome, { flexDirection: row() }]}>
+              <View style={styles.chromeSearch}>
+                <SearchField onPick={setDestination} />
+              </View>
+              {/*
+                Only on the empty state. Once a destination exists the screen
+                has one job, and a settings button next to the arm button is an
+                invitation to wander off in the middle of it.
+              */}
+              <Touch
+                accessibilityRole="button"
+                accessibilityLabel={t('home.settings')}
+                hitSlop={hitSlop}
+                onPress={onOpenSettings}
+                style={[styles.gear, elevation(1, s), { backgroundColor: s.surface }]}
+              >
+                <Settings size={icon.md} strokeWidth={icon.stroke} color={s.inkMuted} />
+              </Touch>
+            </View>
             <View style={styles.spacer} pointerEvents="none" />
             <View style={[styles.locate, { flexDirection: row() }]} pointerEvents="box-none">
               <Touch
@@ -242,6 +261,20 @@ const styles = StyleSheet.create({
   },
   safe: {
     flex: 1,
+  },
+  chrome: {
+    alignItems: 'flex-start',
+    gap: space.md,
+  },
+  chromeSearch: {
+    flex: 1,
+  },
+  gear: {
+    width: 52,
+    height: 52,
+    borderRadius: radius.control,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   floating: {
     flex: 1,

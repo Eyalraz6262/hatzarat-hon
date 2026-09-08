@@ -21,6 +21,10 @@ export const en: TranslationSchema = {
     openSettings: 'Open settings',
     retry: 'Try again',
     save: 'Save',
+    done: 'Done',
+    back: 'Back',
+    on: 'On',
+    off: 'Off',
     meters: '{value} m',
     kilometers: '{value} km',
   },
@@ -31,10 +35,9 @@ export const en: TranslationSchema = {
     noResults: 'No match. Try a station or street name.',
     myLocation: 'My location',
     clearSearch: 'Clear',
-    pickOnMap: 'Search for your destination or tap the map',
+    settings: 'Settings',
     emptyTitle: 'Where are you headed?',
     emptyBody: 'Pick a destination and we will wake you before it.',
-    locating: 'Finding you…',
   },
 
   route: {
@@ -44,12 +47,18 @@ export const en: TranslationSchema = {
     arm: 'Wake me',
     arming: 'Setting up…',
     saveDestination: 'Save destination',
-    savedDestinations: 'Saved destinations',
+    earlyWarning: 'Add an early heads-up',
+    earlyWarningNote: 'A silent notice {distance} before, and the full alarm at your chosen range.',
+    addStop: 'Add a stop on the way',
+    removeStop: 'Remove this stop',
+    stopAdded: 'We will wake you here too',
   },
 
   rail: {
     here: 'You are here',
     wakeHere: 'We wake you here, {distance} before',
+    earlyHere: 'Silent heads-up, {distance} before',
+    transfer: 'Transfer',
     loading: 'Loading the stops on your route',
     fallback: {
       offline: 'We could not load the stops on this route. The alarm itself works exactly the same.',
@@ -67,11 +76,16 @@ export const en: TranslationSchema = {
     distanceLeft: 'Distance to go',
     wakeRange: 'Alert range',
     destination: 'Destination',
+    nextStop: 'Next stop',
     waitingFix: 'Finding you…',
     cancel: 'Cancel alarm',
     cancelConfirmTitle: 'Cancel the alarm?',
     cancelConfirmBody: 'We will not wake you at your destination.',
     cancelConfirmYes: 'Yes, cancel',
+
+    noSignal: 'No signal',
+    noSignalBody: 'Last distance we knew: {distance}. We are still trying.',
+    noSignalNotification: 'No signal. Last distance: {distance}',
 
     statusActive: 'Alarm active',
     notificationTitle: 'We will wake you at {destination}',
@@ -79,14 +93,34 @@ export const en: TranslationSchema = {
     notificationBody: 'You can lock your phone.',
     serviceTitle: 'Are we there? tracking your trip',
     serviceBody: 'Location updates run in the background so we can wake you in time.',
+
+    killedTitle: 'The system stopped your alarm',
+    killedBody: 'Android closed the app in the background during your last trip. Battery settings can prevent this.',
+    killedAction: 'How to fix it',
   },
 
   alarm: {
     title: 'You are here.',
     body: '{destination} is right here.',
     dismiss: 'I am awake',
+    wakeAgain: 'Wake me again at the stop itself',
+    wakeAgainDone: 'We will wake you again',
+    channelGroup: 'Arrival alarms',
     notificationTitle: 'You have reached {destination}',
     notificationBody: 'Time to get off.',
+
+    overshotTitle: 'You passed your stop',
+    overshotBody: 'The distance is growing. Check where you are.',
+    overshotScreenTitle: 'You passed it.',
+    overshotScreenBody: 'You started moving away from {destination} before the alarm could fire.',
+
+    staleTitle: 'We lost signal',
+    staleBody: 'You may have arrived. The last distance we knew was {distance}.',
+    staleScreenTitle: 'You may have arrived.',
+    staleScreenBody: 'We lost signal near {destination}, so we are waking you to be safe.',
+
+    earlyTitle: 'Approaching {destination}',
+    earlyBody: '{distance} to go. Time to get ready.',
   },
 
   permissions: {
@@ -112,19 +146,102 @@ export const en: TranslationSchema = {
     stepOf: 'Step {current} of {total}',
   },
 
+  demo: {
+    title: 'This is what it sounds like',
+    body: 'Before you trust us to wake you, it is worth hearing once what happens when you arrive.',
+    play: 'Hear how it sounds',
+    skip: 'No need',
+    sample: 'Sample stop',
+  },
+
   saved: {
     title: 'Saved destinations',
     add: 'Save destination',
     addTitle: 'Save this destination',
     addPrompt: 'What should we call it?',
     remove: 'Delete',
-    removeHint: 'Long-press to delete.',
+    removeHint: 'Long-press for options.',
     removeConfirm: 'Delete “{name}”?',
+    pin: 'Pin to the front',
+    unpin: 'Unpin',
+    pinned: 'Pinned',
     home: 'Home',
     work: 'Work',
     station: 'Station',
     favourite: 'Favourite',
     savedConfirm: 'Saved',
+  },
+
+  settings: {
+    title: 'Settings',
+
+    sectionAlarm: 'The alarm',
+    sectionApp: 'The app',
+    sectionPrivacy: 'Privacy',
+    sectionHelp: 'Help',
+
+    sound: {
+      label: 'Sound',
+      soft: 'Soft',
+      normal: 'Normal',
+      sharp: 'Piercing',
+      softNote: 'Starts quiet and rises. Wakes you without waking the whole row.',
+      normalNote: 'A rising bell. Clearly an alarm, still pleasant.',
+      sharpNote: 'An alarm-clock beep. For people who really sleep through things.',
+      preview: 'Listen',
+    },
+
+    vibrate: 'Vibration',
+    vibrateNote: 'Works even when the phone is on silent.',
+
+    volume: 'Volume',
+    volumeNote: 'This is our player level, not the device level. An app cannot change system volume.',
+
+    defaultRadius: 'Default range',
+    defaultRadiusNote: 'The range pre-selected on every new trip.',
+
+    language: 'Language',
+    languageRestartNote: 'Switching between a right-to-left and a left-to-right language needs an app restart before the layout mirrors.',
+
+    theme: 'Appearance',
+    themeSystem: 'Follow the system',
+    themeLight: 'Light',
+    themeDark: 'Dark',
+
+    demo: 'Run the demo',
+    demoNote: 'Plays your chosen sound and shows the arrival screen.',
+
+    crashReports: 'Crash reports',
+    crashReportsNote: 'Helps fix faults that stop the alarm working. No location, no identifier, no usage tracking.',
+
+    privacyTitle: 'What leaves your device',
+    privacyBody: 'Your location stays on the phone and is never sent to any server. The one exception: when you pick a destination, two coordinates go to OpenStreetMap to fetch the stops on the way. Once, with no identifier. From the moment the alarm is armed the app does not touch the network at all.',
+
+    whyNotWork: 'Why did the alarm not fire?',
+    whyNotWorkBody: 'Both operating systems reserve the right to delay background events to save battery, and Android also closes background apps. We use three detection layers to narrow that gap, but no app can promise a hundred percent.',
+    batteryTitle: 'Android battery saving',
+    batteryBody: 'Manufacturers like Xiaomi, Samsung and Oppo close background apps aggressively. Exempting the app from battery optimisation is the one fix that really helps.',
+    batteryAction: 'Open battery settings',
+
+    version: 'Version {version}',
+  },
+
+  debug: {
+    title: 'Debug',
+    subtitle: 'Development builds only.',
+    geofence: 'Geofence registered',
+    backgroundTask: 'Background task running',
+    lastFix: 'Last fix',
+    lastFixAge: '{seconds}s ago',
+    never: 'Never',
+    tier: 'Polling tier',
+    accuracy: 'Accuracy',
+    session: 'Session',
+    forceArrival: 'Force arrival',
+    forceOvershoot: 'Force overshoot',
+    forceStale: 'Force signal loss',
+    forceEarly: 'Force early warning',
+    clearSession: 'Clear session',
   },
 
   errors: {

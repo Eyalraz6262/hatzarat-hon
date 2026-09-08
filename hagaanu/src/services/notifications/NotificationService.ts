@@ -8,10 +8,13 @@ import {
 } from 'expo-notifications';
 
 import {
-  ALARM_SOUND_FILE,
   CHANNELS,
+  CHANNEL_GROUP,
   CHANNEL_VIBRATION_PATTERN,
+  alarmChannelFor,
 } from '../../constants/config';
+import { ALARM_SOUND_IDS, specFor } from '../audio/catalog';
+import { currentSettings } from '../../state/useSettingsStore';
 import { t } from '../../i18n';
 import { light } from '../../theme';
 import { log } from '../../utils/logger';
@@ -38,30 +41,41 @@ export const NotificationService = {
     if (channelsReady) return;
 
     if (Platform.OS === 'android') {
-      // The alarm channel is the whole reason the app can wake a sleeping user:
-      // MAX importance produces a heads-up notification even on the lock screen,
-      // and USAGE_ALARM routes the sound to the *alarm* volume stream, which
-      // stays audible when the phone is on vibrate.
-      await Notifications.setNotificationChannelAsync(CHANNELS.ALARM, {
-        name: t('alarm.title'),
-        importance: AndroidImportance.MAX,
-        sound: ALARM_SOUND_FILE,
-        vibrationPattern: [...CHANNEL_VIBRATION_PATTERN],
-        enableVibrate: true,
-        enableLights: true,
-        lightColor: light.accent.base,
-        // Ring through Do Not Disturb. The user still has to grant the DND
-        // access; when they haven't, Android silently ignores this flag rather
-        // than failing, so it costs nothing to ask for.
-        bypassDnd: true,
-        lockscreenVisibility: AndroidNotificationVisibility.PUBLIC,
-        showBadge: true,
-        audioAttributes: {
-          usage: AndroidAudioUsage.ALARM,
-          contentType: AndroidAudioContentType.SONIFICATION,
-          flags: { enforceAudibility: true, requestHardwareAudioVideoSynchronization: false },
-        },
+      // One group, so the system settings screen shows the three tones
+      // together rather than as three unrelated channels.
+      await Notifications.setNotificationChannelGroupAsync(CHANNEL_GROUP, {
+        name: t('alarm.channelGroup'),
       });
+
+      // One channel per tone. Android caches a channel's sound at creation and
+      // will not change it afterwards, so this is the only way a user can
+      // actually pick their alarm sound. See constants/config.ts.
+      for (const id of ALARM_SOUND_IDS) {
+        await Notifications.setNotificationChannelAsync(alarmChannelFor(id), {
+          name: t(`settings.sound.${id}`),
+          groupId: CHANNEL_GROUP,
+          // MAX importance produces a heads-up notification even on the lock
+          // screen, and USAGE_ALARM routes the sound to the *alarm* volume
+          // stream, which stays audible when the phone is on vibrate.
+          importance: AndroidImportance.MAX,
+          sound: specFor(id).file,
+          vibrationPattern: [...CHANNEL_VIBRATION_PATTERN],
+          enableVibrate: true,
+          enableLights: true,
+          lightColor: light.accent.base,
+          // Ring through Do Not Disturb. The user still has to grant DND
+          // access; when they have not, Android silently ignores this rather
+          // than failing, so it costs nothing to ask for.
+          bypassDnd: true,
+          lockscreenVisibility: AndroidNotificationVisibility.PUBLIC,
+          showBadge: true,
+          audioAttributes: {
+            usage: AndroidAudioUsage.ALARM,
+            contentType: AndroidAudioContentType.SONIFICATION,
+            flags: { enforceAudibility: true, requestHardwareAudioVideoSynchronization: false },
+          },
+        });
+      }
 
       await Notifications.setNotificationChannelAsync(CHANNELS.STATUS, {
         name: t('active.statusActive'),
@@ -82,14 +96,17 @@ export const NotificationService = {
    * even if our JS process is killed right after the geofence event, so it is
    * always sent first — sound and vibration are layered on top afterwards.
    */
-  async presentAlarm(destinationLabel: string): Promise<void> {
+  async presentAlarm(destinationLabel: string, overshot = false): Promise<void> {
     await NotificationService.configure();
+    const spec = specFor(currentSettings().soundId);
     try {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: t('alarm.notificationTitle'),
-          body: t('alarm.notificationBody', { destination: destinationLabel }),
-          sound: ALARM_SOUND_FILE,
+          title: overshot
+            ? t('alarm.overshotTitle')
+            : t('alarm.notificationTitle', { destination: destinationLabel }),
+          body: overshot ? t('alarm.overshotBody') : t('alarm.notificationBody'),
+          sound: spec.file,
           priority: Notifications.AndroidNotificationPriority.MAX,
           vibrate: [...CHANNEL_VIBRATION_PATTERN],
           sticky: true,
@@ -103,9 +120,9 @@ export const NotificationService = {
         // fall back to Android's default channel — losing MAX importance, the
         // alarm audio stream and the Do Not Disturb bypass, which is the entire
         // reason the channel exists.
-        trigger: Platform.OS === 'android' ? { channelId: CHANNELS.ALARM } : null,
+        trigger: Platform.OS === 'android' ? { channelId: alarmChannelFor(spec.id) } : null,
       });
-      log.debug('notify', 'alarm notification presented');
+      log.debug('notify', `alarm notification presented on ${spec.id}`);
     } catch (error) {
       log.error('notify', 'failed to present alarm notification', error);
     }

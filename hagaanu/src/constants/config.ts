@@ -11,13 +11,28 @@ export const TASKS = {
   LOCATION: 'hagaanu-location-task',
 } as const;
 
-/** Android notification channels. */
+/**
+ * Android notification channels.
+ *
+ * There is one ALARM channel PER TONE, and that is a platform constraint
+ * rather than a preference. Android caches a channel's sound at creation and
+ * refuses to change it afterwards; deleting and recreating the channel
+ * restores the old settings rather than clearing them. The only way to let a
+ * user actually change the alarm sound is to post on a different channel, so
+ * each tone gets its own. They sit in one group so the system settings screen
+ * shows them together instead of as three unrelated entries.
+ */
+export const CHANNEL_GROUP = 'hagaanu-alarms';
+
 export const CHANNELS = {
-  /** Full alarm: max importance, alarm audio stream, bypasses Do Not Disturb. */
-  ALARM: 'hagaanu-alarm',
   /** Quiet, ongoing "alarm is armed" status notification. */
   STATUS: 'hagaanu-status',
 } as const;
+
+/** The alarm channel for a given tone id. Must be stable across releases. */
+export function alarmChannelFor(soundId: string): string {
+  return `hagaanu-alarm-${soundId}`;
+}
 
 /** The single geofence region identifier (we only ever monitor one). */
 export const GEOFENCE_REGION_ID = 'hagaanu-destination';
@@ -65,8 +80,7 @@ export const POLLING_TIERS: PollingTier[] = [
  */
 export const MAX_ACCURACY_MARGIN_M = 250;
 
-/** How long the in-app alarm keeps ringing before it gives up, in ms. */
-export const ALARM_MAX_DURATION_MS = 5 * 60 * 1000;
+export const ALARM_MAX_DURATION_MS = 3 * 60 * 1000;
 
 /** Vibration pattern (ms): wait, vibrate, wait, vibrate... repeated. */
 export const VIBRATION_PATTERN = [0, 800, 400, 800, 400, 1200];
@@ -74,8 +88,13 @@ export const VIBRATION_PATTERN = [0, 800, 400, 800, 400, 1200];
 /** Notification channel vibration pattern. */
 export const CHANNEL_VIBRATION_PATTERN = [0, 500, 300, 500, 300, 800];
 
-/** Bundled alarm sound. Must stay in sync with the `sounds` array in app.config.ts. */
-export const ALARM_SOUND_FILE = 'alarm.wav';
+/**
+ * How long the alarm TONE plays before the safety cap silences it.
+ *
+ * Vibration and the notification continue past this: the user has not
+ * acknowledged anything, and stopping outright would turn a missed alarm into
+ * a dismissed one. See AlarmService.stopSoundOnly.
+ */
 
 /**
  * Israel-specific geography.

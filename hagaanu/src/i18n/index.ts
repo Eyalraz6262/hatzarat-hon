@@ -1,16 +1,32 @@
 import { he, type TranslationSchema } from './translations/he';
 import { en } from './translations/en';
+import { ar } from './translations/ar';
+import { ru } from './translations/ru';
 
-export type Language = 'he' | 'en';
+export type Language = 'he' | 'en' | 'ar' | 'ru';
 
-const RESOURCES: Record<Language, TranslationSchema> = { he, en };
+const RESOURCES: Record<Language, TranslationSchema> = { he, en, ar, ru };
+
+export const LANGUAGE_NAMES: Record<Language, string> = {
+  he: 'עברית',
+  en: 'English',
+  ar: 'العربية',
+  ru: 'Русский',
+};
 
 /** Languages that read right-to-left. */
-const RTL_LANGUAGES: Language[] = ['he'];
+const RTL_LANGUAGES: Language[] = ['he', 'ar'];
 
 /**
- * v1 ships Hebrew only. When the settings screen lands, this becomes state read
- * from storage (and `t` picks it up because every call resolves it lazily).
+ * Hebrew is the source language and the default.
+ *
+ * `t()` resolves this lazily on every call, so changing it repaints anything
+ * that re-renders. What it does NOT do is change layout direction: React
+ * Native decides LTR or RTL at native startup, and `I18nManager.forceRTL`
+ * only takes effect after a restart. So a user switching between an RTL and an
+ * LTR language gets translated strings immediately and correct mirroring on
+ * the next launch — and the settings screen says so rather than leaving them
+ * looking at a broken layout wondering what happened.
  */
 let activeLanguage: Language = 'he';
 
@@ -20,6 +36,10 @@ export function getLanguage(): Language {
 
 export function setLanguage(language: Language): void {
   activeLanguage = language;
+}
+
+export function isRTLLanguage(language: Language): boolean {
+  return RTL_LANGUAGES.includes(language);
 }
 
 export function isRTL(): boolean {

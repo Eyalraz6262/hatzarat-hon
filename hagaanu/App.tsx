@@ -6,9 +6,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
 
 import { AlarmScreen } from './src/screens/AlarmScreen';
-import { HomeScreen } from './src/screens/HomeScreen';
 import { ActiveScreen } from './src/screens/ActiveScreen';
+import { DemoScreen } from './src/screens/DemoScreen';
+import { HomeScreen } from './src/screens/HomeScreen';
 import { PermissionsScreen } from './src/screens/PermissionsScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { ArrivalCoordinator } from './src/services/alarm/ArrivalCoordinator';
 import { useAppFonts } from './src/hooks/useAppFonts';
 import { useArrivalListener } from './src/hooks/useArrivalListener';
@@ -17,6 +19,8 @@ import { useForegroundArrivalCheck } from './src/hooks/useForegroundArrivalCheck
 import { NotificationService } from './src/services/notifications/NotificationService';
 import { useAlarmStore } from './src/state/useAlarmStore';
 import { usePermissionsStore } from './src/state/usePermissionsStore';
+import { useSettingsStore } from './src/state/useSettingsStore';
+import { resolveLanguage } from './src/i18n/resolve';
 import { light, useTheme } from './src/theme';
 import { log } from './src/utils/logger';
 
@@ -35,6 +39,7 @@ export default function App() {
   // Session-scoped: the user chose to continue without background location. Not
   // persisted, so the next cold start asks once more — the ask matters too much.
   const [skippedBackground, setSkippedBackground] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const permissionsReady = usePermissionsStore((state) => state.ready);
   const snapshot = usePermissionsStore((state) => state.snapshot);
@@ -53,6 +58,11 @@ export default function App() {
 
   const fontsReady = useAppFonts();
 
+  const settingsReady = useSettingsStore((state) => state.ready);
+  const hydrateSettings = useSettingsStore((state) => state.hydrate);
+  const demoSeen = useSettingsStore((state) => state.demoSeen);
+  const setSetting = useSettingsStore((state) => state.set);
+
   // Tracking lives here, not in a screen: HomeScreen unmounts the moment the
   // alarm is armed, and it is the only writer of `position` — which the
   // foreground arrival check, and PassScreen's live distance, both read.
@@ -69,6 +79,11 @@ export default function App() {
         // is no hook to ask, and the splash itself is the light ground.
         await SystemUI.setBackgroundColorAsync(light.bg);
 
+        // Settings first: the language and the theme are read by everything
+        // after this line, including the notification channel names.
+        await hydrateSettings();
+        resolveLanguage(useSettingsStore.getState().language);
+
         // Channels before anything else: a geofence event arriving in the next
         // second must find the alarm channel already created.
         await NotificationService.configure();
@@ -82,7 +97,7 @@ export default function App() {
     })();
   }, [refreshPermissions, hydrate]);
 
-  const ready = booted && permissionsReady && fontsReady;
+  const ready = booted && permissionsReady && fontsReady && settingsReady;
 
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();
@@ -112,6 +127,11 @@ export default function App() {
         */}
         {needsPermissions ? (
           <PermissionsScreen onSkipBackground={() => setSkippedBackground(true)} />
+        ) : !demoSeen ? (
+          // Shown once, after the permissions and before the first trip. Hearing
+          // the alarm once is what turns "I locked my phone and trusted an app
+          // that has never made a sound at me" into a decision.
+          <DemoScreen onDone={() => setSetting('demoSeen', true)} />
         ) : status === 'armed' && destination ? (
           <ActiveScreen
             destination={destination}
@@ -124,8 +144,10 @@ export default function App() {
             onSimulateArrival={() => void ArrivalCoordinator.trigger('manual')}
           />
         ) : (
-          <HomeScreen />
+          <HomeScreen onOpenSettings={() => setShowSettings(true)} />
         )}
+
+        {showSettings ? <SettingsScreen onClose={() => setShowSettings(false)} /> : null}
 
         {status === 'ringing' && destination ? (
           <AlarmScreen destination={destination} onDismiss={onDismissAlarm} />
