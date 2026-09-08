@@ -1,0 +1,516 @@
+<title>בדיקות במכשיר · הגענו?</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;500;600;700&display=swap">
+
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   A working document about a green transit app. The ground is a cool
+   near-neutral with a slight green bias so the app's own accent reads
+   as belonging here rather than pasted on; nothing else is coloured.
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --bg:      #F4F5F3;
+  --surface: #FFFFFF;
+  --sunk:    #EAECE9;
+  --ink:     #14171A;
+  --ink-2:   #3D4347;
+  --muted:   #5C6368;
+  --rule:    #DFE2DE;
+  --hair:    #ECEEEB;
+  --accent:  #0B7A54;
+  --accent-soft: #E7F3ED;
+  --open:    #B0611A;
+  --open-soft:#FBF0E4;
+  --risk:    #B23127;
+  --risk-soft:#FBEBE9;
+  --ui:   'Heebo', system-ui, sans-serif;
+  --body: 'Assistant', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101312; --surface: #171B1A; --sunk: #0B0E0D;
+    --ink: #E9EDEB; --ink-2: #BEC5C2; --muted: #8E9793;
+    --rule: #242A28; --hair: #1D2221;
+    --accent: #3FD69B; --accent-soft: rgba(63,214,155,.12);
+    --open: #E0A265; --open-soft: rgba(224,162,101,.12);
+    --risk: #FF8579; --risk-soft: rgba(255,133,121,.12);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101312; --surface: #171B1A; --sunk: #0B0E0D;
+  --ink: #E9EDEB; --ink-2: #BEC5C2; --muted: #8E9793;
+  --rule: #242A28; --hair: #1D2221;
+  --accent: #3FD69B; --accent-soft: rgba(63,214,155,.12);
+  --open: #E0A265; --open-soft: rgba(224,162,101,.12);
+  --risk: #FF8579; --risk-soft: rgba(255,133,121,.12);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; direction: rtl;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 16.5px; line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 44px 24px 96px; }
+
+/* ── masthead ─────────────────────────────────────────── */
+.eyebrow { font-family: var(--ui); font-size: 12px; font-weight: 500;
+           letter-spacing: .16em; color: var(--muted); }
+h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
+     font-size: clamp(32px,5vw,46px); line-height: 1.06; letter-spacing: -.03em; }
+.lede { margin: 16px 0 0; font-size: 18.5px; line-height: 1.62; color: var(--ink-2); max-width: 60ch; }
+
+.meta { margin-top: 26px; padding: 18px 20px; background: var(--surface);
+        border: 1px solid var(--rule); border-radius: 6px;
+        display: grid; gap: 12px 22px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+.meta div { display: flex; flex-direction: column; gap: 2px; }
+.meta dt, .meta b { font-family: var(--ui); font-size: 11px; font-weight: 500;
+                    letter-spacing: .13em; color: var(--muted); }
+.meta span { font-size: 15.5px; }
+
+/* ── sections ─────────────────────────────────────────── */
+h2 {
+  margin: 56px 0 0; padding-top: 22px; border-top: 2px solid var(--ink);
+  font-family: var(--ui); font-weight: 800; font-size: 25px;
+  letter-spacing: -.02em; display: flex; align-items: baseline; gap: 12px;
+}
+h2 i { font-style: normal; font-size: 14px; font-weight: 500; color: var(--muted);
+       font-variant-numeric: tabular-nums; }
+h3 { margin: 32px 0 0; font-family: var(--ui); font-weight: 700;
+     font-size: 18px; letter-spacing: -.01em; }
+p { margin: 12px 0 0; max-width: 66ch; }
+p.tight { margin-top: 6px; }
+ul { margin: 12px 0 0; padding-inline-start: 20px; max-width: 66ch; }
+li { margin: 6px 0; }
+li::marker { color: var(--muted); }
+strong { font-weight: 700; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: 13.5px;
+       background: var(--sunk); padding: 1px 6px; border-radius: 4px; }
+
+/* ── decision rows ────────────────────────────────────── */
+.rows { margin-top: 16px; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.row { display: grid; grid-template-columns: minmax(120px, 190px) 1fr;
+       border-top: 1px solid var(--hair); background: var(--surface); }
+.row:first-child { border-top: 0; }
+.row > dt, .row > .k {
+  padding: 13px 18px; background: var(--sunk);
+  font-family: var(--ui); font-size: 13.5px; font-weight: 700; line-height: 1.45;
+}
+.row > dd, .row > .v { margin: 0; padding: 13px 18px; font-size: 15.5px; line-height: 1.6; }
+.row .v small { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+@media (max-width: 620px) { .row { grid-template-columns: 1fr; } .row > .k { padding-bottom: 4px; } }
+
+/* ── tags ─────────────────────────────────────────────── */
+.tag { display: inline-block; font-family: var(--ui); font-size: 11px; font-weight: 700;
+       letter-spacing: .08em; padding: 3px 9px; border-radius: 999px; vertical-align: 2px; }
+.tag--set  { background: var(--accent-soft); color: var(--accent); }
+.tag--mine { background: var(--open-soft); color: var(--open); }
+.tag--open { background: var(--risk-soft); color: var(--risk); }
+
+/* ── callout ──────────────────────────────────────────── */
+.note { margin-top: 20px; padding: 16px 18px; border-radius: 6px;
+        background: var(--surface); border: 1px solid var(--rule);
+        border-inline-start: 3px solid var(--muted); }
+.note--risk { border-inline-start-color: var(--risk); background: var(--risk-soft); }
+.note--mine { border-inline-start-color: var(--open); background: var(--open-soft); }
+.note p:first-child { margin-top: 0; }
+.note__t { font-family: var(--ui); font-weight: 700; font-size: 14px; display: block; margin-bottom: 4px; }
+
+/* ── flow ─────────────────────────────────────────────── */
+.flow { margin-top: 18px; display: flex; flex-direction: column; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 14px; align-items: start; }
+.step__n { position: relative; display: flex; justify-content: center; align-self: stretch; }
+.step__n::before { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--rule); }
+.step:first-child .step__n::before { top: 13px; }
+.step:last-child  .step__n::before { bottom: calc(100% - 13px); }
+.step__n b { position: relative; z-index: 1; width: 24px; height: 24px; margin-top: 2px;
+             border-radius: 999px; background: var(--accent); color: var(--bg);
+             font-family: var(--ui); font-size: 12px; font-weight: 700;
+             display: grid; place-items: center; box-shadow: 0 0 0 4px var(--bg); }
+.step__b { padding: 0 0 18px; }
+.step__b b { font-family: var(--ui); font-size: 15.5px; font-weight: 700; display: block; }
+.step__b span { display: block; margin-top: 3px; font-size: 15px; color: var(--ink-2); }
+
+/* ── table ────────────────────────────────────────────── */
+.tablewrap { margin-top: 18px; overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 14.5px; }
+th, td { text-align: start; padding: 11px 14px; border-top: 1px solid var(--hair); vertical-align: top; line-height: 1.55; }
+th { background: var(--sunk); font-family: var(--ui); font-size: 12.5px; font-weight: 700;
+     letter-spacing: .02em; border-top: 0; white-space: nowrap; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+
+.excl { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.excl span { font-family: var(--ui); font-size: 13.5px; font-weight: 500;
+             padding: 6px 13px; border-radius: 999px;
+             background: var(--sunk); color: var(--muted);
+             text-decoration: line-through; text-decoration-color: var(--risk); }
+
+/* ── check rows (this document) ───────────────────────── */
+.checks { margin-top: 18px; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.check { display: grid; grid-template-columns: 26px 1fr; gap: 14px;
+         padding: 15px 18px; background: var(--surface);
+         border-top: 1px solid var(--hair); }
+.check:first-child { border-top: 0; }
+.check__box { width: 20px; height: 20px; margin-top: 3px; border-radius: 4px;
+              border: 2px solid var(--rule); }
+.check__b b { font-family: var(--ui); font-size: 15.5px; font-weight: 700; display: block; }
+.check__b span { display: block; margin-top: 4px; font-size: 15px; color: var(--ink-2); }
+.check__b em { display: block; margin-top: 6px; font-style: normal; font-size: 14px;
+               color: var(--accent); font-family: var(--ui); font-weight: 500; }
+.check__b .fail { color: var(--risk); }
+
+/* ── how long / where ─────────────────────────────────── */
+.badges { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; }
+.badges span { font-family: var(--ui); font-size: 12.5px; font-weight: 600;
+               padding: 5px 12px; border-radius: 999px;
+               background: var(--sunk); color: var(--ink-2); }
+.badges span.b--out { background: var(--accent-soft); color: var(--accent); }
+
+/* ── the journal sample ───────────────────────────────── */
+.journal { margin-top: 16px; padding: 16px 18px; border-radius: 6px;
+           background: var(--sunk); border: 1px solid var(--rule);
+           direction: ltr; text-align: left;
+           font-family: ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.85;
+           overflow-x: auto; white-space: pre; }
+.journal b { color: var(--accent); font-weight: 700; }
+.journal i { color: var(--muted); font-style: normal; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow">הגענו? · בדיקות במכשיר</span>
+    <h1>איך בודקים אזעקה שרצה כשאף אחד לא מסתכל</h1>
+    <p class="lede">
+      כל מה שחשוב באפליקציה הזאת קורה כשהמסך כבוי והטלפון בכיס. אי אפשר לבדוק את זה
+      בסימולטור, ואי אפשר לבדוק את זה מהכורסה. המסמך הזה הוא רשימת הבדיקות שצריך
+      לעבור לפני שמעלים לחנות — כתובה כך שאפשר לקרוא אותה מהטלפון בזמן שנוסעים.
+    </p>
+
+    <div class="meta">
+      <div><b>גרסה</b><span>1.0 · 8 בספטמבר 2026</span></div>
+      <div><b>סוג בילד</b><span>Development build בלבד</span></div>
+      <div><b>זמן מוערך</b><span>‏25 דקות שולחן + 2 נסיעות</span></div>
+      <div><b>מכשירים</b><span>iPhone אחד, אנדרואיד אחד</span></div>
+    </div>
+
+    <div class="note note--risk">
+      <span class="note__t">למה זה לא Expo Go</span>
+      <p>
+        גיאופנס ברקע, מיקום ברקע והתראות עם ערוץ צליל ייעודי לא עובדים ב־Expo Go.
+        צריך <code>npx expo prebuild</code> ובילד אמיתי על מכשיר. בדיקה ב־Expo Go
+        שמצליחה לא אומרת כלום, ובדיקה שנכשלת שם לא אומרת שיש באג.
+      </p>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>00</i> לפני שמתחילים</h2>
+
+  <p>
+    שלושת אלה חייבים להיות במקום, אחרת כל בדיקה שאחריהם בודקת את הדבר הלא נכון.
+  </p>
+
+  <div class="checks">
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>בילד פיתוח על מכשיר פיזי</b>
+      <span>‏<code>npx expo prebuild</code> ואז <code>npx expo run:ios</code> או <code>run:android</code>. סימולטור לא מספיק: אין בו ניהול סוללה, אין בו מנהל תהליכים אמיתי, והגיאופנס בו מתנהג יפה מדי.</span>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>הרשאת מיקום ״תמיד״ אושרה</b>
+      <span>לא ״בזמן שימוש״. במסך הדיבאג השורה <code>Location (always)</code> חייבת להראות <code>granted</code>. אם היא לא — האפליקציה עוברת למצב חזית בלבד וכל הבדיקות הבאות בודקות מסלול אחר.</span>
+      <em>אנדרואיד: זה שני דיאלוגים נפרדים. iOS: לפעמים צריך לצאת להגדרות.</em>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>מסך הדיבאג נפתח</b>
+      <span>הגדרות ← בתחתית, ״Development ← Debug״. אם השורה לא שם, זה בילד ריליס — הוא נמחק ממנו לגמרי, וזה בכוונה.</span>
+    </div></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>01</i> בדיקות שולחן</h2>
+  <div class="badges"><span>‏10 דקות</span><span>בבית</span><span>בלי לזוז</span></div>
+
+  <p>
+    אלה לא בודקות את הלב של המוצר, אבל הן זולות והן תופסות את מה ששבר לרוב.
+  </p>
+
+  <div class="checks">
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>ההדגמה מתנגנת בהפעלה הראשונה</b>
+      <span>התקנה נקייה ← אחרי ההרשאות מגיע מסך ההדגמה, ובו הצליל ומסך ההגעה האמיתי. אחרי שסוגרים אותו הוא לא חוזר.</span>
+      <em>למה זה חשוב: זה הרגע היחיד שבו המשתמש שומע את הצליל לפני שהוא סומך על האפליקציה ונרדם.</em>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>שלושת הצלילים נשמעים שונה, ובעוצמה שנבחרה</b>
+      <span>הגדרות ← צליל. עדין / רגיל / חד. כל אחד מתנגן בלחיצה, ומחליף את הקודם במקום להצטבר עליו.</span>
+      <em class="fail">כישלון אנדרואיד ידוע: אם החלפת צליל לא נשמעת, הערוץ לא נוצר מחדש. יש ערוץ נפרד לכל צליל בדיוק בגלל זה — התקנה נקייה ובדיקה חוזרת.</em>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>שינוי שפה מחליף את כל הטקסטים</b>
+      <span>עברית ← אנגלית ← ערבית ← רוסית. עברית וערבית מימין לשמאל, אנגלית ורוסית משמאל לימין. אין מחרוזת שנשארת באנגלית באמצע מסך בעברית, ואין מפתח גולמי כמו <code>errors.armFailed</code> על המסך.</span>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>מצב כהה נראה נכון בשני הכיוונים</b>
+      <span>הגדרות ← מראה ← כהה / בהיר / מערכת. הירוק נשאר קריא, והטקסט על הירוק כהה ולא לבן.</span>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>הקו מציג תחנות אמיתיות</b>
+      <span>בחירת יעד במרחק סביר ← הקו מתמלא בתחנות בשמות אמיתיים, ממוינות מהרחוקה לקרובה, והיעד תמיד אחרון.</span>
+      <em>אם אין תחנות: זה מצב תקין. הקו אמור להגיד למה — אין רשת, היעד רחוק מ־120 ק״מ, או פשוט אין תחנות במסד. הוא לא אמור להיראות ריק בלי הסבר.</em>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>כפתורי הכפייה במסך הדיבאג עובדים</b>
+      <span>להפעיל אזעקה, ואז ללחוץ על כל אחד מששת הכפתורים ב״Force a layer״. כל אחד מהם מריץ את המסלול האמיתי — האזעקה באמת מצלצלת.</span>
+      <em>זה גם הרגע לוודא שמסך ההגעה מציג נוסח שונה לכל סיבה: הגעה, פספוס, ואובדן קליטה.</em>
+    </div></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>02</i> הנסיעה</h2>
+  <div class="badges"><span class="b--out">בחוץ</span><span>נסיעה אחת מלאה</span><span>הבדיקה היחידה שבאמת נחשבת</span></div>
+
+  <p>
+    כל השאר הוא הכנה. זאת הבדיקה. אוטובוס או רכבת אמיתיים, יעד אמיתי,
+    <strong>והטלפון נעול בכיס מרגע ההפעלה</strong>. לא מציצים.
+  </p>
+
+  <div class="flow">
+    <div class="step"><div class="step__n"><b>1</b></div><div class="step__b">
+      <b>לבחור יעד וטווח 500 מ׳, ולהפעיל</b>
+      <span>לפני שנועלים: לפתוח את מסך הדיבאג ולוודא ש־<code>OS geofence</code> רשום ו־<code>Background stream</code> רץ. אם אחד מהם לא — לעצור כאן, אין טעם להמשיך.</span>
+    </div></div>
+
+    <div class="step"><div class="step__n"><b>2</b></div><div class="step__b">
+      <b>לנעול את הטלפון ולהכניס לכיס</b>
+      <span>לא למסך הבית — לנעול. ואז להניח לו. כל הצצה מחזירה את האפליקציה לחזית ומרפאה בעצמה בעיות שאנחנו מנסים לתפוס.</span>
+    </div></div>
+
+    <div class="step"><div class="step__n"><b>3</b></div><div class="step__b">
+      <b>לבדוק את מסך הנעילה פעם אחת באמצע</b>
+      <span>בלי לפתוח את האפליקציה. ההתראה המתמשכת אמורה להראות את היעד ומרחק שמתעדכן. אם המרחק תקוע על אותו מספר עשר דקות — זה ממצא, לרשום את השעה.</span>
+    </div></div>
+
+    <div class="step"><div class="step__n"><b>4</b></div><div class="step__b">
+      <b>האזעקה מצלצלת לפני התחנה</b>
+      <span>זה הרגע. הצליל, הרטט ומסך ההגעה — כשהטלפון עדיין נעול.</span>
+      <em style="color:var(--risk);font-family:var(--ui);font-weight:500;display:block;margin-top:6px">אם היא צלצלה אחרי התחנה, או לא צלצלה בכלל — לפתוח מיד את מסך הדיבאג ולצלם את היומן לפני שעושים משהו אחר.</em>
+    </div></div>
+
+    <div class="step"><div class="step__n"><b>5</b></div><div class="step__b">
+      <b>לקרוא את היומן</b>
+      <span>הגדרות ← Debug ← Journal. שם כתוב מה קרה בזמן שהטלפון היה בכיס, כולל מה שקרה כשהתהליך היה מת.</span>
+    </div></div>
+  </div>
+
+  <h3>איך נראה יומן של נסיעה תקינה</h3>
+  <div class="journal"><i>14:32:07</i>  <b>alarm</b>     arrived — fired by geofence, 480m out
+<i>14:31:44</i>  <b>fix</b>       512m ±14m · none · 11.4m/s
+<i>14:30:09</i>  <b>fix</b>       1620m ±12m · none · 12.1m/s
+<i>14:29:31</i>  <b>fix</b>       2410m ±18m · early · 12.8m/s
+<i>14:29:31</i>  <b>early</b>     heads-up sent at 2000m
+<i>14:26:02</i>  <b>fix</b>       5140m ±22m · none · 13.0m/s
+<i>14:21:15</i>  <b>fix</b>       11980m ±30m · none · 12.4m/s
+<i>14:12:48</i>  <b>armed</b>     תחנה מרכזית r=500m tier=far</div>
+
+  <p class="tight">
+    שלושה דברים לוודא ביומן הזה:
+  </p>
+  <ul>
+    <li>המרחקים <strong>יורדים</strong> ברצף. קפיצה למעלה באמצע היא או ג׳יטר של GPS או מסלול עוקף — שניהם תקינים, אבל שווה לשים לב.</li>
+    <li>הפערים בין <code>fix</code> ל־<code>fix</code> <strong>מתקצרים</strong> ככל שמתקרבים. זה ה־tier מתחלף: מעל 12 ק״מ דוגמים כל 2 דקות, מתחת ל־3 ק״מ כל 15 שניות.</li>
+    <li>השורה האחרונה היא <code>alarm</code>, והיא אומרת <strong>מי</strong> ירה. <code>geofence</code> הוא המסלול הרצוי; <code>backstop</code> אומר שהגיאופנס איחר והרשת השנייה תפסה; <code>watchdog</code> אומר שאיבדנו קליטה וצלצלנו מחוסר ברירה.</li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>03</i> מצבי הכשל</h2>
+
+  <p>
+    לכל אחד מאלה יש קוד שמטפל בו. אם הקוד לא נבדק, הוא לא קיים.
+    הטור השמאלי הוא איך לגרום לזה לקרות בכוונה.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>הכשל</th><th>איך לגרום לו</th><th>מה אמור לקרות</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>הגיאופנס מאחר</td>
+        <td>טווח 300 מ׳ ברכבת מהירה. מערכת ההפעלה מקבצת אירועי גיאופנס והם מגיעים באיחור.</td>
+        <td>הרשת השנייה תופסת. ביומן: <code>alarm ... fired by backstop</code>. הצלצול עדיין לפני התחנה.</td>
+      </tr>
+      <tr>
+        <td>פספסנו את התחנה</td>
+        <td>לנסוע דרך היעד בלי לעצור — או ללחוץ ״Overshoot alarm״ בדיבאג.</td>
+        <td>צלצול <strong>מיד</strong>, עם נוסח אחר: ״עברת את היעד״. לא נוסח של הגעה.</td>
+      </tr>
+      <tr>
+        <td>אין GPS — מנהרה</td>
+        <td>הקריית שלום / מנהרות הכרמל, או מצב טיסה ל־4 דקות.</td>
+        <td>‏90 שניות ← ההתראה מפסיקה לטעון שהמרחק חי. 180 שניות ← אם אנחנו בתוך פי־3 מהטווח, מצלצלים. אחרת רק אזהרה.</td>
+      </tr>
+      <tr>
+        <td>אנדרואיד הרג את התהליך</td>
+        <td>שיאומי / סמסונג / הואווי: להשאיר מופעל, לנעול, ולא לגעת 40 דקות. או ״Force stop״ מההגדרות.</td>
+        <td>הגיאופנס של מערכת ההפעלה שורד גם מוות של התהליך ומעיר אותנו. כשחוזרים לאפליקציה: הודעה שזה קרה, והצעה לפטור מסוללה. ביומן: <code>repair</code>.</td>
+      </tr>
+      <tr>
+        <td>המסלול לא נכנס לעיגול</td>
+        <td>יעד בצד השני של מחלף, טווח 300 מ׳.</td>
+        <td>כלל הפספוס תופס: התרחקנו יותר מ־300 מ׳ מהנקודה הקרובה ביותר, בעודנו קרובים ליעד ← צלצול.</td>
+      </tr>
+      <tr>
+        <td>הטלפון על שולחן, לא זז</td>
+        <td>להפעיל אזעקה ליעד רחוק ופשוט להשאיר את הטלפון במקום שעה.</td>
+        <td><strong>שום דבר.</strong> אין צלצול. ג׳יטר GPS בעמידה הוא לא פספוס, וזאת בדיקת ההיפך החשובה ביותר במסמך.</td>
+      </tr>
+      <tr>
+        <td>הרשאה נשללה באמצע</td>
+        <td>בזמן שהאזעקה פעילה: הגדרות מערכת ← לשלול ״תמיד״.</td>
+        <td>האפליקציה לא קורסת ולא מתחזה לפעילה. כשחוזרים אליה היא אומרת מה חסר.</td>
+      </tr>
+      <tr>
+        <td>אין רשת בזמן ההפעלה</td>
+        <td>מצב טיסה, ואז לבחור יעד ולהפעיל.</td>
+        <td>אין תחנות בקו — עם הסבר. <strong>האזעקה עצמה עובדת</strong>: היא לא צריכה רשת, רק GPS.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <span class="note__t">הבדיקה שהכי קל לשכוח</span>
+    <p>
+      השורה ״הטלפון על שולחן״. כל שאר הבדיקות שואלות ״האם זה מצלצל כשצריך״.
+      זאת שואלת ״האם זה שותק כשצריך״, וזה בדיוק מה שנשבר כשמכווננים את כללי
+      הפספוס. אזעקה שמצלצלת סתם באמצע היום היא אזעקה שמכבים — ואז היא לא שם
+      בפעם שכן צריך אותה.
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>04</i> נסיעה עם החלפה</h2>
+  <div class="badges"><span class="b--out">בחוץ</span><span>נסיעה שנייה</span></div>
+
+  <p>
+    נסיעה עם החלפה היא נסיעה אחת עם שני יעדים, לא שתי אזעקות. הרגליים רצות
+    ברצף — רגל אחת פעילה בכל רגע.
+  </p>
+
+  <div class="checks">
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>בחירת החלפה מהקו</b>
+      <span>אחרי בחירת יעד, ללחוץ על תחנה שעדיין לפנינו. היא הופכת לנקודת החלפה, ומופיעה נקודת יקיצה נוספת לפניה. תחנה שכבר עברנו אינה לחיצה.</span>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>האזעקה הראשונה היא בהחלפה</b>
+      <span>במסך הדיבאג: <code>Destination</code> הוא ההחלפה, ו־<code>Legs remaining</code> מציג את היעד הסופי.</span>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>כיבוי האזעקה בהחלפה מפעיל את הרגל הבאה לבד</b>
+      <span>בלי להגדיר שוב כלום. ביומן: <code>leg</code> ואחריו <code>next leg armed</code>. במסך הדיבאג: <code>Legs remaining: none</code>, וה־tier מתאים למרחק האמיתי — לא <code>far</code> אוטומטית.</span>
+      <em>למה זה קריטי: אף אחד לא מגדיר אזעקה חדשה עומד על רציף בשלוש לפנות בוקר.</em>
+    </div></div>
+
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>האזעקה השנייה מצלצלת ביעד הסופי</b>
+      <span>ואחריה, בכיבוי, הכל נעצר: <code>stood-down</code> ביומן, ושום מוניטור לא נשאר רשום.</span>
+    </div></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>05</i> מה שספציפי לכל פלטפורמה</h2>
+
+  <h3>אנדרואיד</h3>
+  <ul>
+    <li><strong>יצרנים שהורגים תהליכים ברקע:</strong> שיאומי, סמסונג, הואווי, ואנפלוס, אופו, ויוו. אם יש רק מכשיר אחד לבדיקה — שיאומי הוא הבחירה הנכונה, הוא האגרסיבי ביותר.</li>
+    <li><strong>הפטור מסוללה מוצע רק אחרי כשל אמיתי</strong>, לא בהתקנה. לוודא שההצעה לא קופצת למשתמש שהכל עובד אצלו.</li>
+    <li><strong>ערוצי התראה:</strong> אחרי החלפת צליל, לבדוק בהגדרות המערכת של האפליקציה שיש ערוץ נפרד לכל צליל ולא ערוץ אחד שמנסה להשתנות.</li>
+    <li><strong>מצב לא להפריע:</strong> לוודא שהאזעקה נשמעת. אם לא — זאת החלטת מערכת, וצריך שהאפליקציה תגיד את זה במקום להתחזות.</li>
+  </ul>
+
+  <h3>iOS</h3>
+  <ul>
+    <li><strong>מצב ריכוז / שינה:</strong> ההתראה מסומנת <code>timeSensitive</code>, ולכן אמורה לעבור. לבדוק גם במצב שינה ממש.</li>
+    <li><strong>Low Power Mode:</strong> מקטין את תדירות עדכוני המיקום. הגיאופנס עדיין עובד — לבדוק נסיעה שלמה במצב הזה.</li>
+    <li><strong>מיקום מדויק כבוי</strong> (Precise Location off): לבדוק מה קורה. זה מצב שהמשתמש יכול להיכנס אליו בטעות.</li>
+    <li><strong>לא ביקשנו Critical Alerts</strong> — בכוונה, זה דורש אישור מיוחד מאפל. לכן האזעקה כפופה למתג הצלצול, ולוודא שהאפליקציה לא מבטיחה אחרת בשום מקום.</li>
+  </ul>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>06</i> מתי מותר לעלות לחנות</h2>
+
+  <p>
+    לא ״אין באגים״. הרשימה הזאת:
+  </p>
+
+  <div class="checks">
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>שתי נסיעות מלאות על iPhone, שתיים על אנדרואיד</b>
+      <span>אחת מהן על מכשיר של יצרן שהורג תהליכים. הטלפון נעול לאורך כל אחת מהן.</span>
+    </div></div>
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>אפס צלצולים כוזבים בבדיקת השולחן של השעה</b>
+      <span>אזעקה שמצלצלת סתם היא אזעקה שמכבים.</span>
+    </div></div>
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>כל שמונת מצבי הכשל בטבלה נוסו, וכל אחד התנהג כמתואר</b>
+    </div></div>
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>ארבע השפות עברו עין של דובר שפת אם</b>
+      <span>ערבית ורוסית עדיין מסומנות בקוד כטעונות בדיקה. זה חוסם עלייה, לא פיתוח.</span>
+    </div></div>
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>מדיניות פרטיות באוויר, ומקושרת מתוך האפליקציה</b>
+      <span>שתי החנויות דורשות את זה מאפליקציה שמבקשת מיקום ברקע.</span>
+    </div></div>
+    <div class="check"><div class="check__box"></div><div class="check__b">
+      <b>‏<code>GOOGLE_MAPS_ANDROID_API_KEY</code> קיים לבילד האנדרואיד</b>
+      <span>בלעדיו המפה באנדרואיד ריקה. ה־iOS משתמש ב־MapKit ולא צריך מפתח.</span>
+    </div></div>
+  </div>
+
+  <div class="note note--mine">
+    <span class="note__t">מה שלא נבדק כאן, ולמה</span>
+    <p>
+      אין כאן בדיקות אוטומטיות למסלול הרקע, ואי אפשר שיהיו: הן היו בודקות מוקים
+      של מערכת ההפעלה, ומערכת ההפעלה היא בדיוק החלק שמאכזב. מה שכן מכוסה
+      בבדיקות יחידה הוא הכללים הטהורים — סדר התחנות בקו, כללי הפספוס
+      והשתיקה, מיון הרשימה השמורה, ורישום היומן. ‏79 בדיקות, רצות ב־<code>npm test</code>.
+    </p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <h2><i>07</i> טופס רישום</h2>
+
+  <p>לצילום מסך אחרי כל נסיעה, כדי שיהיה במה להשוות כשמשהו משתנה.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>נסיעה</th><th>מכשיר</th><th>קו</th><th>טווח</th><th>מי ירה</th><th>מרחק בצלצול</th><th>תקין?</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p style="margin-top:34px;font-size:14.5px;color:var(--muted)">
+    ״מי ירה״ ו״מרחק בצלצול״ נלקחים מהשורה הראשונה ביומן. שניהם מופיעים שם ככתוב.
+  </p>
+
+</div>
