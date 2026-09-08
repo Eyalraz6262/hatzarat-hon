@@ -46,6 +46,20 @@ type Props = {
 /** Fractions of the usable height. `peek` is a hint, not a panel. */
 const FRACTION: Record<Snap, number> = { peek: 0.28, half: 0.56, full: 0.9 };
 
+/**
+ * How tall the sheet is at a given snap point.
+ *
+ * Exported because things floating over the map have to stay clear of it, and
+ * the alternative is every caller keeping its own copy of these fractions and
+ * drifting from them.
+ */
+export function useSheetHeight(snap: Snap): number {
+  const insets = useSafeAreaInsets();
+  const { height: screenH } = useWindowDimensions();
+  const usable = Math.max(screenH - insets.top - 48, 320);
+  return Math.round(usable * FRACTION[snap]);
+}
+
 export function BottomSheet({ snap, children, onCollapse, footer }: Props) {
   const s = useTheme();
   const insets = useSafeAreaInsets();

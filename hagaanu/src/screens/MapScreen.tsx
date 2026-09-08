@@ -11,7 +11,7 @@ import { labelFor, nearestPlace } from '../services/places/match';
 import { ApproachGauge } from '../components/route/ApproachGauge';
 import { RangeSlider } from '../components/route/RangeSlider';
 import { buildApproach } from '../components/route/approach';
-import { BottomSheet, type Snap } from '../components/sheet/BottomSheet';
+import { BottomSheet, useSheetHeight, type Snap } from '../components/sheet/BottomSheet';
 import { Chip, DangerButton, PrimaryButton, Touch, Txt, row } from '../components/ui';
 import { FALLBACK_REGION } from '../constants/config';
 import { t } from '../i18n';
@@ -155,6 +155,8 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
         ? 'half'
         : 'peek';
 
+  const sheetH = useSheetHeight(snap);
+
   return (
     <View style={[styles.screen, { backgroundColor: s.bg }]}>
       <RouteMap
@@ -167,8 +169,18 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
         onPickPoint={pickPoint}
       />
 
-      {/* Floating over the map, above the sheet. */}
-      <View style={[styles.overlay, { paddingTop: insets.top + space.sm }]} pointerEvents="box-none">
+      {/*
+        Floating over the map. `zIndex` is load-bearing: the sheet is a later
+        sibling, so without it the sheet paints over this layer and the search
+        results — which drop down from the field — land behind it and are never
+        seen. The tools are held clear of the sheet's top edge for the same
+        reason, hence the sheet's own height rather than the bottom of the
+        screen.
+      */}
+      <View
+        style={[styles.overlay, { paddingTop: insets.top + space.sm, paddingBottom: sheetH }]}
+        pointerEvents="box-none"
+      >
         {!armed ? (
           <View style={styles.searchDock}>
             <SearchField
@@ -424,6 +436,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
     paddingHorizontal: space.screen,
+    zIndex: 2,
   },
   searchDock: { width: '100%' },
   spacer: { flex: 1 },

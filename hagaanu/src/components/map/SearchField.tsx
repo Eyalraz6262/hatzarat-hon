@@ -176,8 +176,19 @@ export function SearchField({
         ) : null}
       </View>
 
+      {/*
+        The panel drops onto the sheet, and both are the same surface colour, so
+        the shadow alone leaves the last result and the sheet's own heading
+        reading as one list. The hairline is what ends it.
+      */}
       {showPanel ? (
-        <View style={[styles.panel, elevation(2, s), { backgroundColor: s.surface }]}>
+        <View
+          style={[
+            styles.panel,
+            elevation(2, s),
+            { backgroundColor: s.surface, borderColor: s.line },
+          ]}
+        >
           {failed ? (
             <View style={styles.message}>
               <Txt variant="label" tone="muted">
@@ -246,6 +257,7 @@ const styles = StyleSheet.create({
   },
   panel: {
     borderRadius: radius.control,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
   message: {
