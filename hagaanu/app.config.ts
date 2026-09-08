@@ -124,7 +124,7 @@ const config: ExpoConfig = {
       foregroundImage: './assets/android-icon-foreground.png',
       // The brand itself: the adaptive icon's mark is white, so the tile is
       // the colour rather than a dark ground the mark sits on.
-      backgroundColor: '#2B4EF0',
+      backgroundColor: '#6A2C91',
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     permissions: [
@@ -167,7 +167,7 @@ const config: ExpoConfig = {
       'expo-notifications',
       {
         icon: './assets/notification-icon.png',
-        color: '#2B4EF0',
+        color: '#6A2C91',
         // Copies every tone into res/raw (Android) and the app bundle (iOS) so
         // the notification itself can play the one the user chose — including
         // when our JS process is gone by the time the notification is shown.

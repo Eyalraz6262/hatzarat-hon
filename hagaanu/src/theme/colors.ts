@@ -11,10 +11,21 @@
  * appears on exactly one thing per screen — the button you came to press — and
  * everything else is the neutral ramp.
  *
- * The blue is a cobalt with a slight violet lean, deliberately NOT the
- * #6366F1 / #8B5CF6 indigo that every generated app reaches for. It carries
- * white text at 6.09:1 and reads as text on the light ground at 5.73:1, so the
- * same token works as a fill and as a label without a second value.
+ * The brand is a plum-violet, and the hue was chosen against the MAP rather
+ * than against a mood board. A map already spends blue twice — the water, and
+ * the "you are here" dot that every mapping SDK on both platforms draws in it.
+ * The cobalt this replaced sat 15° from that dot, which made the wake ring and
+ * the passenger the same colour on the one screen where telling them apart is
+ * the entire point. This sits 63° away and cannot be confused with either.
+ *
+ * It is deliberately not one of the #6366F1 / #7C3AED / #8B5CF6 violets every
+ * generated app reaches for: deeper, less saturated, and a specific value
+ * rather than a framework default.
+ *
+ * Being dark is a feature, not a compromise. The arrival screen is a full bleed
+ * of this colour seen at three in the morning by someone who has just been
+ * woken, and a bright screen at that moment is unkind. White on it is 8.82:1,
+ * which is comfortably readable without being a flashlight.
  */
 
 export type Scheme = {
@@ -94,11 +105,11 @@ export const light: Scheme = {
   lineStrong: '#D3D8E0',
 
   primary: {
-    base: '#2B4EF0',
-    pressed: '#2340D6',
-    on: '#FFFFFF', //      6.09:1 on base
-    text: '#2B4EF0', //    5.73:1 on bg
-    soft: '#E4EAFD',
+    base: '#6A2C91',
+    pressed: '#5A2479',
+    on: '#FFFFFF', //      8.82:1 on base
+    text: '#6A2C91', //    8.30:1 on bg · 8.82:1 on surface
+    soft: '#F0E7F7', //    7.34:1 for the text on this tint
   },
 
   success: {
@@ -118,9 +129,9 @@ export const light: Scheme = {
   },
 
   alarm: {
-    bg: '#2B4EF0',
-    on: '#FFFFFF', //      6.09:1
-    dim: '#D5DDFF', //     4.53:1
+    bg: '#6A2C91',
+    on: '#FFFFFF', //      8.82:1
+    dim: '#E2D0F0', //     6.09:1
     line: 'rgba(255,255,255,0.26)',
   },
 
@@ -156,11 +167,11 @@ export const dark: Scheme = {
   lineStrong: '#333B47',
 
   primary: {
-    base: '#5B8BFF',
-    pressed: '#4C79EA',
-    on: '#0B1020', //      5.93:1 on base
-    text: '#5B8BFF', //    5.93:1 on bg
-    soft: 'rgba(91,139,255,0.14)',
+    base: '#B69CFF',
+    pressed: '#A084F0',
+    on: '#1C0B2E', //      8.08:1 on base
+    text: '#B69CFF', //    8.27:1 on bg
+    soft: 'rgba(182,156,255,0.15)',
   },
 
   success: {
@@ -180,9 +191,9 @@ export const dark: Scheme = {
   },
 
   alarm: {
-    bg: '#2B4EF0',
+    bg: '#6A2C91',
     on: '#FFFFFF',
-    dim: '#D5DDFF',
+    dim: '#E2D0F0',
     line: 'rgba(255,255,255,0.26)',
   },
 
