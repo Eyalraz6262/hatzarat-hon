@@ -16,9 +16,10 @@ import { Touch, Txt, row } from '../ui';
  * exactly the interaction this app exists to avoid. Four taps, four answers.
  *
  * The values are distances rather than stops on purpose: the alarm fires on a
- * geofence radius, and labelling the control in stops while the alarm counts
- * metres would be a promise the mechanism cannot keep on a route where the
- * stop list is missing.
+ * geofence radius, and the app has no idea which stops any given vehicle
+ * serves. Labelling this control in stops would have been a promise the
+ * mechanism cannot keep — an earlier version of the armed screen made exactly
+ * that promise, and it was removed.
  */
 export function RangePicker({
   value,

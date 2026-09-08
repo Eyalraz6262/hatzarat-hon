@@ -156,11 +156,11 @@ export const ArrivalCoordinator = {
         );
       }
       await NotificationService.presentArmedStatus(again.destination.label);
-      const againCard = liveCard(again.lastDistanceM ?? null, null);
+      const againCard = liveCard(again.lastDistanceM ?? null, again.radiusM);
       await LiveActivity.start(
         again.destination.label,
         againCard.distance,
-        againCard.stops,
+        againCard.note,
         againCard.staleText
       );
       log.debug('alarm', 're-armed at the destination itself');
@@ -228,8 +228,8 @@ export const ArrivalCoordinator = {
       await NotificationService.presentArmedStatus(continued.destination.label);
       // A new destination means a new card: ActivityKit attributes are fixed
       // for the life of an activity, so the leg change cannot be an update.
-      const card = liveCard(null, null);
-      await LiveActivity.start(continued.destination.label, card.distance, card.stops, card.staleText);
+      const card = liveCard(null, continued.radiusM);
+      await LiveActivity.start(continued.destination.label, card.distance, card.note, card.staleText);
       log.debug('alarm', `advanced to next leg: ${continued.destination.label}`);
       void Journal.record(
         'leg',

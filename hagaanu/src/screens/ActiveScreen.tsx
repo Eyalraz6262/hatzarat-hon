@@ -2,14 +2,13 @@ import { useMemo } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { t } from '../i18n';
-import { RouteRail } from '../components/route/RouteRail';
-import { buildRail } from '../components/route/rail';
+import { ApproachGauge } from '../components/route/ApproachGauge';
+import { buildApproach } from '../components/route/approach';
 import { Card, Chip, DangerButton, GhostButton, Row, Touch, Txt, row } from '../components/ui';
+import { t } from '../i18n';
 import { Feedback } from '../services/feedback/Haptics';
-import type { StopsResult, TransitStop } from '../services/transit/StopsService';
 import { space, useTheme } from '../theme';
-import type { Destination, LatLng } from '../types';
+import type { Destination, LatLng, Leg } from '../types';
 import { formatDistance } from '../utils/geo';
 
 type Props = {
@@ -17,8 +16,8 @@ type Props = {
   radiusM: number;
   distanceM: number | null;
   here: LatLng | null;
-  stops: TransitStop[];
-  stopsFallback: Extract<StopsResult, { ok: false }>['reason'] | null;
+  /** Legs still to come. Present only on a journey with a change. */
+  remaining: Leg[];
   /** True while the fix has gone stale and the distance below is not current. */
   stale: boolean;
   /** True once we caught the OS tearing our monitors down mid-trip. */
@@ -33,22 +32,26 @@ type Props = {
 /**
  * The armed state.
  *
- * This is the last screen the user looks at before the phone goes in a pocket,
- * so its whole job is reassurance, and the rail does most of it: the same
- * object from the previous screen, still there, with the passenger's dot on
- * it. Nothing was thrown away and re-drawn; the journey simply continues.
+ * The screen wakes up before the passenger does. For most of a trip it is
+ * almost empty — one number and a sentence saying they can sleep — and it
+ * becomes more present as the moment approaches. That progression is the
+ * design, and it comes from taking the honest position seriously: far from the
+ * destination there is genuinely nothing to decide, and a screen that fills
+ * that stretch with things to read is a screen that gets closed before the
+ * part that matters.
  *
- * The headline is a count of stops rather than a distance because that is the
- * unit the answer arrives in. "Three stops" tells you whether to keep reading
- * your book. "4.3 km" does not.
+ * It used to lead with "3 stops to go", counted from transit stops near the
+ * straight line to the destination. The app has no idea which line the
+ * passenger is on, whether it is a bus, a train or a shuttle, or which stops
+ * that vehicle serves — so the most confident number on the screen was the
+ * least reliable thing in the app. It is gone. What is left is measured.
  */
 export function ActiveScreen({
   destination,
   radiusM,
   distanceM,
   here,
-  stops,
-  stopsFallback,
+  remaining,
   stale,
   killed,
   onDismissKilled,
@@ -58,9 +61,9 @@ export function ActiveScreen({
 }: Props) {
   const s = useTheme();
 
-  const rail = useMemo(
-    () => buildRail(stops, here, destination, radiusM),
-    [stops, here, destination, radiusM]
+  const approach = useMemo(
+    () => buildApproach(here, destination, radiusM, remaining),
+    [here, destination, radiusM, remaining]
   );
 
   const confirmCancel = () => {
@@ -77,6 +80,9 @@ export function ActiveScreen({
     ]);
   };
 
+  const phase = stale ? 'far' : approach.phase;
+  const next = remaining.length ? remaining[remaining.length - 1].destination : null;
+
   return (
     <View style={[styles.screen, { backgroundColor: s.bg }]}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -86,9 +92,9 @@ export function ActiveScreen({
           showsVerticalScrollIndicator={false}
         >
           {/*
-            Shown above everything, because "the system stopped your alarm last
-            time" outranks anything else on this screen. Dismissible, and only
-            offered after a real failure — never during onboarding.
+            Above everything, because "the system stopped your alarm last time"
+            outranks anything else here. Dismissible, and only offered after a
+            real failure — never during onboarding.
           */}
           {killed ? (
             <Card style={{ borderColor: s.danger, borderWidth: 1.5 }}>
@@ -121,27 +127,64 @@ export function ActiveScreen({
             </Card>
           ) : null}
 
-          <View style={styles.head}>
-            <Chip label={stale ? t('active.noSignal') : t('active.statusActive')} live={!stale} />
-            <Txt variant="display">{t('active.title')}</Txt>
-            <Txt variant="body" tone="muted">
-              {t('active.body')}
+          <Chip
+            label={
+              stale
+                ? t('active.noSignal')
+                : phase === 'arriving'
+                  ? t('approach.almost')
+                  : phase === 'closing'
+                    ? t('approach.closing')
+                    : t('active.statusActive')
+            }
+            live={!stale}
+          />
+
+          {/*
+            The one number. It is the distance to the thing we will wake you
+            for next — the transfer on the first leg of a journey with a
+            change, the destination otherwise — because that is the only
+            distance that decides anything.
+          */}
+          <View style={styles.headline}>
+            {distanceM === null || stale ? (
+              <Txt variant="title" tone="muted">
+                {stale ? t('active.noSignal') : t('active.waitingFix')}
+              </Txt>
+            ) : (
+              <View style={[styles.reading, { flexDirection: row() }]}>
+                <Txt variant="counter" tone="accent" nums>
+                  {formatDistance(approach.hereM ?? distanceM).replace(/[^\d.,]/g, '')}
+                </Txt>
+                <Txt variant="label" tone="muted" style={styles.unit}>
+                  {unitOf(approach.hereM ?? distanceM)}
+                  {'\n'}
+                  {next ? t('approach.toTransfer') : t('approach.toGo')}
+                </Txt>
+              </View>
+            )}
+
+            <Txt variant="body" tone="muted" style={styles.reassure}>
+              {stale
+                ? t('active.noSignalBody', {
+                    distance: distanceM === null ? '' : formatDistance(distanceM),
+                  })
+                : phase === 'arriving'
+                  ? t('active.body')
+                  : t('approach.sleep') + ' · ' + t('active.body')}
             </Txt>
           </View>
 
-          {stale ? (
-            <Txt variant="body" tone="muted">
-              {t('active.noSignalBody', {
-                distance: distanceM === null ? '' : formatDistance(distanceM),
-              })}
-            </Txt>
-          ) : (
-            <Counter stopsToGo={rail.stopsToGo} distanceM={distanceM} radiusM={radiusM} />
-          )}
-
-          <Card>
-            <RouteRail rail={rail} fallback={stopsFallback} loading={false} />
-          </Card>
+          {/*
+            Drawn only once it can be drawn truthfully. Further out a 500 m
+            ring inside a 40 km trip is a hairline, and a gauge whose most
+            important mark is invisible is worse than no gauge at all.
+          */}
+          {phase !== 'far' ? (
+            <Card>
+              <ApproachGauge approach={approach} />
+            </Card>
+          ) : null}
 
           <Card>
             <Row label={t('active.destination')} first>
@@ -149,11 +192,18 @@ export function ActiveScreen({
                 {destination.label}
               </Txt>
             </Row>
+            {next ? (
+              <Row label={t('approach.then')}>
+                <Txt variant="labelStrong" numberOfLines={1}>
+                  {next.label}
+                </Txt>
+              </Row>
+            ) : null}
             <Row label={t('active.distanceLeft')}>
               {/*
-                A stale distance is shown muted and captioned rather than
-                hidden: the last thing we actually measured is useful, and
-                presenting it as live would be the app quietly lying.
+                A stale distance is shown muted rather than hidden: the last
+                thing we actually measured is useful, and presenting it as live
+                would be the app quietly lying.
               */}
               <Txt variant="labelStrong" tone={stale ? 'muted' : 'ink'} nums>
                 {distanceM === null ? t('active.waitingFix') : formatDistance(distanceM)}
@@ -181,96 +231,46 @@ export function ActiveScreen({
   );
 }
 
-/**
- * The one number on the screen.
- *
- * Falls back to distance when there is no stop list, and to a plain "any
- * moment now" when the passenger is already inside the ring, because "0 stops
- * to go" reads like the alarm failed rather than like it is about to fire.
- */
-function Counter({
-  stopsToGo,
-  distanceM,
-  radiusM,
-}: {
-  stopsToGo: number | null;
-  distanceM: number | null;
-  radiusM: number;
-}) {
-  if (distanceM !== null && distanceM <= radiusM) {
-    return (
-      <View style={styles.counter}>
-        <Txt variant="title" tone="accent">
-          {t('active.almostThere')}
-        </Txt>
-      </View>
-    );
-  }
-
-  if (stopsToGo === null || stopsToGo === 0) {
-    return (
-      <View style={[styles.counter, styles.counterRow, { flexDirection: row() }]}>
-        <Txt variant="counter" tone="accent" nums>
-          {distanceM === null ? '·' : formatDistance(distanceM).replace(/[^\d.,]/g, '')}
-        </Txt>
-        <Txt variant="label" tone="muted" style={styles.counterUnit}>
-          {distanceM === null ? t('active.waitingFix') : t('active.distanceLeft')}
-        </Txt>
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.counter, styles.counterRow, { flexDirection: row() }]}>
-      <Txt variant="counter" tone="accent" nums>
-        {stopsToGo}
-      </Txt>
-      <Txt variant="label" tone="muted" style={styles.counterUnit}>
-        {stopsToGo === 1 ? t('active.stopsToGoOne') : t('active.stopsToGo')}
-      </Txt>
-    </View>
-  );
+/** The unit `formatDistance` chose, split off so the number can be set larger. */
+function unitOf(metres: number): string {
+  return formatDistance(metres).replace(/[\d.,\s]/g, '');
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  safe: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
+  screen: { flex: 1 },
+  safe: { flex: 1 },
+  scroll: { flex: 1 },
   body: {
-    padding: space.screen,
-    gap: space.xl,
+    paddingHorizontal: space.screen,
+    paddingTop: space.lg,
+    paddingBottom: space.xxxl,
+    gap: space.lg,
   },
-  head: {
+  headline: {
     gap: space.md,
   },
-  counter: {
-    paddingVertical: space.sm,
-  },
-  counterRow: {
-    alignItems: 'baseline',
+  reading: {
+    alignItems: 'flex-end',
     gap: space.md,
   },
-  counterUnit: {
-    flexShrink: 1,
+  unit: {
+    paddingBottom: 6,
+  },
+  reassure: {
+    maxWidth: '92%',
   },
   noticeBody: {
-    marginTop: space.sm,
+    marginTop: space.xs,
   },
   noticeActions: {
-    marginTop: space.lg,
-    gap: space.xxl,
+    marginTop: space.md,
+    gap: space.xl,
   },
   dock: {
     paddingHorizontal: space.screen,
-    paddingTop: space.lg,
-    paddingBottom: space.md,
+    paddingTop: space.md,
+    paddingBottom: space.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    gap: space.md,
+    gap: space.sm,
   },
 });

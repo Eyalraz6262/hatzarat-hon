@@ -2,7 +2,7 @@ import LocateFixed from 'lucide-react-native/icons/locate-fixed';
 import Settings from 'lucide-react-native/icons/settings';
 import Check from 'lucide-react-native/icons/check';
 import X from 'lucide-react-native/icons/x';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,8 +11,6 @@ import { t } from '../i18n';
 import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
 import { SearchField } from '../components/map/SearchField';
 import { RangePicker } from '../components/route/RangePicker';
-import { RouteRail } from '../components/route/RouteRail';
-import { buildRail } from '../components/route/rail';
 import { SavedList } from '../components/route/SavedList';
 import {
   Card,
@@ -51,11 +49,9 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   const destination = useAlarmStore((state) => state.destination);
   const radiusM = useAlarmStore((state) => state.radiusM);
   const position = useAlarmStore((state) => state.position);
+  const distanceM = useAlarmStore((state) => state.distanceM);
   const busy = useAlarmStore((state) => state.busy);
   const error = useAlarmStore((state) => state.error);
-  const stops = useAlarmStore((state) => state.stops);
-  const stopsState = useAlarmStore((state) => state.stopsState);
-  const stopsFallback = useAlarmStore((state) => state.stopsFallback);
   const saved = useAlarmStore((state) => state.saved);
 
   const setDestination = useAlarmStore((state) => state.setDestination);
@@ -63,7 +59,6 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   const earlyWarning = useAlarmStore((state) => state.earlyWarning);
   const setEarlyWarning = useAlarmStore((state) => state.setEarlyWarning);
   const setError = useAlarmStore((state) => state.setError);
-  const loadStops = useAlarmStore((state) => state.loadStops);
   const arm = useAlarmStore((state) => state.arm);
   const saveCurrent = useAlarmStore((state) => state.saveCurrent);
   const useSaved = useAlarmStore((state) => state.useSaved);
@@ -75,46 +70,12 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   const backgroundGranted =
     usePermissionsStore((state) => state.snapshot.backgroundLocation) === 'granted';
 
-  // The stop list needs both a destination and a fix. Whichever arrives second
-  // starts the fetch, which is why this watches both rather than firing inside
-  // the destination setter.
-  useEffect(() => {
-    if (destination && position && stopsState === 'loading' && stops.length === 0) {
-      void loadStops();
-    }
-  }, [destination, position, stopsState, stops.length, loadStops]);
-
   useEffect(() => {
     if (destination) mapRef.current?.frameRoute(position?.coords ?? null, destination, radiusM);
     // Framing follows the destination and the radius, not every position fix:
     // re-framing on each fix would fight the user panning the map.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destination, radiusM]);
-
-  const rail = useMemo(
-    () =>
-      destination
-        ? buildRail(stops, position?.coords ?? null, destination, radiusM, transfer, radiusM)
-        : null,
-    [stops, position, destination, radiusM, transfer]
-  );
-
-  /**
-   * Turns a stop on the rail into a change of vehicle.
-   *
-   * The coordinates come from the stop list we already fetched, so this needs
-   * no lookup and no network — tapping a name on the rail is the whole
-   * interaction, which is why the rail is where it lives.
-   */
-  const pickTransfer = useCallback(
-    (name: string) => {
-      const stop = stops.find((item) => item.name === name);
-      if (!stop) return;
-      Feedback.tick();
-      setTransfer({ coords: stop.coords, label: stop.name });
-    },
-    [stops, setTransfer]
-  );
 
   const onSave = useCallback(() => {
     if (!destination) return;
@@ -140,7 +101,6 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
           destination={destination}
           radiusM={radiusM}
           here={position?.coords ?? null}
-          stops={stops}
           mode={destination ? 'band' : 'picker'}
           onPickPoint={(coords) =>
             setDestination({ coords, label: t('errors.unknownPlace') })
@@ -194,39 +154,69 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
           </View>
         )}
 
-        {destination && rail ? (
+        {destination ? (
           <ScrollView
             style={styles.sheetScroll}
             contentContainerStyle={styles.sheetBody}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
+            {/*
+              What will happen, in two lines, and nothing else.
+
+              This card used to be a list of transit stops between here and the
+              destination, taken from OpenStreetMap within 450 m of the straight
+              line. The app does not know which line the passenger is on, or
+              whether it is a bus, a train or a shuttle, so it could not know
+              that the vehicle stops at any of them — and it was drawn as a
+              route the passenger was about to travel. What is left is what is
+              measured: how far the place is, and how early we will wake them.
+            */}
             <Card>
-              <Txt variant="label" tone="muted" style={styles.sheetTitle}>
-                {t('route.title')}
+              <View style={[styles.factRow, { flexDirection: row() }]}>
+                <Txt variant="label" tone="muted" style={styles.grow}>
+                  {t('active.distanceLeft')}
+                </Txt>
+                <Txt variant="labelStrong" nums>
+                  {distanceM === null ? t('active.waitingFix') : formatDistance(distanceM)}
+                </Txt>
+              </View>
+              <Txt variant="body" tone="muted" style={styles.factNote}>
+                {t('approach.preview', { distance: formatDistance(radiusM) })}
               </Txt>
-              <RouteRail
-                rail={rail}
-                fallback={stopsFallback}
-                loading={stopsState === 'loading'}
-                onPickStop={transfer ? undefined : pickTransfer}
-              />
 
               {transfer ? (
-                <Touch
-                  accessibilityRole="button"
-                  accessibilityLabel={t('route.removeStop')}
-                  onPress={() => {
-                    Feedback.tick();
-                    setTransfer(null);
-                  }}
-                  style={[styles.removeStop, { borderTopColor: s.line, flexDirection: row() }]}
-                >
-                  <Txt variant="caption" tone="muted">
-                    {t('route.removeStop')}
+                <View style={[styles.stopRow, { borderTopColor: s.line, flexDirection: row() }]}>
+                  <Txt variant="labelStrong" numberOfLines={1} style={styles.grow}>
+                    {transfer.label}
                   </Txt>
-                </Touch>
-              ) : null}
+                  <Touch
+                    accessibilityRole="button"
+                    accessibilityLabel={t('route.removeStop')}
+                    hitSlop={hitSlop}
+                    onPress={() => {
+                      Feedback.tick();
+                      setTransfer(null);
+                    }}
+                  >
+                    <Txt variant="captionStrong" tone="muted">
+                      {t('route.removeStop')}
+                    </Txt>
+                  </Touch>
+                </View>
+              ) : (
+                <View style={[styles.stopRow, { borderTopColor: s.line }]}>
+                  {/*
+                    A change is chosen the same way the destination is — by
+                    naming a real place. It is never inferred from a route the
+                    app cannot see.
+                  */}
+                  <Txt variant="caption" tone="muted" style={styles.factNote}>
+                    {t('route.addStopHint')}
+                  </Txt>
+                  <SearchField onPick={setTransfer} placeholder={t('route.addStop')} />
+                </View>
+              )}
             </Card>
 
             <RangePicker value={radiusM} onChange={setRadius} />
@@ -445,13 +435,24 @@ const styles = StyleSheet.create({
   },
   earlyText: { flex: 1, gap: 2 },
   earlyNote: { marginTop: 1 },
-  removeStop: {
-    marginTop: space.md,
-    paddingTop: space.md,
-    justifyContent: 'center',
+  factRow: {
     alignItems: 'center',
+    gap: space.md,
+  },
+  factNote: {
+    marginTop: space.xs,
+  },
+  stopRow: {
+    marginTop: space.lg,
+    paddingTop: space.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    gap: space.md,
     minHeight: HIT,
+  },
+  grow: {
+    flexGrow: 1,
+    flexShrink: 1,
   },
   warn: {
     borderRadius: radius.control,

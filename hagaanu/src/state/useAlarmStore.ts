@@ -12,7 +12,6 @@ import { LocationService } from '../services/location/LocationService';
 import { NotificationService } from '../services/notifications/NotificationService';
 import { AlarmStorage } from '../services/storage/AlarmStorage';
 import { SavedStorage, type SavedDestination, type SavedKind } from '../services/storage/SavedStorage';
-import { fetchStopsAlongRoute, type StopsResult, type TransitStop } from '../services/transit/StopsService';
 import { usePermissionsStore } from './usePermissionsStore';
 import type { AlarmSession, AlarmStatus, Destination, Leg, PositionSample } from '../types';
 import { distanceMeters } from '../utils/geo';
@@ -48,27 +47,12 @@ type AlarmState = {
   /** Ordered by last use — the trip taken yesterday is the likely one now. */
   saved: SavedDestination[];
 
-  /** The stops between the user and the destination. Empty is a valid state. */
-  stops: TransitStop[];
-  stopsState: 'idle' | 'loading' | 'ready';
-  /** Why the stop list is empty, when it is. Surfaced on the rail. */
-  stopsFallback: Extract<StopsResult, { ok: false }>['reason'] | null;
-
   setDestination: (destination: Destination | null) => void;
   setRadius: (radiusM: number) => void;
   setEarlyWarning: (on: boolean) => void;
   setTransfer: (transfer: Destination | null) => void;
   setPosition: (position: PositionSample) => void;
   setError: (error: string | null) => void;
-  /**
-   * Fetches the stops for the current destination.
-   *
-   * Called once when a destination is chosen, while the user still has signal
-   * and attention. Never called after arming: from that point the alarm is a
-   * geofence and a local position stream, and neither needs the network.
-   */
-  loadStops: () => Promise<void>;
-
   /** Rehydrates from disk — call once at boot, before the first render matters. */
   hydrate: () => Promise<void>;
   saveCurrent: (name: string, kind: SavedKind) => Promise<void>;
@@ -120,9 +104,6 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   busy: false,
   error: null,
   saved: [],
-  stops: [],
-  stopsState: 'idle',
-  stopsFallback: null,
   killed: false,
   stale: false,
 
@@ -131,34 +112,11 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       destination,
       error: null,
       distanceM: computeDistance(state.position, destination),
-      // A new destination invalidates the old route entirely. Clearing here
-      // rather than on load means the rail never shows yesterday's stops
-      // against today's destination, even for one frame.
-      stops: [],
-      stopsState: destination ? 'loading' : 'idle',
-      stopsFallback: null,
       // A change belongs to a journey. Choosing a new destination ends the old
       // journey, so a transfer left over from it would be a stop on a route
       // nobody is taking.
       transfer: null,
     })),
-
-  async loadStops() {
-    const { position, destination } = get();
-    if (!destination || !position) return;
-
-    set({ stopsState: 'loading', stopsFallback: null });
-    const result = await fetchStopsAlongRoute(position.coords, destination.coords);
-
-    // The user may have changed their mind while the request was in flight.
-    if (get().destination?.label !== destination.label) return;
-
-    set(
-      result.ok
-        ? { stops: result.stops, stopsState: 'ready', stopsFallback: null }
-        : { stops: [], stopsState: 'ready', stopsFallback: result.reason }
-    );
-  },
 
   setRadius: (radiusM) => set({ radiusM }),
 
@@ -196,9 +154,6 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
         session,
         destination: session.destination,
         radiusM: session.radiusM,
-        stops: session.stops ?? [],
-        stopsFallback: session.stopsFallback ?? null,
-        stopsState: 'ready',
       });
       if (!AlarmService.isRinging()) void AlarmService.start();
       return;
@@ -223,9 +178,6 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       radiusM: session.radiusM,
       // Restored from the session, never refetched: the armed alarm does not
       // touch the network, and this is the state where the rail matters most.
-      stops: session.stops ?? [],
-      stopsFallback: session.stopsFallback ?? null,
-      stopsState: 'ready',
     });
   },
 
@@ -259,7 +211,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   },
 
   async arm() {
-    const { destination, radiusM, position, stops, stopsFallback, transfer } = get();
+    const { destination, radiusM, position, transfer } = get();
     if (!destination || get().busy) return false;
 
     set({ busy: true, error: null });
@@ -304,8 +256,6 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
         staleNoticed: false,
         // Frozen here on purpose: from this point the alarm is a geofence and
         // a local position stream, and nothing may need the network again.
-        stops,
-        stopsFallback,
       };
 
       // Persist before starting the monitors: if the OS wakes the geofence task
@@ -321,11 +271,11 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       // The lock-screen card. Absent on Android, on older iPhones, and when the
       // user has switched Live Activities off — all of which this handles by
       // doing nothing, because the alarm does not depend on it.
-      const card = liveCard(Number.isFinite(distance) ? distance : null, null);
+      const card = liveCard(Number.isFinite(distance) ? distance : null, radiusM);
       await LiveActivity.start(
         session.destination.label,
         card.distance,
-        card.stops,
+        card.note,
         card.staleText
       );
 

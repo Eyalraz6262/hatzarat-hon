@@ -51,7 +51,6 @@ export const ar: TranslationSchema = {
   },
 
   route: {
-    title: 'رحلتك',
     changeDestination: 'تغيير الوجهة',
     wakeRange: 'متى نوقظك؟',
     arm: 'أيقظني',
@@ -60,33 +59,27 @@ export const ar: TranslationSchema = {
     earlyWarning: 'تنبيه مبكر أيضاً',
     earlyWarningNote: 'إشعار صامت على بُعد {distance}، ثم المنبّه الكامل عند المسافة التي اخترتها.',
     addStop: 'إضافة محطة في الطريق',
+    addStopHint: 'إذا كنتم ستبدّلون المركبة، أضيفوا نقطة التبديل. سنوقظكم هناك أيضًا.',
     removeStop: 'إزالة المحطة',
-    stopAdded: 'سنوقظك هنا أيضاً',
   },
 
-  rail: {
-    here: 'أنت هنا',
-    wakeHere: 'سنوقظك هنا، على بُعد {distance}',
-    earlyHere: 'تنبيه صامت، على بُعد {distance}',
-    transfer: 'تبديل',
-    loading: 'جارٍ تحميل المحطات على الطريق',
-    fallback: {
-      offline: 'لم نتمكن من تحميل المحطات على هذا الطريق. المنبّه نفسه يعمل تماماً كالمعتاد.',
-      'none-found': 'لا توجد محطات مسجّلة على هذا المقطع. سيعتمد المنبّه على المسافة.',
-      'too-far': 'الطريق أطول من أن نعرض قائمة محطات. سيعتمد المنبّه على المسافة.',
-    },
+  approach: {
+    sleep: 'يمكنكم النوم',
+    toGo: 'حتى الوجهة',
+    toTransfer: 'حتى التبديل',
+    window: 'المعروض: آخر {distance}',
+    wakeBand: 'هنا نوقظكم · {distance}',
+    closing: 'نقترب',
+    almost: 'سنوقظكم بعد لحظات',
+    then: 'ثم',
+    preview: 'سنوقظكم على بعد {distance} من الوجهة.',
   },
 
   active: {
-    title: 'نحن نراقب من أجلك.',
     body: 'يمكنك قفل الهاتف. المنبّه يعمل حتى لو أُغلق التطبيق.',
-    stopsToGo: 'محطات حتى نوقظك',
-    stopsToGoOne: 'محطة واحدة حتى نوقظك',
-    almostThere: 'سنوقظك بعد لحظات',
     distanceLeft: 'المسافة المتبقية',
     wakeRange: 'مدى التنبيه',
     destination: 'الوجهة',
-    nextStop: 'المحطة التالية',
     waitingFix: 'جارٍ تحديد موقعك…',
     cancel: 'إلغاء المنبّه',
     cancelConfirmTitle: 'إلغاء المنبّه؟',
@@ -97,9 +90,6 @@ export const ar: TranslationSchema = {
     noSignalBody: 'آخر مسافة عرفناها: {distance}. ما زلنا نحاول.',
     noSignalNotification: 'لا توجد إشارة. آخر مسافة: {distance}',
 
-    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
-    liveStops: 'بقيت {n} محطات',
-    liveStopsOne: 'بقيت محطة واحدة',
 
     statusActive: 'المنبّه مفعّل',
     notificationTitle: 'سنوقظك عند {destination}',
@@ -239,23 +229,6 @@ export const ar: TranslationSchema = {
     version: 'الإصدار {version}',
   },
 
-  debug: {
-    title: 'تصحيح',
-    subtitle: 'نسخ التطوير فقط.',
-    geofence: 'السياج الجغرافي مسجّل',
-    backgroundTask: 'مهمة الخلفية تعمل',
-    lastFix: 'آخر تحديد موقع',
-    lastFixAge: 'قبل {seconds} ثانية',
-    never: 'أبداً',
-    tier: 'مستوى أخذ العينات',
-    accuracy: 'الدقة',
-    session: 'الجلسة',
-    forceArrival: 'فرض الوصول',
-    forceOvershoot: 'فرض التجاوز',
-    forceStale: 'فرض فقدان الإشارة',
-    forceEarly: 'فرض التنبيه المبكر',
-    clearSession: 'مسح الجلسة',
-  },
 
   errors: {
     locationUnavailable: 'لم نتمكن من تحديد موقعك. تأكد من تشغيل GPS.',

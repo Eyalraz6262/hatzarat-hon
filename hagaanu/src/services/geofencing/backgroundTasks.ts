@@ -157,8 +157,8 @@ TaskManager.defineTask<LocationEventData>(TASKS.LOCATION, async ({ data, error }
     // The Live Activity carries the same number, updated on the same rule: only
     // when the rendered text actually changed. ActivityKit budgets updates, and
     // spending one to redraw an identical string wastes it.
-    const card = liveCard(distance, null);
-    await LiveActivity.update(card.distance, card.stops, false, card.staleText);
+    const card = liveCard(distance, session.radiusM);
+    await LiveActivity.update(card.distance, card.note, false, card.staleText);
   }
 
   // Battery: sample coarsely far out, tightly close in. Restart the stream only

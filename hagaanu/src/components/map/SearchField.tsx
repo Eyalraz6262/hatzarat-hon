@@ -19,7 +19,14 @@ import { Touch, Txt, align, row } from '../ui';
  * a dozen of them. The list is capped at five by the geocoder, so a plain View
  * is correct here and a virtualized list would be overhead for nothing.
  */
-export function SearchField({ onPick }: { onPick: (destination: Destination) => void }) {
+export function SearchField({
+  onPick,
+  placeholder,
+}: {
+  onPick: (destination: Destination) => void;
+  /** Defaults to the destination prompt; the change-of-vehicle field says so. */
+  placeholder?: string;
+}) {
   const s = useTheme();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -85,7 +92,7 @@ export function SearchField({ onPick }: { onPick: (destination: Destination) => 
         <TextInput
           value={query}
           onChangeText={setQuery}
-          placeholder={t('home.searchPlaceholder')}
+          placeholder={placeholder ?? t('home.searchPlaceholder')}
           placeholderTextColor={s.inkMuted}
           style={[styles.input, { color: s.ink, textAlign: align() }]}
           returnKeyType="search"

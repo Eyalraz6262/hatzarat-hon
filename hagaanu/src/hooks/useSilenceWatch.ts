@@ -83,8 +83,8 @@ export function useSilenceWatch(): void {
 
           // Same rule on the card: it stops showing a distance rather than
           // showing the last one as though it were current.
-          const card = liveCard(signal.lastDistanceM, null);
-          await LiveActivity.update(card.distance, card.stops, true, card.staleText);
+          const card = liveCard(signal.lastDistanceM, session.radiusM);
+          await LiveActivity.update(card.distance, card.note, true, card.staleText);
         }
       } catch (error) {
         log.warn('location', 'silence watchdog failed', error);

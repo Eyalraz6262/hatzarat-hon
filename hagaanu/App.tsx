@@ -68,8 +68,6 @@ export default function App() {
   const radiusM = useAlarmStore((state) => state.radiusM);
   const distanceM = useAlarmStore((state) => state.distanceM);
   const position = useAlarmStore((state) => state.position);
-  const stops = useAlarmStore((state) => state.stops);
-  const stopsFallback = useAlarmStore((state) => state.stopsFallback);
   const stale = useAlarmStore((state) => state.stale);
   const killed = useAlarmStore((state) => state.killed);
   const dismissKilled = useAlarmStore((state) => state.dismissKilled);
@@ -174,8 +172,7 @@ export default function App() {
             radiusM={radiusM}
             distanceM={distanceM}
             here={position?.coords ?? null}
-            stops={stops}
-            stopsFallback={stopsFallback}
+            remaining={session?.remaining ?? []}
             stale={stale}
             killed={killed}
             onDismissKilled={dismissKilled}

@@ -53,7 +53,6 @@ export const ru: TranslationSchema = {
   },
 
   route: {
-    title: 'Ваша поездка',
     changeDestination: 'Изменить пункт назначения',
     wakeRange: 'Когда разбудить?',
     arm: 'Разбудите меня',
@@ -62,33 +61,27 @@ export const ru: TranslationSchema = {
     earlyWarning: 'Ещё и раннее предупреждение',
     earlyWarningNote: 'Тихое уведомление за {distance}, и полный будильник на выбранном расстоянии.',
     addStop: 'Добавить остановку по пути',
+    addStopHint: 'Если по пути пересадка — добавьте место. Разбудим и там.',
     removeStop: 'Убрать остановку',
-    stopAdded: 'Разбудим и здесь',
   },
 
-  rail: {
-    here: 'Вы здесь',
-    wakeHere: 'Разбудим здесь, за {distance}',
-    earlyHere: 'Тихое предупреждение, за {distance}',
-    transfer: 'Пересадка',
-    loading: 'Загружаем остановки по маршруту',
-    fallback: {
-      offline: 'Не удалось загрузить остановки на этом маршруте. Сам будильник работает точно так же.',
-      'none-found': 'На этом участке нет отмеченных остановок. Будильник сработает по расстоянию.',
-      'too-far': 'Маршрут слишком длинный для списка остановок. Будильник сработает по расстоянию.',
-    },
+  approach: {
+    sleep: 'Можно спать',
+    toGo: 'до места',
+    toTransfer: 'до пересадки',
+    window: 'Показаны последние {distance}',
+    wakeBand: 'Здесь разбудим · {distance}',
+    closing: 'Подъезжаем',
+    almost: 'Разбудим с минуты на минуту',
+    then: 'Затем',
+    preview: 'Разбудим за {distance} до места.',
   },
 
   active: {
-    title: 'Мы следим за дорогой.',
     body: 'Можно заблокировать телефон. Будильник работает и с закрытым приложением.',
-    stopsToGo: 'остановки до пробуждения',
-    stopsToGoOne: 'остановка до пробуждения',
-    almostThere: 'Разбудим совсем скоро',
     distanceLeft: 'Осталось',
     wakeRange: 'Радиус оповещения',
     destination: 'Пункт назначения',
-    nextStop: 'Следующая остановка',
     waitingFix: 'Определяем ваше местоположение…',
     cancel: 'Отменить будильник',
     cancelConfirmTitle: 'Отменить будильник?',
@@ -99,9 +92,6 @@ export const ru: TranslationSchema = {
     noSignalBody: 'Последнее известное расстояние: {distance}. Продолжаем попытки.',
     noSignalNotification: 'Нет сигнала. Последнее расстояние: {distance}',
 
-    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
-    liveStops: 'ещё {n} ост.',
-    liveStopsOne: 'ещё 1 остановка',
 
     statusActive: 'Будильник включён',
     notificationTitle: 'Разбудим вас на «{destination}»',
@@ -241,23 +231,6 @@ export const ru: TranslationSchema = {
     version: 'Версия {version}',
   },
 
-  debug: {
-    title: 'Отладка',
-    subtitle: 'Только сборки для разработки.',
-    geofence: 'Геозона зарегистрирована',
-    backgroundTask: 'Фоновая задача работает',
-    lastFix: 'Последнее определение',
-    lastFixAge: '{seconds} с назад',
-    never: 'Никогда',
-    tier: 'Частота опроса',
-    accuracy: 'Точность',
-    session: 'Сессия',
-    forceArrival: 'Форсировать прибытие',
-    forceOvershoot: 'Форсировать проезд',
-    forceStale: 'Форсировать потерю сигнала',
-    forceEarly: 'Форсировать раннее предупреждение',
-    clearSession: 'Очистить сессию',
-  },
 
   errors: {
     locationUnavailable: 'Не удалось определить местоположение. Проверьте, включён ли GPS.',

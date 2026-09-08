@@ -108,11 +108,11 @@ test('Hebrew and Arabic are right-to-left, English and Russian are not', () => {
 
 test('t() interpolates, and falls back to the source rather than to the key', () => {
   setLanguage('he');
-  assert.equal(t('active.liveStops', { n: 3 }), 'עוד 3 תחנות');
+  assert.equal(t('approach.window', { distance: '5 ק״מ' }), 'התצוגה: 5 ק״מ האחרונים');
 
-  // The failure this guards against is a user seeing "active.liveStops" on
-  // their lock screen because one file was behind.
+  // The failure this guards against is a user seeing "approach.window" on
+  // their screen because one file was behind.
   setLanguage('ru');
-  assert.ok(!t('active.liveStops', { n: 3 }).includes('active.'));
+  assert.ok(!t('approach.window', { distance: '5 km' }).includes('approach.'));
   setLanguage('he');
 });

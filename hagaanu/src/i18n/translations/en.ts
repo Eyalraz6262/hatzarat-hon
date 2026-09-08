@@ -41,7 +41,6 @@ export const en: TranslationSchema = {
   },
 
   route: {
-    title: 'Your journey',
     changeDestination: 'Change destination',
     wakeRange: 'When should we wake you?',
     arm: 'Wake me',
@@ -50,33 +49,27 @@ export const en: TranslationSchema = {
     earlyWarning: 'Add an early heads-up',
     earlyWarningNote: 'A silent notice {distance} before, and the full alarm at your chosen range.',
     addStop: 'Add a stop on the way',
+    addStopHint: 'Changing vehicle on the way? Add where. We will wake you there too.',
     removeStop: 'Remove this stop',
-    stopAdded: 'We will wake you here too',
   },
 
-  rail: {
-    here: 'You are here',
-    wakeHere: 'We wake you here, {distance} before',
-    earlyHere: 'Silent heads-up, {distance} before',
-    transfer: 'Transfer',
-    loading: 'Loading the stops on your route',
-    fallback: {
-      offline: 'We could not load the stops on this route. The alarm itself works exactly the same.',
-      'none-found': 'No mapped stops on this stretch. The alarm will use distance instead.',
-      'too-far': 'This route is too long for a stop list. The alarm will use distance instead.',
-    },
+  approach: {
+    sleep: 'You can sleep',
+    toGo: 'to go',
+    toTransfer: 'to the change',
+    window: 'Showing the last {distance}',
+    wakeBand: 'We wake you here · {distance}',
+    closing: 'Getting close',
+    almost: 'Waking you any moment',
+    then: 'Then',
+    preview: 'We will wake you {distance} before the destination.',
   },
 
   active: {
-    title: 'We have got you.',
     body: 'Lock your phone. The alarm works with the app closed.',
-    stopsToGo: 'stops until we wake you',
-    stopsToGoOne: 'stop until we wake you',
-    almostThere: 'Waking you in a moment',
     distanceLeft: 'Distance to go',
     wakeRange: 'Alert range',
     destination: 'Destination',
-    nextStop: 'Next stop',
     waitingFix: 'Finding you…',
     cancel: 'Cancel alarm',
     cancelConfirmTitle: 'Cancel the alarm?',
@@ -87,9 +80,6 @@ export const en: TranslationSchema = {
     noSignalBody: 'Last distance we knew: {distance}. We are still trying.',
     noSignalNotification: 'No signal. Last distance: {distance}',
 
-    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
-    liveStops: '{n} stops to go',
-    liveStopsOne: '1 stop to go',
 
     statusActive: 'Alarm active',
     notificationTitle: 'We will wake you at {destination}',
@@ -229,23 +219,6 @@ export const en: TranslationSchema = {
     version: 'Version {version}',
   },
 
-  debug: {
-    title: 'Debug',
-    subtitle: 'Development builds only.',
-    geofence: 'Geofence registered',
-    backgroundTask: 'Background task running',
-    lastFix: 'Last fix',
-    lastFixAge: '{seconds}s ago',
-    never: 'Never',
-    tier: 'Polling tier',
-    accuracy: 'Accuracy',
-    session: 'Session',
-    forceArrival: 'Force arrival',
-    forceOvershoot: 'Force overshoot',
-    forceStale: 'Force signal loss',
-    forceEarly: 'Force early warning',
-    clearSession: 'Clear session',
-  },
 
   errors: {
     locationUnavailable: 'We could not find you. Check that GPS is on.',

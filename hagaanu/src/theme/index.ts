@@ -14,11 +14,11 @@ export { mapStyleFor } from './mapStyle';
  * here answers to that: nothing needs a precise finger, nothing needs reading
  * twice, and the primary action always sits in the bottom third.
  *
- * The organising idea is the ROUTE. The signature object is a vertical rail of
- * stops that the passenger travels down, and the whole system exists to keep
- * that rail legible: one accent for "where you have been and where we wake
- * you", one neutral ramp for everything else, and no decoration competing
- * with it.
+ * The organising idea is the APPROACH. The screen is nearly empty for most of
+ * a journey and becomes present as the destination nears, so the system exists
+ * to make one number and one measure legible in the dark: one accent for
+ * "where we will wake you", one neutral ramp for everything else, and no
+ * decoration competing with either.
  */
 
 /**

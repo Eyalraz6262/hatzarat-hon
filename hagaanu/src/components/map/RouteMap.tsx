@@ -9,7 +9,6 @@ import MapView, {
   type Region,
 } from 'react-native-maps';
 
-import type { TransitStop } from '../../services/transit/StopsService';
 import { mapStyleFor, useTheme } from '../../theme';
 import type { Destination, LatLng } from '../../types';
 import { regionForRadius } from '../../utils/geo';
@@ -24,8 +23,7 @@ type Props = {
   destination: Destination | null;
   radiusM: number;
   here: LatLng | null;
-  stops: TransitStop[];
-  /** Full-bleed picker, or the quiet band above the rail. */
+  /** Full-bleed picker, or the quiet band above the decision. */
   mode: 'picker' | 'band';
   onPickPoint: (coords: LatLng) => void;
 };
@@ -34,10 +32,13 @@ type Props = {
  * The map.
  *
  * Deliberately NOT the star of this design. In "picker" mode it fills the
- * screen and takes a tap; once a destination exists it becomes a band above
- * the rail, which is where the actual decisions happen. A map that stays
- * dominant after the destination is set would compete with the stop list for
- * the same glance, and the stop list wins that argument every time.
+ * screen and takes a tap; once a destination exists it becomes a band, because
+ * the remaining question is not "where am I" but "how much warning do I want".
+ *
+ * It draws only measured things: the destination, the ring around it at its
+ * real radius, and the passenger. The dashed line between them is a straight
+ * line, not a route, and is drawn dashed for exactly that reason — the app has
+ * no routing engine and no idea which way the vehicle will actually go.
  *
  * Provider choice is per-platform and deliberate: iOS uses Apple Maps
  * (PROVIDER_DEFAULT), which needs no key, no billing account and speaks Hebrew
@@ -45,7 +46,7 @@ type Props = {
  * only external credential in the project (see README).
  */
 export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
-  { initialRegion, destination, radiusM, here, stops, mode, onPickPoint },
+  { initialRegion, destination, radiusM, here, mode, onPickPoint },
   ref
 ) {
   const s = useTheme();
@@ -135,17 +136,6 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
         </>
       ) : null}
 
-      {stops.map((stop) => (
-        <Marker
-          key={stop.id}
-          coordinate={stop.coords}
-          anchor={{ x: 0.5, y: 0.5 }}
-          tracksViewChanges={false}
-          title={stop.name}
-        >
-          <View style={[styles.stop, { backgroundColor: s.surface, borderColor: s.inkMuted }]} />
-        </Marker>
-      ))}
     </MapView>
   );
 });
@@ -156,11 +146,5 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 4,
-  },
-  stop: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 2,
   },
 });

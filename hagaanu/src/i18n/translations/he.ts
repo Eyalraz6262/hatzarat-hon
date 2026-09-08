@@ -43,7 +43,6 @@ export const he = {
   },
 
   route: {
-    title: 'הדרך שלכם',
     changeDestination: 'שינוי יעד',
     wakeRange: 'מתי להעיר?',
     arm: 'תעירו אותי',
@@ -52,33 +51,29 @@ export const he = {
     earlyWarning: 'גם התרעה מוקדמת',
     earlyWarningNote: 'התראה שקטה {distance} לפני, וצלצול מלא בטווח שבחרתם.',
     addStop: 'הוספת עצירה בדרך',
+    addStopHint: 'אם מחליפים כלי באמצע, אפשר להוסיף את נקודת ההחלפה. נעיר גם שם.',
     removeStop: 'הסרת העצירה',
-    stopAdded: 'נעיר אתכם גם כאן',
   },
 
-  rail: {
-    here: 'אתם כאן',
-    wakeHere: 'כאן נעיר אתכם, {distance} לפני',
-    earlyHere: 'התרעה שקטה, {distance} לפני',
-    transfer: 'החלפה',
-    loading: 'טוענים את התחנות בדרך',
-    fallback: {
-      offline: 'לא הצלחנו לטעון את התחנות בדרך. ההתראה עצמה תעבוד בדיוק אותו דבר.',
-      'none-found': 'אין לנו תחנות מסומנות בקטע הזה. ההתראה תפעל לפי מרחק.',
-      'too-far': 'המסלול ארוך מדי בשביל רשימת תחנות. ההתראה תפעל לפי מרחק.',
-    },
+  approach: {
+    /* The armed screen. Only measured things are named here. */
+    sleep: 'אפשר לישון',
+    toGo: 'ליעד',
+    toTransfer: 'להחלפה',
+    window: 'התצוגה: {distance} האחרונים',
+    wakeBand: 'כאן נעיר אתכם · {distance}',
+    closing: 'מתקרבים',
+    almost: 'עוד רגע מעירים אתכם',
+    then: 'ואז',
+    /* Shown under the range picker, before arming. */
+    preview: 'נעיר אתכם {distance} לפני היעד.',
   },
 
   active: {
-    title: 'אנחנו שומרים עליכם.',
     body: 'אפשר לנעול את הטלפון. ההתראה תפעל גם אם האפליקציה סגורה.',
-    stopsToGo: 'תחנות עד שנעיר אתכם',
-    stopsToGoOne: 'תחנה עד שנעיר אתכם',
-    almostThere: 'עוד רגע מעירים אתכם',
     distanceLeft: 'מרחק ליעד',
     wakeRange: 'טווח ההתראה',
     destination: 'היעד',
-    nextStop: 'העצירה הבאה',
     waitingFix: 'מחפשים אתכם…',
     cancel: 'ביטול ההתראה',
     cancelConfirmTitle: 'לבטל את ההתראה?',
@@ -90,9 +85,6 @@ export const he = {
     noSignalBody: 'המרחק האחרון שידענו: {distance}. נמשיך לנסות.',
     noSignalNotification: 'אין קליטה. המרחק האחרון: {distance}',
 
-    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
-    liveStops: 'עוד {n} תחנות',
-    liveStopsOne: 'עוד תחנה אחת',
 
     /* Notifications. Shown on the lock screen, so short enough to read at a glance. */
     statusActive: 'ההתראה פעילה',
@@ -244,23 +236,6 @@ export const he = {
     version: 'גרסה {version}',
   },
 
-  debug: {
-    title: 'דיבאג',
-    subtitle: 'בילדי פיתוח בלבד.',
-    geofence: 'geofence רשום',
-    backgroundTask: 'משימת רקע פועלת',
-    lastFix: 'ה־fix האחרון',
-    lastFixAge: 'לפני {seconds} שניות',
-    never: 'אף פעם',
-    tier: 'מדרגת דגימה',
-    accuracy: 'דיוק',
-    session: 'סשן',
-    forceArrival: 'אילוץ הגעה',
-    forceOvershoot: 'אילוץ פספוס',
-    forceStale: 'אילוץ אובדן קליטה',
-    forceEarly: 'אילוץ התרעה מוקדמת',
-    clearSession: 'מחיקת הסשן',
-  },
 
   errors: {
     locationUnavailable: 'לא הצלחנו לאתר אתכם. בדקו שה־GPS פועל.',
