@@ -8,6 +8,7 @@ import { DemoBanner } from '../components/DemoBanner';
 import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
 import { SearchField } from '../components/map/SearchField';
 import { labelFor, nearestPlace } from '../services/places/match';
+import { warmStops } from '../services/places/stops';
 import { ApproachGauge } from '../components/route/ApproachGauge';
 import { RangeSlider } from '../components/route/RangeSlider';
 import { buildApproach } from '../components/route/approach';
@@ -156,6 +157,11 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
         : 'peek';
 
   const sheetH = useSheetHeight(snap);
+
+  // The national stop index costs a couple of hundred milliseconds to build.
+  // Spend it now, while the map is being looked at, rather than inside the
+  // first keystroke of a search.
+  useEffect(() => warmStops(), []);
 
   return (
     <View style={[styles.screen, { backgroundColor: s.bg }]}>

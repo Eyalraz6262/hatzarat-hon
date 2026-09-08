@@ -218,6 +218,8 @@ export const en: TranslationSchema = {
     batteryAction: 'Open battery settings',
 
     version: 'Version {version}',
+    dataCredit:
+      'Stop names and locations come from the Ministry of Transport public transport feed (GTFS), Israeli open government data.',
   },
 
 

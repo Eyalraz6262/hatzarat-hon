@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { PLACES } from './catalog';
-import { labelFor, normalize, parseQuery, searchCatalog } from './match';
+import { labelFor, parseQuery, searchCatalog } from './match';
+import { normalize } from './normalize';
 
 const HAIFA = { latitude: 32.79, longitude: 34.96 };
 const TEL_AVIV = { latitude: 32.0743, longitude: 34.7925 };
@@ -36,13 +37,14 @@ describe('normalisation', () => {
   });
 
   it('treats the definite article as optional', () => {
-    // Two places in the catalog are named after the bay. Which one ranks first
-    // is not the point; typing the article must not change the answer.
-    const withArticle = searchCatalog('המפרץ').map((hit) => hit.place.name);
-    const without = searchCatalog('מפרץ').map((hit) => hit.place.name);
-    assert.deepEqual(withArticle, without);
-    assert.ok(withArticle.includes('תחנה מרכזית המפרץ'));
-    assert.ok(withArticle.includes('חוצות המפרץ'));
+    // Typing the article must not decide whether a place is found. It can
+    // change what else is found — "מפרץ" is also a word in "מפרץ שלמה" — so
+    // this is about the two the catalog itself names after the bay.
+    for (const query of ['המפרץ', 'מפרץ']) {
+      const names = searchCatalog(query).map((hit) => hit.place.name);
+      assert.ok(names.includes('תחנה מרכזית המפרץ'), query);
+      assert.ok(names.includes('חוצות המפרץ'), query);
+    }
   });
 
   it('does not strip a ה that is part of the word', () => {
@@ -157,8 +159,19 @@ describe('the catalog itself', () => {
 
 describe('words that are not part of any name', () => {
   it('still answers when the query carries an extra word', () => {
-    // Three of the four words name a station; the fourth names a different one.
-    assert.equal(top('חיפה חוף הכרמל מרכז'), 'חיפה - חוף הכרמל');
+    // No curated name has all four of these words, but a real place does: the
+    // bus terminal at Hof HaKarmel, which is "ת. מרכזית חוף הכרמל" in Haifa.
+    // The station itself stays in the list behind it.
+    const names = searchCatalog('חיפה חוף הכרמל מרכז').map((hit) => hit.place.name);
+    assert.ok(names.length > 0);
+    assert.ok(names.some((name) => name.includes('חוף הכרמל')));
+  });
+
+  it('reads a number as part of a name when that is all it can be', () => {
+    // "כביש 4" is two words, one of them a number, and it names real stops.
+    const names = searchCatalog('כביש 4').map((hit) => hit.place.name);
+    assert.ok(names.length > 0);
+    assert.ok(names.every((name) => name.includes('4')));
   });
 
   it('leaves a street address to the geocoder', () => {

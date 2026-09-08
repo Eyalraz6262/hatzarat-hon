@@ -303,6 +303,11 @@ export function SettingsScreen({ onOpenDebug }: { onOpenDebug: () => void }) {
           <Txt variant="caption" tone="muted" style={styles.version} nums>
             {t('settings.version', { version })}
           </Txt>
+
+          {/* Where the stop list comes from. Open data, but still someone's work. */}
+          <Txt variant="caption" tone="faint" style={styles.credit}>
+            {t('settings.dataCredit')}
+          </Txt>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -685,6 +690,11 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
 
+  credit: {
+    textAlign: 'center',
+    paddingHorizontal: space.lg,
+    paddingBottom: space.lg,
+  },
   version: {
     textAlign: 'center',
     paddingTop: space.lg,

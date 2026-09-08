@@ -1,6 +1,8 @@
 import type { LatLng } from '../../types';
 import { distanceMeters } from '../../utils/geo';
 import { PLACES, type Place, type PlaceKind } from './catalog';
+import { normalize, proximityScore, tokensOf, withoutArticle } from './normalize';
+import { nearestStop, searchStops, type StopHit } from './stops';
 
 /**
  * Ranking a typed query against the bundled catalog.
@@ -16,6 +18,39 @@ export type PlaceHit = {
   /** Metres from the user, when we know where they are. */
   distanceM: number | null;
 };
+
+type Scored = { hit: PlaceHit; score: number };
+
+/** A stop from the national index, shaped like a curated place. */
+function asPlace(hit: StopHit): Place {
+  return {
+    name: hit.name,
+    nameEn: '',
+    kind: hit.kind,
+    city: hit.town || undefined,
+    coords: hit.coords,
+  };
+}
+
+/**
+ * Whether a stop is really the curated place we already listed.
+ *
+ * The feed has a stop called "אצטדיון סמי עופר/כביש 4" beside the stadium and
+ * "ת. רכבת נתניה" outside the station. Those are worth showing — they are where
+ * a bus actually puts you down. What is not worth showing is the same place
+ * twice under two spellings, so a stop is dropped only when its name contains
+ * the curated one and it is close enough to be the same spot.
+ */
+const SAME_SPOT_M = 350;
+
+function duplicates(hit: PlaceHit, shown: PlaceHit[]): boolean {
+  const name = normalize(hit.place.name);
+  return shown.some((seen) => {
+    const other = normalize(seen.place.name);
+    if (!name.includes(other) && !other.includes(name)) return false;
+    return distanceMeters(hit.place.coords, seen.place.coords) < SAME_SPOT_M;
+  });
+}
 
 /**
  * Words that describe a *category* rather than name a place.
@@ -70,33 +105,6 @@ const FILLER = new Set([
   'at',
 ]);
 
-/** Hebrew points and cantillation, plus the marks people type inconsistently. */
-const MARKS = /[֑-ׇ׳״'"`׳״]/g;
-const SEPARATORS = /[-–—_,.()[\]/\\]+/g;
-
-export function normalize(text: string): string {
-  return text
-    .replace(MARKS, '')
-    .replace(SEPARATORS, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
-}
-
-/**
- * The definite article is optional in the way people type.
- *
- * "מפרץ" should find "המפרץ" and the other way round, but stripping ה from
- * every word would turn "הרצליה" into "רצליה" and "הדסה" into "דסה". Three
- * letters left over is the shortest that is still a word worth matching.
- */
-function withoutArticle(token: string): string | null {
-  return token.startsWith('ה') && token.length >= 4 ? token.slice(1) : null;
-}
-
-function tokensOf(text: string): string[] {
-  return normalize(text).split(' ').filter(Boolean);
-}
 
 /**
  * The tokens a query term may match, split by how much a match is worth.
@@ -146,6 +154,10 @@ export function parseQuery(text: string): Query {
       continue;
     }
     if (FILLER.has(token)) continue;
+    // "ת. רכבת נתניה" leaves a bare "ת" behind. A single letter matches a
+    // quarter of the country and narrows nothing. A single digit is different:
+    // it is the whole of "כביש 4", and the house number in an address.
+    if (token.length < 2 && !/\d/.test(token)) continue;
     terms.push(token);
   }
 
@@ -174,17 +186,14 @@ function termScore(term: string, hay: Haystack): number {
 const STRONG = 300;
 
 /**
- * Closeness is worth something, but never enough to beat the name.
+ * What a hand-checked entry is worth over a raw one from the feed.
  *
- * Someone in Haifa typing "תדי" means the stadium in Jerusalem. Proximity
- * settles ties between comparable matches — two stations called "מרכז" — and
- * orders a category-only query. It does not reorder a better name match below
- * a worse one, which is why the ceiling here is under one whole-token match.
+ * The curated list holds the canonical name for a place — "אצטדיון סמי עופר"
+ * rather than "אצטדיון סמי עופר/כביש 4" — so where both describe the same
+ * thing equally well, the tidier one goes first. It is a nudge, not a veto:
+ * a stop that matches a whole word the curated entry only prefixed still wins.
  */
-function proximityScore(distanceM: number | null): number {
-  if (distanceM === null) return 0;
-  return 120 / (1 + distanceM / 15_000);
-}
+const CURATED_BONUS = 150;
 
 export const MAX_RESULTS = 6;
 
@@ -203,16 +212,20 @@ export function searchCatalog(
   const parsed = parseQuery(query);
   if (parsed.terms.length === 0 && !parsed.kind) return [];
 
-  // Numbers do not appear in any name in the catalog, but they are the whole
-  // point of a street address. A query carrying one is meant for the geocoder,
-  // so the relaxed pass below stays out of its way.
-  const looksLikeAnAddress = parsed.terms.some((term) => /\d/.test(term));
+  // A number is the whole point of a street address, and no curated name has
+  // one — so the relaxed pass stays out of the geocoder's way whenever one
+  // appears. Stop names do carry numbers ("אצטדיון סמי עופר/כביש 4"), so for
+  // those a number only means an address when it comes with a street *and* a
+  // town: two or more other words beside it.
+  const hasNumber = parsed.terms.some((term) => /\d/.test(term));
+  const looksLikeAnAddress = hasNumber;
+  const addressForStops = hasNumber && parsed.terms.length >= 3;
   // On the relaxed pass, how many of the typed words a place has to account for
   // before it is offered at all.
   const floor = Math.ceil(parsed.terms.length * 0.6);
 
-  const rank = (requireAll: boolean): PlaceHit[] => {
-    const scored: { hit: PlaceHit; score: number }[] = [];
+  const rank = (requireAll: boolean): Scored[] => {
+    const scored: Scored[] = [];
 
     for (const place of places) {
       const hay = haystack(place);
@@ -256,15 +269,40 @@ export function searchCatalog(
       scored.push({ hit: { place, distanceM }, score });
     }
 
-    return scored
-      .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_RESULTS)
-      .map((entry) => entry.hit);
+    return scored;
   };
 
   const exact = rank(true);
-  if (exact.length > 0) return exact;
-  return looksLikeAnAddress ? [] : rank(false);
+  const curated = exact.length > 0 ? exact : looksLikeAnAddress ? [] : rank(false);
+
+  // The curated list is small, hand-checked and canonical; the national index
+  // is what makes the answer complete — every stop a bus or a train actually
+  // calls at, which is most of what anyone names as a destination and none of
+  // which an address geocoder has ever heard of. They are scored on one scale
+  // so they sort into one list rather than one always sitting above the other:
+  // someone typing "הרצל" in Tel Aviv wants the stop around the corner, not the
+  // station in Herzliya, however tidy its name is.
+  const merged: Scored[] = curated.map((entry) => ({
+    hit: entry.hit,
+    score: entry.score + CURATED_BONUS,
+  }));
+
+  if (parsed.terms.length > 0 && !addressForStops) {
+    for (const hit of searchStops(parsed.terms, near, MAX_RESULTS * 2, parsed.kind)) {
+      merged.push({
+        hit: { place: asPlace(hit), distanceM: hit.distanceM },
+        score: hit.score,
+      });
+    }
+  }
+
+  const shown: PlaceHit[] = [];
+  for (const { hit } of merged.sort((a, b) => b.score - a.score)) {
+    if (shown.length >= MAX_RESULTS) break;
+    if (duplicates(hit, shown)) continue;
+    shown.push(hit);
+  }
+  return shown;
 }
 
 /** How a catalog hit is written on one line of a phone screen. */
@@ -298,6 +336,11 @@ export function nearestPlace(coords: LatLng, withinM = 700): Place | null {
       best = place;
     }
   }
+  if (bestM <= withinM) return best;
 
-  return bestM <= withinM ? best : null;
+  // Nothing curated is near, but almost anywhere someone taps in a built-up
+  // part of the country has a stop on it, and a stop's name beats a street
+  // address for telling them where they are about to be woken.
+  const stop = nearestStop(coords, withinM);
+  return stop ? asPlace(stop) : null;
 }

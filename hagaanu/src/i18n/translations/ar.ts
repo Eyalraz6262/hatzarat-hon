@@ -228,6 +228,8 @@ export const ar: TranslationSchema = {
     batteryAction: 'فتح إعدادات البطارية',
 
     version: 'الإصدار {version}',
+    dataCredit:
+      'أسماء المحطات ومواقعها مأخوذة من بيانات النقل العام (GTFS) لوزارة النقل — بيانات حكومية مفتوحة.',
   },
 
 
