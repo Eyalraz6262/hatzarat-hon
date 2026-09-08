@@ -97,6 +97,10 @@ export const ar: TranslationSchema = {
     noSignalBody: 'آخر مسافة عرفناها: {distance}. ما زلنا نحاول.',
     noSignalNotification: 'لا توجد إشارة. آخر مسافة: {distance}',
 
+    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
+    liveStops: 'بقيت {n} محطات',
+    liveStopsOne: 'بقيت محطة واحدة',
+
     statusActive: 'المنبّه مفعّل',
     notificationTitle: 'سنوقظك عند {destination}',
     notificationTitleLive: '{distance} إلى {destination}',

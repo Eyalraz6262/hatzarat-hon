@@ -23,7 +23,7 @@ import { useAlarmStore } from './src/state/useAlarmStore';
 import { usePermissionsStore } from './src/state/usePermissionsStore';
 import { useSettingsStore } from './src/state/useSettingsStore';
 import { resolveLanguage } from './src/i18n/resolve';
-import { light, useTheme } from './src/theme';
+import { currentScheme, useTheme } from './src/theme';
 import { log } from './src/utils/logger';
 
 void SplashScreen.preventAutoHideAsync();
@@ -99,16 +99,16 @@ export default function App() {
   useEffect(() => {
     void (async () => {
       try {
-        // Paints the native window behind React with the app's own ground, so
-        // a cold start never flashes white before the first frame. Read from
-        // the light scheme directly: this runs before React renders, so there
-        // is no hook to ask, and the splash itself is the light ground.
-        await SystemUI.setBackgroundColorAsync(light.bg);
-
         // Settings first: the language and the theme are read by everything
-        // after this line, including the notification channel names.
+        // after this line, including the notification channel names and the
+        // window colour below.
         await hydrateSettings();
         resolveLanguage(useSettingsStore.getState().language);
+
+        // Paints the native window behind React with the app's own ground, so
+        // a cold start never flashes the wrong colour before the first frame.
+        // Runs before React renders, so the scheme is read outside the hook.
+        await SystemUI.setBackgroundColorAsync(currentScheme().bg);
 
         // Channels before anything else: a geofence event arriving in the next
         // second must find the alarm channel already created.

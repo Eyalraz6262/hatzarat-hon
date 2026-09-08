@@ -90,6 +90,10 @@ export const he = {
     noSignalBody: 'המרחק האחרון שידענו: {distance}. נמשיך לנסות.',
     noSignalNotification: 'אין קליטה. המרחק האחרון: {distance}',
 
+    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
+    liveStops: 'עוד {n} תחנות',
+    liveStopsOne: 'עוד תחנה אחת',
+
     /* Notifications. Shown on the lock screen, so short enough to read at a glance. */
     statusActive: 'ההתראה פעילה',
     notificationTitle: 'נעיר אתכם ב{destination}',

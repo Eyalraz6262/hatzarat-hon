@@ -99,6 +99,10 @@ export const ru: TranslationSchema = {
     noSignalBody: 'Последнее известное расстояние: {distance}. Продолжаем попытки.',
     noSignalNotification: 'Нет сигнала. Последнее расстояние: {distance}',
 
+    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
+    liveStops: 'ещё {n} ост.',
+    liveStopsOne: 'ещё 1 остановка',
+
     statusActive: 'Будильник включён',
     notificationTitle: 'Разбудим вас на «{destination}»',
     notificationTitleLive: '{distance} до «{destination}»',

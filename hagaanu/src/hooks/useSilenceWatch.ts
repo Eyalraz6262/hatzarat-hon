@@ -3,7 +3,9 @@ import { AppState } from 'react-native';
 
 import { ArrivalCoordinator } from '../services/alarm/ArrivalCoordinator';
 import { onSilence } from '../services/alarm/watchdog';
+import { LiveActivity } from '../../modules/live-activity';
 import { Journal } from '../services/debug/Journal';
+import { liveCard } from '../services/notifications/liveCard';
 import { tripStateOf } from '../services/geofencing/backgroundTasks';
 import { NotificationService } from '../services/notifications/NotificationService';
 import { AlarmStorage } from '../services/storage/AlarmStorage';
@@ -78,6 +80,11 @@ export function useSilenceWatch(): void {
             formatDistance(signal.lastDistanceM),
             true
           );
+
+          // Same rule on the card: it stops showing a distance rather than
+          // showing the last one as though it were current.
+          const card = liveCard(signal.lastDistanceM, null);
+          await LiveActivity.update(card.distance, card.stops, true, card.staleText);
         }
       } catch (error) {
         log.warn('location', 'silence watchdog failed', error);

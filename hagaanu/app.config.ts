@@ -14,6 +14,23 @@ import type { ExpoConfig } from 'expo/config';
 
 const GOOGLE_MAPS_ANDROID_KEY = process.env.GOOGLE_MAPS_ANDROID_API_KEY ?? '';
 
+/**
+ * The iOS Live Activity, behind an opt-in flag.
+ *
+ * `@bacons/apple-targets` adds a Widget Extension target to the Xcode project.
+ * That is the single most fragile thing in this config — it needs Xcode 16 and
+ * a macOS machine, and a mistake in it fails `expo prebuild` for the WHOLE app,
+ * not just the widget. The alarm does not depend on the card, so the default
+ * build does not carry that risk.
+ *
+ * Turn it on when building on a Mac with the widget verified:
+ *
+ *     HAGAANU_LIVE_ACTIVITY=1 npx expo prebuild -p ios --clean
+ *
+ * See docs/LIVE-ACTIVITY.md.
+ */
+const LIVE_ACTIVITY = process.env.HAGAANU_LIVE_ACTIVITY === '1';
+
 const config: ExpoConfig = {
   name: 'הגענו?',
   slug: 'hagaanu',
@@ -21,12 +38,26 @@ const config: ExpoConfig = {
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
-  userInterfaceStyle: 'dark',
-  backgroundColor: '#14161C',
+  /**
+   * The app follows the device, and the theme setting overrides it in JS.
+   * Forcing 'dark' here would make the native chrome disagree with a user who
+   * chose light — and the splash would then hand over to a screen of the
+   * opposite colour.
+   */
+  userInterfaceStyle: 'automatic',
+  // The light scheme's ground, which is what App paints before the first frame.
+  backgroundColor: '#F6F6F3',
 
   ios: {
     bundleIdentifier: 'com.hagaanu.app',
     supportsTablet: false,
+    /**
+     * Required by the widget target, and only by it — a second target has to be
+     * signed, and signing needs the team. Read from the environment for the
+     * same reason as the Maps key: it identifies the developer account and does
+     * not belong in git.
+     */
+    appleTeamId: process.env.APPLE_TEAM_ID,
     // Hebrew is the shipping language; the OS uses this for RTL and for the
     // language of the permission dialogs.
     infoPlist: {
@@ -51,6 +82,12 @@ const config: ExpoConfig = {
         'כדי להעיר אותך לפני התחנה, "הגענו?" צריכה לזהות מתי אתה מתקרב ליעד גם כשהמסך כבוי והאפליקציה סגורה.',
       NSLocationAlwaysUsageDescription:
         'כדי להעיר אותך לפני התחנה, "הגענו?" צריכה לזהות מתי אתה מתקרב ליעד גם כשהמסך כבוי והאפליקציה סגורה.',
+
+      /**
+       * Live Activities are refused silently without this key — no error, no
+       * card. It lives in the APP's Info.plist, not the extension's.
+       */
+      NSSupportsLiveActivities: LIVE_ACTIVITY,
 
       // Keeps the alarm audible when the ringer switch is on silent.
       UIRequiresPersistentWiFi: false,
@@ -138,7 +175,8 @@ const config: ExpoConfig = {
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',
-        backgroundColor: '#14161C',
+        backgroundColor: '#F6F6F3',
+        dark: { backgroundColor: '#0F1315' },
       },
     ],
     [
@@ -153,6 +191,9 @@ const config: ExpoConfig = {
       },
     ],
     'expo-dev-client',
+    // Spread rather than a conditional entry, so the array has no holes when
+    // the flag is off.
+    ...(LIVE_ACTIVITY ? (['@bacons/apple-targets'] as const) : []),
   ],
 
   extra: {

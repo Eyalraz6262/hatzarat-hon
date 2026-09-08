@@ -2,7 +2,9 @@ import { AlarmService } from './AlarmService';
 import { NotificationService } from '../notifications/NotificationService';
 import { GeofencingService } from '../geofencing/GeofencingService';
 import { LocationService } from '../location/LocationService';
+import { LiveActivity } from '../../../modules/live-activity';
 import { Journal } from '../debug/Journal';
+import { liveCard } from '../notifications/liveCard';
 import { AlarmStorage } from '../storage/AlarmStorage';
 import { MIN_RADIUS_M } from '../../constants/config';
 import type { AlarmReason, AlarmSession, LatLng } from '../../types';
@@ -79,6 +81,10 @@ export const ArrivalCoordinator = {
 
     await Promise.all([GeofencingService.stop(), LocationService.stopBackgroundTracking()]);
 
+    // The card's job is over the moment the alarm has the screen. Leaving it up
+    // would put a stale distance next to a ringing alarm.
+    await LiveActivity.end();
+
     await AlarmService.start();
 
     listeners.forEach((listener) => {
@@ -150,6 +156,13 @@ export const ArrivalCoordinator = {
         );
       }
       await NotificationService.presentArmedStatus(again.destination.label);
+      const againCard = liveCard(again.lastDistanceM ?? null, null);
+      await LiveActivity.start(
+        again.destination.label,
+        againCard.distance,
+        againCard.stops,
+        againCard.staleText
+      );
       log.debug('alarm', 're-armed at the destination itself');
       return true;
     } catch (error) {
@@ -213,6 +226,10 @@ export const ArrivalCoordinator = {
         await LocationService.startBackgroundTracking(tier);
       }
       await NotificationService.presentArmedStatus(continued.destination.label);
+      // A new destination means a new card: ActivityKit attributes are fixed
+      // for the life of an activity, so the leg change cannot be an update.
+      const card = liveCard(null, null);
+      await LiveActivity.start(continued.destination.label, card.distance, card.stops, card.staleText);
       log.debug('alarm', `advanced to next leg: ${continued.destination.label}`);
       void Journal.record(
         'leg',
@@ -232,6 +249,7 @@ export const ArrivalCoordinator = {
     await Promise.all([GeofencingService.stop(), LocationService.stopBackgroundTracking()]);
     await NotificationService.dismissAll();
     await AlarmStorage.clear();
+    await LiveActivity.end();
     log.debug('alarm', 'stood down');
     void Journal.record('stood-down', 'everything stopped, session cleared');
   },

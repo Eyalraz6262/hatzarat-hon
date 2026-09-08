@@ -3,7 +3,9 @@ import * as Location from 'expo-location';
 
 import { GEOFENCE_REGION_ID, MAX_ACCURACY_MARGIN_M, TASKS } from '../../constants/config';
 import { ArrivalCoordinator } from '../alarm/ArrivalCoordinator';
+import { LiveActivity } from '../../../modules/live-activity';
 import { Journal } from '../debug/Journal';
+import { liveCard } from '../notifications/liveCard';
 import { applyFix, onFix, type TripState } from '../alarm/watchdog';
 import { LocationService } from '../location/LocationService';
 import { NotificationService } from '../notifications/NotificationService';
@@ -151,6 +153,12 @@ TaskManager.defineTask<LocationEventData>(TASKS.LOCATION, async ({ data, error }
   if (distanceLabel !== session.statusDistanceLabel) {
     await AlarmStorage.patch({ statusDistanceLabel: distanceLabel });
     await NotificationService.presentArmedStatus(session.destination.label, distanceLabel);
+
+    // The Live Activity carries the same number, updated on the same rule: only
+    // when the rendered text actually changed. ActivityKit budgets updates, and
+    // spending one to redraw an identical string wastes it.
+    const card = liveCard(distance, null);
+    await LiveActivity.update(card.distance, card.stops, false, card.staleText);
   }
 
   // Battery: sample coarsely far out, tightly close in. Restart the stream only

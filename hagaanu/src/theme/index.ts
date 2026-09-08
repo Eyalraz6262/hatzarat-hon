@@ -1,4 +1,4 @@
-import { Platform, useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
+import { Appearance, Platform, useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
 
 import { useSettingsStore } from '../state/useSettingsStore';
 import { dark, light, type Scheme } from './colors';
@@ -41,10 +41,17 @@ export function useTheme(): Scheme {
  *
  * For the services that paint something before or without a render: the native
  * window background at boot, the notification tint from a background task.
+ *
+ * `Appearance` rather than `useColorScheme` because there is no render here to
+ * hang a hook on — but it must be consulted all the same. Falling back to light
+ * on "system" would paint the boot window white for every user who never opened
+ * settings and has their phone in dark mode, which is most of them.
  */
 export function currentScheme(): Scheme {
   const mode = useSettingsStore.getState().theme;
-  return mode === 'dark' ? dark : light;
+  if (mode === 'light') return light;
+  if (mode === 'dark') return dark;
+  return Appearance.getColorScheme() === 'dark' ? dark : light;
 }
 
 /* ------------------------------------------------------------------ *

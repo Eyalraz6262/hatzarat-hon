@@ -4,7 +4,9 @@ import { DEFAULT_RADIUS_M, EARLY_RADIUS_M, MIN_RADIUS_M } from '../constants/con
 import { t } from '../i18n';
 import { AlarmService } from '../services/alarm/AlarmService';
 import { ArrivalCoordinator } from '../services/alarm/ArrivalCoordinator';
+import { LiveActivity } from '../../modules/live-activity';
 import { Journal } from '../services/debug/Journal';
+import { liveCard } from '../services/notifications/liveCard';
 import { GeofencingService } from '../services/geofencing/GeofencingService';
 import { LocationService } from '../services/location/LocationService';
 import { NotificationService } from '../services/notifications/NotificationService';
@@ -315,6 +317,17 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
         await LocationService.startBackgroundTracking(tier);
       }
       await NotificationService.presentArmedStatus(session.destination.label);
+
+      // The lock-screen card. Absent on Android, on older iPhones, and when the
+      // user has switched Live Activities off — all of which this handles by
+      // doing nothing, because the alarm does not depend on it.
+      const card = liveCard(Number.isFinite(distance) ? distance : null, null);
+      await LiveActivity.start(
+        session.destination.label,
+        card.distance,
+        card.stops,
+        card.staleText
+      );
 
       void Journal.record(
         'armed',

@@ -87,6 +87,10 @@ export const en: TranslationSchema = {
     noSignalBody: 'Last distance we knew: {distance}. We are still trying.',
     noSignalNotification: 'No signal. Last distance: {distance}',
 
+    /* The Live Activity card. Short: it shares a lock-screen row with a distance. */
+    liveStops: '{n} stops to go',
+    liveStopsOne: '1 stop to go',
+
     statusActive: 'Alarm active',
     notificationTitle: 'We will wake you at {destination}',
     notificationTitleLive: '{distance} to {destination}',
