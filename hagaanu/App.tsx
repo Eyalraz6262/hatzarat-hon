@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
@@ -16,6 +16,8 @@ import { useAppFonts } from './src/hooks/useAppFonts';
 import { useArrivalListener } from './src/hooks/useArrivalListener';
 import { useLocationTracking } from './src/hooks/useLocationTracking';
 import { useForegroundArrivalCheck } from './src/hooks/useForegroundArrivalCheck';
+import { useProcessGuard } from './src/hooks/useProcessGuard';
+import { useSilenceWatch } from './src/hooks/useSilenceWatch';
 import { NotificationService } from './src/services/notifications/NotificationService';
 import { useAlarmStore } from './src/state/useAlarmStore';
 import { usePermissionsStore } from './src/state/usePermissionsStore';
@@ -52,9 +54,14 @@ export default function App() {
   const position = useAlarmStore((state) => state.position);
   const stops = useAlarmStore((state) => state.stops);
   const stopsFallback = useAlarmStore((state) => state.stopsFallback);
+  const stale = useAlarmStore((state) => state.stale);
+  const killed = useAlarmStore((state) => state.killed);
+  const dismissKilled = useAlarmStore((state) => state.dismissKilled);
   const hydrate = useAlarmStore((state) => state.hydrate);
   const cancel = useAlarmStore((state) => state.cancel);
   const dismissAlarm = useAlarmStore((state) => state.dismissAlarm);
+  const wakeAgain = useAlarmStore((state) => state.wakeAgain);
+  const session = useAlarmStore((state) => state.session);
 
   const fontsReady = useAppFonts();
 
@@ -69,6 +76,10 @@ export default function App() {
   useLocationTracking();
   useArrivalListener();
   useForegroundArrivalCheck();
+  // The two layers that react to something NOT happening: no fix arriving, and
+  // the OS quietly unregistering our monitors.
+  useSilenceWatch();
+  useProcessGuard();
 
   useEffect(() => {
     void (async () => {
@@ -140,6 +151,10 @@ export default function App() {
             here={position?.coords ?? null}
             stops={stops}
             stopsFallback={stopsFallback}
+            stale={stale}
+            killed={killed}
+            onDismissKilled={dismissKilled}
+            onOpenBatterySettings={() => void Linking.openSettings()}
             onCancel={() => void cancel()}
             onSimulateArrival={() => void ArrivalCoordinator.trigger('manual')}
           />
@@ -150,7 +165,13 @@ export default function App() {
         {showSettings ? <SettingsScreen onClose={() => setShowSettings(false)} /> : null}
 
         {status === 'ringing' && destination ? (
-          <AlarmScreen destination={destination} onDismiss={onDismissAlarm} />
+          <AlarmScreen
+            destination={destination}
+            reason={session?.reason ?? 'arrived'}
+            lastDistanceM={session?.lastDistanceM ?? null}
+            onDismiss={onDismissAlarm}
+            onWakeAgain={() => void wakeAgain()}
+          />
         ) : null}
       </View>
     </SafeAreaProvider>

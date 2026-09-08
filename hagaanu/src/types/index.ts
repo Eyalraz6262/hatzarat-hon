@@ -18,6 +18,15 @@ export type PositionSample = {
   timestamp: number;
 };
 
+/**
+ * Why the alarm is ringing.
+ *
+ *   arrived   we measured ourselves inside the ring
+ *   overshot  we were approaching, and then we were not
+ *   stale     the signal went quiet close to the destination
+ */
+export type AlarmReason = 'arrived' | 'overshot' | 'stale';
+
 export type AlarmStatus =
   /** Nothing armed. User is picking a destination. */
   | 'idle'
@@ -42,8 +51,16 @@ export type AlarmSession = {
   armedAt: number;
   /** Epoch ms when the geofence/backstop decided we arrived. */
   triggeredAt: number | null;
-  /** Which layer detected the arrival — useful for diagnostics. */
-  triggeredBy: 'geofence' | 'backstop' | 'foreground' | 'manual' | null;
+  /** Which layer detected it — useful for diagnostics. */
+  triggeredBy: 'geofence' | 'backstop' | 'foreground' | 'watchdog' | 'manual' | null;
+  /**
+   * WHY the alarm fired, which is a different question from which layer noticed.
+   *
+   * The wake screen says something different for each, because "you are here"
+   * and "you went past" and "we lost signal near your stop" call for three
+   * different reactions from someone who just opened their eyes.
+   */
+  reason: AlarmReason | null;
   /**
    * True when the user declined background location. The OS geofence and the
    * background stream are both unavailable, so the alarm can only fire while the
@@ -52,6 +69,32 @@ export type AlarmSession = {
   foregroundOnly: boolean;
   /** Id of the currently active polling tier, so we only restart on change. */
   pollingTierId: string | null;
+
+  /**
+   * The optional early heads-up: a silent notification further out, so the
+   * passenger can start getting their things together. Null when not wanted.
+   */
+  earlyRadiusM: number | null;
+  earlySent: boolean;
+
+  /**
+   * The closest we have ever measured on this trip.
+   *
+   * A low-water mark, not a running distance. The overshoot rule hangs off it:
+   * without it there is no way to tell "the bus is going the long way round"
+   * from "we went past". See services/alarm/watchdog.ts.
+   */
+  closestM: number | null;
+  lastDistanceM: number | null;
+  /** Epoch ms of the most recent fix, for the stale-signal rules. */
+  lastFixAt: number | null;
+  /** Ground speed at the last fix, m/s, when the OS reported one. */
+  lastSpeedMps: number | null;
+  /**
+   * True once we have told the user the signal went stale, so the lock screen
+   * is not rewritten with the same text on every silent tick.
+   */
+  staleNoticed: boolean;
   /**
    * The distance last written into the ongoing notification. Kept so the
    * background task re-posts only when the visible text actually changes —

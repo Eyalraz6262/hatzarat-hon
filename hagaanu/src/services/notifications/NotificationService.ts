@@ -15,6 +15,38 @@ import {
 } from '../../constants/config';
 import { ALARM_SOUND_IDS, specFor } from '../audio/catalog';
 import { currentSettings } from '../../state/useSettingsStore';
+import { formatDistance } from '../../utils/geo';
+import type { AlarmReason } from '../../types';
+
+/**
+ * What the wake-up notification says.
+ *
+ * Three reasons, three messages. "You are here", "you went past" and "we lost
+ * signal near your stop" call for three different reactions from someone who
+ * has just opened their eyes, and collapsing them into one line would make the
+ * app confidently wrong two times out of three.
+ */
+function alarmText(
+  destination: string,
+  reason: AlarmReason,
+  distance: number | null
+): { title: string; body: string } {
+  if (reason === 'overshot') {
+    return { title: t('alarm.overshotTitle'), body: t('alarm.overshotBody') };
+  }
+  if (reason === 'stale') {
+    return {
+      title: t('alarm.staleTitle'),
+      body: t('alarm.staleBody', {
+        distance: distance === null ? '' : formatDistance(distance),
+      }),
+    };
+  }
+  return {
+    title: t('alarm.notificationTitle', { destination }),
+    body: t('alarm.notificationBody'),
+  };
+}
 import { t } from '../../i18n';
 import { light } from '../../theme';
 import { log } from '../../utils/logger';
@@ -96,16 +128,19 @@ export const NotificationService = {
    * even if our JS process is killed right after the geofence event, so it is
    * always sent first — sound and vibration are layered on top afterwards.
    */
-  async presentAlarm(destinationLabel: string, overshot = false): Promise<void> {
+  async presentAlarm(
+    destinationLabel: string,
+    reason: AlarmReason = 'arrived',
+    context: { distance?: number | null } = {}
+  ): Promise<void> {
     await NotificationService.configure();
     const spec = specFor(currentSettings().soundId);
+    const text = alarmText(destinationLabel, reason, context.distance ?? null);
     try {
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: overshot
-            ? t('alarm.overshotTitle')
-            : t('alarm.notificationTitle', { destination: destinationLabel }),
-          body: overshot ? t('alarm.overshotBody') : t('alarm.notificationBody'),
+          title: text.title,
+          body: text.body,
           sound: spec.file,
           priority: Notifications.AndroidNotificationPriority.MAX,
           vibrate: [...CHANNEL_VIBRATION_PATTERN],
@@ -138,18 +173,28 @@ export const NotificationService = {
    */
   async presentArmedStatus(
     destinationLabel: string,
-    radiusLabel: string,
-    distanceLabel?: string | null
+    distanceLabel?: string | null,
+    /**
+     * When the fix has gone stale, the lock screen stops showing a live
+     * distance and says so instead. Continuing to display the last number as
+     * if it were current is the app quietly lying to a sleeping passenger.
+     */
+    stale = false
   ): Promise<void> {
     await NotificationService.configure();
     try {
       await Notifications.scheduleNotificationAsync({
         identifier: STATUS_NOTIFICATION_ID,
         content: {
-          title: distanceLabel
-            ? t('active.notificationTitleLive', { distance: distanceLabel })
-            : t('active.notificationTitle'),
-          body: t('active.notificationBody', { radius: radiusLabel, destination: destinationLabel }),
+          title: stale
+            ? t('active.noSignalNotification', { distance: distanceLabel ?? '' })
+            : distanceLabel
+              ? t('active.notificationTitleLive', {
+                  distance: distanceLabel,
+                  destination: destinationLabel,
+                })
+              : t('active.notificationTitle', { destination: destinationLabel }),
+          body: t('active.notificationBody'),
           sound: false,
           sticky: true,
           autoDismiss: false,
@@ -163,6 +208,33 @@ export const NotificationService = {
       });
     } catch (error) {
       log.warn('notify', 'failed to present status notification', error);
+    }
+  },
+
+  /**
+   * The silent early heads-up.
+   *
+   * Posted on the STATUS channel on purpose: it is deliberately quiet, and
+   * putting it on an alarm channel would make "start getting your things
+   * together" as loud as "get off now".
+   */
+  async presentEarly(destinationLabel: string, distanceM: number): Promise<void> {
+    await NotificationService.configure();
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: t('alarm.earlyTitle', { destination: destinationLabel }),
+          body: t('alarm.earlyBody', { distance: formatDistance(distanceM) }),
+          sound: false,
+          priority: Notifications.AndroidNotificationPriority.DEFAULT,
+          interruptionLevel: 'active',
+          data: { kind: NOTIFICATION_KIND.STATUS },
+        },
+        trigger: Platform.OS === 'android' ? { channelId: CHANNELS.STATUS } : null,
+      });
+      log.debug('notify', 'early heads-up presented');
+    } catch (error) {
+      log.warn('notify', 'failed to present early notification', error);
     }
   },
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { DEFAULT_RADIUS_M } from '../constants/config';
+import { DEFAULT_RADIUS_M, EARLY_RADIUS_M, MIN_RADIUS_M } from '../constants/config';
 import { t } from '../i18n';
 import { AlarmService } from '../services/alarm/AlarmService';
 import { ArrivalCoordinator } from '../services/alarm/ArrivalCoordinator';
@@ -12,7 +12,7 @@ import { SavedStorage, type SavedDestination, type SavedKind } from '../services
 import { fetchStopsAlongRoute, type StopsResult, type TransitStop } from '../services/transit/StopsService';
 import { usePermissionsStore } from './usePermissionsStore';
 import type { AlarmSession, AlarmStatus, Destination, PositionSample } from '../types';
-import { distanceMeters, formatDistance } from '../utils/geo';
+import { distanceMeters } from '../utils/geo';
 import { log } from '../utils/logger';
 
 type AlarmState = {
@@ -20,6 +20,12 @@ type AlarmState = {
   /** Where the user wants to wake up. Null until they pick something. */
   destination: Destination | null;
   radiusM: number;
+  /**
+   * Whether the user asked for the quiet heads-up further out. Off by default:
+   * most trips do not need it, and an extra notification on every journey is a
+   * cost paid by everyone to serve a few.
+   */
+  earlyWarning: boolean;
   /** Newest position we have, from the foreground watcher. */
   position: PositionSample | null;
   /** Meters to the destination, or null when either endpoint is unknown. */
@@ -39,6 +45,7 @@ type AlarmState = {
 
   setDestination: (destination: Destination | null) => void;
   setRadius: (radiusM: number) => void;
+  setEarlyWarning: (on: boolean) => void;
   setPosition: (position: PositionSample) => void;
   setError: (error: string | null) => void;
   /**
@@ -58,8 +65,28 @@ type AlarmState = {
   arm: () => Promise<boolean>;
   cancel: () => Promise<void>;
   dismissAlarm: () => Promise<void>;
+  /** Re-arms at the destination itself after the first alarm was dismissed. */
+  wakeAgain: () => Promise<void>;
   /** Applied when a background task decides we arrived while the UI is mounted. */
   onArrival: (session: AlarmSession) => void;
+
+  /**
+   * True once we have caught the OS tearing our monitors down mid-trip.
+   *
+   * Session-scoped rather than persisted: it drives a one-off explanation, and
+   * a flag that survives a reinstall would keep nagging about a problem that
+   * may already be fixed.
+   */
+  killed: boolean;
+  reportKilled: () => void;
+  dismissKilled: () => void;
+
+  /**
+   * True while no fix has arrived for long enough that the displayed distance
+   * is no longer current. Set by the silence watchdog; cleared by a fresh fix.
+   */
+  stale: boolean;
+  setStale: (stale: boolean) => void;
 };
 
 function computeDistance(position: PositionSample | null, destination: Destination | null): number | null {
@@ -71,6 +98,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   status: 'idle',
   destination: null,
   radiusM: DEFAULT_RADIUS_M,
+  earlyWarning: false,
   position: null,
   distanceM: null,
   session: null,
@@ -80,6 +108,8 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   stops: [],
   stopsState: 'idle',
   stopsFallback: null,
+  killed: false,
+  stale: false,
 
   setDestination: (destination) =>
     set((state) => ({
@@ -113,13 +143,22 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
   setRadius: (radiusM) => set({ radiusM }),
 
+  setEarlyWarning: (earlyWarning) => set({ earlyWarning }),
+
   setPosition: (position) =>
     set((state) => ({
       position,
       distanceM: computeDistance(position, state.destination),
+      // A fix in hand is proof the blackout is over, whichever layer got it.
+      stale: false,
     })),
 
   setError: (error) => set({ error }),
+
+  reportKilled: () => set({ killed: true }),
+  dismissKilled: () => set({ killed: false }),
+
+  setStale: (stale) => set({ stale }),
 
   async hydrate() {
     set({ saved: await SavedStorage.readAll() });
@@ -221,6 +260,17 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
         pollingTierId: tier.id,
         statusDistanceLabel: null,
         foregroundOnly,
+        reason: null,
+        earlyRadiusM: get().earlyWarning ? EARLY_RADIUS_M : null,
+        earlySent: false,
+        // Seeded from the current distance rather than left null, so a trip
+        // that starts already near the destination has a low-water mark from
+        // the first moment instead of after the first background fix.
+        closestM: Number.isFinite(distance) ? distance : null,
+        lastDistanceM: Number.isFinite(distance) ? distance : null,
+        lastFixAt: position ? position.timestamp : null,
+        lastSpeedMps: null,
+        staleNoticed: false,
         // Frozen here on purpose: from this point the alarm is a geofence and
         // a local position stream, and nothing may need the network again.
         stops,
@@ -235,7 +285,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
         await GeofencingService.start(destination, radiusM);
         await LocationService.startBackgroundTracking(tier);
       }
-      await NotificationService.presentArmedStatus(destination.label, formatDistance(radiusM));
+      await NotificationService.presentArmedStatus(destination.label);
 
       AlarmService.confirmationBuzz();
       set({ status: 'armed', session, busy: false });
@@ -267,6 +317,16 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     // sounded convenient and reads as the app not having noticed they arrived.
     // A clean map is the honest ending.
     set({ status: 'idle', session: null, destination: null, distanceM: null, busy: false, error: null });
+  },
+
+  async wakeAgain() {
+    const ok = await ArrivalCoordinator.wakeAgain();
+    if (!ok) {
+      set({ status: 'idle', session: null, destination: null, distanceM: null, error: null });
+      return;
+    }
+    const session = await AlarmStorage.read();
+    set({ status: 'armed', session, radiusM: session?.radiusM ?? MIN_RADIUS_M });
   },
 
   onArrival: (session) =>

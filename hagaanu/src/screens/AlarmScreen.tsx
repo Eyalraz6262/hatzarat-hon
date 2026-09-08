@@ -9,7 +9,8 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { Touch, Txt } from '../components/ui';
 import { Feedback } from '../services/feedback/Haptics';
 import { motion, radius, space, type, useTheme } from '../theme';
-import type { Destination } from '../types';
+import type { AlarmReason, Destination } from '../types';
+import { formatDistance } from '../utils/geo';
 
 /**
  * Arrival.
@@ -25,10 +26,24 @@ import type { Destination } from '../types';
  */
 export function AlarmScreen({
   destination,
+  reason = 'arrived',
+  lastDistanceM = null,
   onDismiss,
+  onWakeAgain,
 }: {
   destination: Destination;
+  /** Why we are ringing. Changes what the screen says, not how loud it is. */
+  reason?: AlarmReason;
+  /** The last distance we actually measured, for the lost-signal message. */
+  lastDistanceM?: number | null;
   onDismiss: () => void;
+  /**
+   * Re-arms at the destination itself.
+   *
+   * Absent in the demo and on the overshoot screen, where "wake me again at
+   * the stop" would be an offer to wake someone at a place they have left.
+   */
+  onWakeAgain?: () => void;
 }) {
   const s = useTheme();
   const reduced = useReducedMotion();
@@ -88,13 +103,34 @@ export function AlarmScreen({
 
           <View style={styles.copy}>
             <Txt variant="display" tone="onAlarm" style={styles.title}>
-              {t('alarm.title')}
+              {headline(reason)}
             </Txt>
             <Txt variant="body" tone="alarmDim" style={styles.title}>
-              {t('alarm.body', { destination: destination.label })}
+              {detail(reason, destination.label, lastDistanceM)}
             </Txt>
           </View>
         </View>
+
+        {/*
+          Offered only when arriving, and only for five seconds' worth of
+          attention: after an overshoot there is nothing left to be woken for,
+          and after a lost signal we do not know enough to promise a second try.
+        */}
+        {onWakeAgain && reason === 'arrived' ? (
+          <Touch
+            accessibilityRole="button"
+            accessibilityLabel={t('alarm.wakeAgain')}
+            onPress={() => {
+              Feedback.tick();
+              onWakeAgain();
+            }}
+            style={[styles.again, { borderColor: s.alarm.line }]}
+          >
+            <Txt variant="captionStrong" tone="onAlarm">
+              {t('alarm.wakeAgain')}
+            </Txt>
+          </Touch>
+        ) : null}
 
         <Touch
           accessibilityRole="button"
@@ -119,6 +155,33 @@ export function AlarmScreen({
       </SafeAreaView>
     </View>
   );
+}
+
+/**
+ * What the screen says.
+ *
+ * Three reasons, three headlines. Someone opening their eyes to "you are here"
+ * stands up; to "you went past" checks the window; to "we lost signal" looks
+ * outside before doing anything. Collapsing them into one line would make the
+ * app confidently wrong two times out of three.
+ */
+function headline(reason: AlarmReason): string {
+  if (reason === 'overshot') return t('alarm.overshotScreenTitle');
+  if (reason === 'stale') return t('alarm.staleScreenTitle');
+  return t('alarm.title');
+}
+
+function detail(reason: AlarmReason, destination: string, lastDistanceM: number | null): string {
+  if (reason === 'overshot') return t('alarm.overshotScreenBody', { destination });
+  if (reason === 'stale') {
+    const where = t('alarm.staleScreenBody', { destination });
+    // The last measured distance is the one honest fact we have here, so it is
+    // said out loud rather than left implied.
+    return lastDistanceM === null
+      ? where
+      : `${where} ${t('alarm.staleBody', { distance: formatDistance(lastDistanceM) })}`;
+  }
+  return t('alarm.body', { destination });
 }
 
 const styles = StyleSheet.create({
@@ -174,5 +237,18 @@ const styles = StyleSheet.create({
   },
   dismissLabel: {
     textAlign: 'center',
+  },
+  /**
+   * The secondary action, and deliberately quiet: outlined rather than filled,
+   * and above the dismiss target rather than beside it. On this screen there
+   * is one thing to press, and everything else must stay out of its way.
+   */
+  again: {
+    minHeight: 52,
+    marginBottom: space.md,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -3,9 +3,11 @@ import * as Location from 'expo-location';
 
 import { GEOFENCE_REGION_ID, MAX_ACCURACY_MARGIN_M, TASKS } from '../../constants/config';
 import { ArrivalCoordinator } from '../alarm/ArrivalCoordinator';
+import { applyFix, onFix, type TripState } from '../alarm/watchdog';
 import { LocationService } from '../location/LocationService';
 import { NotificationService } from '../notifications/NotificationService';
 import { AlarmStorage } from '../storage/AlarmStorage';
+import type { AlarmSession } from '../../types';
 import { distanceMeters, formatDistance } from '../../utils/geo';
 import { log } from '../../utils/logger';
 
@@ -19,6 +21,19 @@ import { log } from '../../utils/logger';
  * or an effect is the classic reason "it works in the foreground but never fires
  * when the phone is locked".
  */
+
+/** The persisted session, in the shape the pure rules understand. */
+export function tripStateOf(session: AlarmSession): TripState {
+  return {
+    radiusM: session.radiusM,
+    earlyRadiusM: session.earlyRadiusM ?? null,
+    earlySent: session.earlySent ?? false,
+    closestM: session.closestM ?? null,
+    lastDistanceM: session.lastDistanceM ?? null,
+    lastFixAt: session.lastFixAt ?? null,
+    lastSpeedMps: session.lastSpeedMps ?? null,
+  };
+}
 
 type GeofenceEventData = {
   eventType: Location.LocationGeofencingEventType;
@@ -46,7 +61,7 @@ TaskManager.defineTask<GeofenceEventData>(TASKS.GEOFENCE, async ({ data, error }
   }
 
   log.debug('geofence', 'ENTER event received');
-  await ArrivalCoordinator.trigger('geofence');
+  await ArrivalCoordinator.trigger('geofence', 'arrived');
 });
 
 type LocationEventData = {
@@ -76,10 +91,42 @@ TaskManager.defineTask<LocationEventData>(TASKS.LOCATION, async ({ data, error }
   // kilometers early.
   const accuracyMargin = Math.min(latest.coords.accuracy ?? 0, MAX_ACCURACY_MARGIN_M);
 
-  if (distance <= session.radiusM + accuracyMargin) {
-    log.debug('location', `backstop arrival: ${Math.round(distance)}m <= ${session.radiusM}m`);
-    await ArrivalCoordinator.trigger('backstop');
-    return;
+  const before = tripStateOf(session);
+  const signal = onFix(before, distance, accuracyMargin);
+
+  // The running state is written before acting on the signal, so a process
+  // killed between the two still has the low-water mark it needs next time.
+  const after = applyFix(before, distance, latest.timestamp, latest.coords.speed ?? null);
+  await AlarmStorage.patch({
+    closestM: after.closestM,
+    lastDistanceM: after.lastDistanceM,
+    lastFixAt: after.lastFixAt,
+    lastSpeedMps: after.lastSpeedMps,
+    // A fresh fix clears the stale notice, so the next blackout says so again
+    // rather than staying quiet because it already had its turn.
+    staleNoticed: false,
+  });
+
+  switch (signal.kind) {
+    case 'arrive':
+      log.debug('location', `backstop arrival: ${Math.round(distance)}m <= ${session.radiusM}m`);
+      await ArrivalCoordinator.trigger('backstop', 'arrived');
+      return;
+
+    case 'overshot':
+      log.debug(
+        'location',
+        `overshoot: ${Math.round(distance)}m, closest was ${Math.round(before.closestM ?? 0)}m`
+      );
+      await ArrivalCoordinator.trigger('backstop', 'overshot');
+      return;
+
+    case 'early':
+      await ArrivalCoordinator.sendEarly();
+      break;
+
+    default:
+      break;
   }
 
   // Keep the ongoing notification current, so a glance at the lock screen shows
@@ -88,18 +135,17 @@ TaskManager.defineTask<LocationEventData>(TASKS.LOCATION, async ({ data, error }
   const distanceLabel = formatDistance(distance);
   if (distanceLabel !== session.statusDistanceLabel) {
     await AlarmStorage.patch({ statusDistanceLabel: distanceLabel });
-    await NotificationService.presentArmedStatus(
-      session.destination.label,
-      formatDistance(session.radiusM),
-      distanceLabel
-    );
+    await NotificationService.presentArmedStatus(session.destination.label, distanceLabel);
   }
 
   // Battery: sample coarsely far out, tightly close in. Restart the stream only
   // when the tier actually changes, since restarting costs a radio wake.
   const tier = LocationService.tierForDistance(distance);
   if (tier.id !== session.pollingTierId) {
-    log.debug('location', `polling tier ${session.pollingTierId ?? 'none'} -> ${tier.id} at ${Math.round(distance)}m`);
+    log.debug(
+      'location',
+      `polling tier ${session.pollingTierId ?? 'none'} -> ${tier.id} at ${Math.round(distance)}m`
+    );
     await AlarmStorage.patch({ pollingTierId: tier.id });
     try {
       await LocationService.startBackgroundTracking(tier);

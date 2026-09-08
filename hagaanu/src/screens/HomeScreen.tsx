@@ -1,11 +1,12 @@
 import LocateFixed from 'lucide-react-native/icons/locate-fixed';
 import Settings from 'lucide-react-native/icons/settings';
+import Check from 'lucide-react-native/icons/check';
 import X from 'lucide-react-native/icons/x';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FALLBACK_REGION } from '../constants/config';
+import { EARLY_RADIUS_M, FALLBACK_REGION } from '../constants/config';
 import { t } from '../i18n';
 import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
 import { SearchField } from '../components/map/SearchField';
@@ -22,6 +23,7 @@ import {
   row,
 } from '../components/ui';
 import { Feedback } from '../services/feedback/Haptics';
+import { formatDistance } from '../utils/geo';
 import { useAlarmStore } from '../state/useAlarmStore';
 import { usePermissionsStore } from '../state/usePermissionsStore';
 import { elevation, hitSlop, icon, radius, space, useTheme } from '../theme';
@@ -58,6 +60,8 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
 
   const setDestination = useAlarmStore((state) => state.setDestination);
   const setRadius = useAlarmStore((state) => state.setRadius);
+  const earlyWarning = useAlarmStore((state) => state.earlyWarning);
+  const setEarlyWarning = useAlarmStore((state) => state.setEarlyWarning);
   const setError = useAlarmStore((state) => state.setError);
   const loadStops = useAlarmStore((state) => state.loadStops);
   const arm = useAlarmStore((state) => state.arm);
@@ -186,6 +190,54 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
             </Card>
 
             <RangePicker value={radiusM} onChange={setRadius} />
+
+            {/*
+              Off by default. Most trips do not need a second notification, and
+              turning it on for everyone would be a cost paid by all to serve a
+              few. It sits under the range because it is a variation on the same
+              question: how much warning do you want.
+            */}
+            <Touch
+              accessibilityRole="switch"
+              accessibilityState={{ checked: earlyWarning }}
+              accessibilityLabel={t('route.earlyWarning')}
+              onPress={() => {
+                Feedback.tick();
+                setEarlyWarning(!earlyWarning);
+              }}
+              style={[
+                styles.early,
+                {
+                  backgroundColor: earlyWarning ? s.accent.soft : s.sunk,
+                  borderColor: earlyWarning ? s.accent.base : 'transparent',
+                  flexDirection: row(),
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.earlyBox,
+                  {
+                    borderColor: earlyWarning ? s.accent.base : s.lineStrong,
+                    backgroundColor: earlyWarning ? s.accent.base : 'transparent',
+                  },
+                ]}
+              >
+                {earlyWarning ? (
+                  <Check size={14} strokeWidth={3} color={s.accent.on} />
+                ) : null}
+              </View>
+              <View style={styles.earlyText}>
+                <Txt variant="labelStrong" tone={earlyWarning ? 'accent' : 'ink'}>
+                  {t('route.earlyWarning')}
+                </Txt>
+                {earlyWarning ? (
+                  <Txt variant="caption" tone="muted" style={styles.earlyNote}>
+                    {t('route.earlyWarningNote', { distance: formatDistance(EARLY_RADIUS_M) })}
+                  </Txt>
+                ) : null}
+              </View>
+            </Touch>
 
             {!backgroundGranted ? (
               <View style={[styles.warn, { backgroundColor: s.sunk, flexDirection: row() }]}>
@@ -333,6 +385,26 @@ const styles = StyleSheet.create({
   sheetTitle: {
     marginBottom: space.lg,
   },
+  early: {
+    alignItems: 'center',
+    gap: space.md,
+    minHeight: 56,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderRadius: radius.control,
+    borderWidth: 1.5,
+  },
+  earlyBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  earlyText: { flex: 1, gap: 2 },
+  earlyNote: { marginTop: 1 },
   warn: {
     borderRadius: radius.control,
     padding: space.lg,

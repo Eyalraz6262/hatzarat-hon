@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { RouteRail } from '../components/route/RouteRail';
 import { buildRail } from '../components/route/rail';
-import { Card, Chip, DangerButton, GhostButton, Row, Txt, row } from '../components/ui';
+import { Card, Chip, DangerButton, GhostButton, Row, Touch, Txt, row } from '../components/ui';
 import { Feedback } from '../services/feedback/Haptics';
 import type { StopsResult, TransitStop } from '../services/transit/StopsService';
 import { space, useTheme } from '../theme';
@@ -19,6 +19,12 @@ type Props = {
   here: LatLng | null;
   stops: TransitStop[];
   stopsFallback: Extract<StopsResult, { ok: false }>['reason'] | null;
+  /** True while the fix has gone stale and the distance below is not current. */
+  stale: boolean;
+  /** True once we caught the OS tearing our monitors down mid-trip. */
+  killed: boolean;
+  onDismissKilled: () => void;
+  onOpenBatterySettings: () => void;
   onCancel: () => void;
   /** Development only — fires the full arrival path without travelling. */
   onSimulateArrival?: () => void;
@@ -43,6 +49,10 @@ export function ActiveScreen({
   here,
   stops,
   stopsFallback,
+  stale,
+  killed,
+  onDismissKilled,
+  onOpenBatterySettings,
   onCancel,
   onSimulateArrival,
 }: Props) {
@@ -75,15 +85,59 @@ export function ActiveScreen({
           contentContainerStyle={styles.body}
           showsVerticalScrollIndicator={false}
         >
+          {/*
+            Shown above everything, because "the system stopped your alarm last
+            time" outranks anything else on this screen. Dismissible, and only
+            offered after a real failure — never during onboarding.
+          */}
+          {killed ? (
+            <Card style={{ borderColor: s.danger, borderWidth: 1.5 }}>
+              <Txt variant="labelStrong" tone="danger">
+                {t('active.killedTitle')}
+              </Txt>
+              <Txt variant="caption" tone="muted" style={styles.noticeBody}>
+                {t('active.killedBody')}
+              </Txt>
+              <View style={[styles.noticeActions, { flexDirection: row() }]}>
+                <Touch
+                  accessibilityRole="button"
+                  accessibilityLabel={t('active.killedAction')}
+                  onPress={onOpenBatterySettings}
+                >
+                  <Txt variant="captionStrong" tone="accent">
+                    {t('active.killedAction')}
+                  </Txt>
+                </Touch>
+                <Touch
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.close')}
+                  onPress={onDismissKilled}
+                >
+                  <Txt variant="captionStrong" tone="muted">
+                    {t('common.close')}
+                  </Txt>
+                </Touch>
+              </View>
+            </Card>
+          ) : null}
+
           <View style={styles.head}>
-            <Chip label={t('active.statusActive')} live />
+            <Chip label={stale ? t('active.noSignal') : t('active.statusActive')} live={!stale} />
             <Txt variant="display">{t('active.title')}</Txt>
             <Txt variant="body" tone="muted">
               {t('active.body')}
             </Txt>
           </View>
 
-          <Counter stopsToGo={rail.stopsToGo} distanceM={distanceM} radiusM={radiusM} />
+          {stale ? (
+            <Txt variant="body" tone="muted">
+              {t('active.noSignalBody', {
+                distance: distanceM === null ? '' : formatDistance(distanceM),
+              })}
+            </Txt>
+          ) : (
+            <Counter stopsToGo={rail.stopsToGo} distanceM={distanceM} radiusM={radiusM} />
+          )}
 
           <Card>
             <RouteRail rail={rail} fallback={stopsFallback} loading={false} />
@@ -96,7 +150,12 @@ export function ActiveScreen({
               </Txt>
             </Row>
             <Row label={t('active.distanceLeft')}>
-              <Txt variant="labelStrong" nums>
+              {/*
+                A stale distance is shown muted and captioned rather than
+                hidden: the last thing we actually measured is useful, and
+                presenting it as live would be the app quietly lying.
+              */}
+              <Txt variant="labelStrong" tone={stale ? 'muted' : 'ink'} nums>
                 {distanceM === null ? t('active.waitingFix') : formatDistance(distanceM)}
               </Txt>
             </Row>
@@ -199,6 +258,13 @@ const styles = StyleSheet.create({
   },
   counterUnit: {
     flexShrink: 1,
+  },
+  noticeBody: {
+    marginTop: space.sm,
+  },
+  noticeActions: {
+    marginTop: space.lg,
+    gap: space.xxl,
   },
   dock: {
     paddingHorizontal: space.screen,

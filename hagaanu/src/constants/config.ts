@@ -43,6 +43,16 @@ export const RADIUS_PRESETS = [300, 500, 1000, 2000] as const;
 export const DEFAULT_RADIUS_M = 500;
 
 /**
+ * Where the optional early heads-up fires.
+ *
+ * Fixed rather than another thing to choose. The point of the early notice is
+ * "start putting your book away", and two kilometres is about three minutes on
+ * a train and five on a bus — enough to act on, short enough not to be
+ * forgotten by the time the real alarm comes.
+ */
+export const EARLY_RADIUS_M = 2000;
+
+/**
  * iOS region monitoring is unreliable below ~100m, and GPS accuracy on a moving
  * train is rarely better than that anyway. Enforced on custom radius input.
  */
