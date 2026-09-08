@@ -22,10 +22,19 @@ import { Touch, Txt, align, row } from '../ui';
 export function SearchField({
   onPick,
   placeholder,
+  onFocusChange,
+  onClear,
 }: {
   onPick: (destination: Destination) => void;
-  /** Defaults to the destination prompt; the change-of-vehicle field says so. */
+  /** Defaults to the destination prompt. */
   placeholder?: string;
+  /**
+   * Focus drives the sheet: typing opens it to full height so results have
+   * somewhere to land, and dismissing gives the map back.
+   */
+  onFocusChange?: (focused: boolean) => void;
+  /** Present only when there is a destination to clear. */
+  onClear?: () => void;
 }) {
   const s = useTheme();
   const [query, setQuery] = useState('');
@@ -96,18 +105,34 @@ export function SearchField({
           placeholderTextColor={s.inkMuted}
           style={[styles.input, { color: s.ink, textAlign: align() }]}
           returnKeyType="search"
+          onFocus={() => onFocusChange?.(true)}
+          onBlur={() => onFocusChange?.(false)}
           autoCorrect={false}
           autoComplete="street-address"
           textContentType="fullStreetAddress"
           accessibilityLabel={t('home.searchPlaceholder')}
         />
         {busy ? <ActivityIndicator size="small" color={s.inkMuted} /> : null}
-        {query.length > 0 && !busy ? (
+        {/*
+          One X, two jobs, and which one it does depends on what there is to
+          clear: the typed query first, and the chosen destination once the
+          field is empty. Two separate controls in a search bar this size would
+          be two 20px targets side by side.
+        */}
+        {(query.length > 0 || onClear) && !busy ? (
           <Touch
             accessibilityRole="button"
-            accessibilityLabel={t('home.clearSearch')}
+            accessibilityLabel={
+              query.length > 0 ? t('home.clearSearch') : t('route.changeDestination')
+            }
             hitSlop={hitSlop}
-            onPress={() => setQuery('')}
+            onPress={() => {
+              if (query.length > 0) {
+                setQuery('');
+                return;
+              }
+              onClear?.();
+            }}
           >
             <X size={icon.md} strokeWidth={icon.stroke} color={s.inkMuted} />
           </Touch>

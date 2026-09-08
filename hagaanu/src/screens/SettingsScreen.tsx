@@ -1,6 +1,6 @@
+import Check from 'lucide-react-native/icons/check';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Play from 'lucide-react-native/icons/play';
-import X from 'lucide-react-native/icons/x';
 import Constants from 'expo-constants';
 import { useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { Linking, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
@@ -12,6 +12,7 @@ import { AlarmService } from '../services/alarm/AlarmService';
 import { ALARM_SOUND_IDS, type AlarmSoundId } from '../services/audio/catalog';
 import { Feedback } from '../services/feedback/Haptics';
 import { LANGUAGES, type ThemeMode } from '../services/storage/settings';
+import { usePermissionsStore } from '../state/usePermissionsStore';
 import { useSettingsStore } from '../state/useSettingsStore';
 import { HIT, hitSlop, icon, radius, space, useTheme } from '../theme';
 import { formatDistance } from '../utils/geo';
@@ -38,14 +39,13 @@ import { Card, Touch, Txt, row } from '../components/ui';
 const VOLUME_STEPS = [0.4, 0.6, 0.8, 1.0] as const;
 const THEME_MODES: ThemeMode[] = ['system', 'light', 'dark'];
 
-export function SettingsScreen({
-  onClose,
-  onOpenDebug,
-}: {
-  onClose: () => void;
-  onOpenDebug: () => void;
-}) {
+export function SettingsScreen({ onOpenDebug }: { onOpenDebug: () => void }) {
   const s = useTheme();
+  const permissions = usePermissionsStore((state) => state.snapshot);
+  const allGranted =
+    permissions.foregroundLocation === 'granted' &&
+    permissions.backgroundLocation === 'granted' &&
+    permissions.notifications === 'granted';
   const settings = useSettingsStore();
   const stopPreview = useRef<(() => void) | null>(null);
 
@@ -68,19 +68,8 @@ export function SettingsScreen({
   return (
     <View style={[styles.screen, { backgroundColor: s.bg }]}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={[styles.header, { flexDirection: row() }]}>
-          <Txt variant="title" style={styles.headerTitle}>
-            {t('settings.title')}
-          </Txt>
-          <Touch
-            accessibilityRole="button"
-            accessibilityLabel={t('common.close')}
-            hitSlop={hitSlop}
-            onPress={onClose}
-            style={[styles.close, { backgroundColor: s.sunk }]}
-          >
-            <X size={icon.md} strokeWidth={icon.stroke} color={s.inkMuted} />
-          </Touch>
+        <View style={styles.header}>
+          <Txt variant="title">{t('settings.title')}</Txt>
         </View>
 
         <ScrollView
@@ -213,6 +202,36 @@ export function SettingsScreen({
             </Card>
           </Section>
 
+          {/* ── location ──────────────────────────────────────────── */}
+          <Section title={t('settings.sectionLocation')}>
+            <Card padded={false}>
+              {/*
+                Status, not a switch. An app cannot grant itself a permission,
+                and a toggle that opens the system settings and might come back
+                unchanged is a control that lies about what it does.
+              */}
+              <StatusRow
+                first
+                label={t('permissions.locationTitle')}
+                granted={permissions.foregroundLocation === 'granted'}
+              />
+              <StatusRow
+                label={t('permissions.backgroundTitle')}
+                granted={permissions.backgroundLocation === 'granted'}
+              />
+              <StatusRow
+                label={t('permissions.notificationsTitle')}
+                granted={permissions.notifications === 'granted'}
+              />
+              {allGranted ? null : (
+                <ActionRow
+                  label={t('common.openSettings')}
+                  onPress={() => void Linking.openSettings()}
+                />
+              )}
+            </Card>
+          </Section>
+
           {/* ── privacy ───────────────────────────────────────────── */}
           <Section title={t('settings.sectionPrivacy')}>
             <Card padded={false}>
@@ -254,10 +273,10 @@ export function SettingsScreen({
                   onPress={() => void Linking.openSettings()}
                   style={[styles.linkBtn, { borderColor: s.line, flexDirection: row() }]}
                 >
-                  <Txt variant="captionStrong" tone="accent">
+                  <Txt variant="captionStrong" tone="primary">
                     {t('settings.batteryAction')}
                   </Txt>
-                  <ChevronRight size={icon.sm} strokeWidth={icon.stroke} color={s.accent.text} />
+                  <ChevronRight size={icon.sm} strokeWidth={icon.stroke} color={s.primary.text} />
                 </Touch>
               </Card>
             ) : null}
@@ -293,6 +312,55 @@ export function SettingsScreen({
 /* ------------------------------------------------------------------ *
  * Pieces
  * ------------------------------------------------------------------ */
+
+/**
+ * A permission, as a fact.
+ *
+ * The check is the whole control: it says granted or it does not, and the one
+ * action offered when something is missing opens the system settings, because
+ * that is the only place it can be changed.
+ */
+function StatusRow({
+  label,
+  granted,
+  first,
+}: {
+  label: string;
+  granted: boolean;
+  first?: boolean;
+}) {
+  const s = useTheme();
+  return (
+    <View
+      style={[
+        styles.rowBase,
+        {
+          flexDirection: row(),
+          borderTopWidth: first ? 0 : StyleSheet.hairlineWidth,
+          borderTopColor: s.line,
+        },
+      ]}
+    >
+      <View style={styles.rowText}>
+        <Txt variant="label">{label}</Txt>
+      </View>
+      {granted ? (
+        <View style={[styles.status, { flexDirection: row(), backgroundColor: s.success.soft }]}>
+          <Check size={icon.sm - 2} strokeWidth={3} color={s.success.text} />
+          <Txt variant="captionStrong" tone="success">
+            {t('permissions.granted')}
+          </Txt>
+        </View>
+      ) : (
+        <View style={[styles.status, { backgroundColor: s.sunk }]}>
+          <Txt variant="captionStrong" tone="muted">
+            {t('common.off')}
+          </Txt>
+        </View>
+      )}
+    </View>
+  );
+}
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -363,12 +431,12 @@ function Choice({
         style={[
           styles.dot,
           {
-            borderColor: selected ? s.accent.base : s.lineStrong,
-            backgroundColor: selected ? s.accent.base : 'transparent',
+            borderColor: selected ? s.primary.base : s.lineStrong,
+            backgroundColor: selected ? s.primary.base : 'transparent',
           },
         ]}
       >
-        {selected ? <View style={[styles.dotCore, { backgroundColor: s.accent.on }]} /> : null}
+        {selected ? <View style={[styles.dotCore, { backgroundColor: s.primary.on }]} /> : null}
       </View>
 
       <View style={styles.rowText}>
@@ -427,8 +495,12 @@ function ToggleRow({
           onChange(v);
         }}
         accessibilityLabel={label}
-        trackColor={{ false: s.lineStrong, true: s.accent.base }}
-        thumbColor={Platform.OS === 'android' ? s.surface : undefined}
+        trackColor={{ false: s.lineStrong, true: s.primary.base }}
+        // Both platforms, not just Android: react-native-web draws its own
+        // green thumb when this is left undefined, which put a second accent
+        // colour on a settings screen that has exactly one.
+        thumbColor={Platform.OS === 'ios' ? undefined : s.surface}
+        ios_backgroundColor={s.lineStrong}
       />
     </View>
   );
@@ -462,7 +534,7 @@ function ActionRow({
       ]}
     >
       <View style={styles.rowText}>
-        <Txt variant="label" tone="accent">
+        <Txt variant="label" tone="primary">
           {label}
         </Txt>
         {note ? (
@@ -494,13 +566,13 @@ function Segmented({
           style={[
             styles.segment,
             {
-              backgroundColor: option.selected ? s.accent.base : s.sunk,
+              backgroundColor: option.selected ? s.primary.base : s.sunk,
             },
           ]}
         >
           <Txt
             variant="captionStrong"
-            tone={option.selected ? 'onAccent' : 'muted'}
+            tone={option.selected ? 'onPrimary' : 'muted'}
             nums
             style={styles.segmentLabel}
           >
@@ -572,6 +644,13 @@ const styles = StyleSheet.create({
   },
   dotCore: { width: 8, height: 8, borderRadius: 4 },
 
+  status: {
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: space.md,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+  },
   playBtn: {
     width: 34,
     height: 34,

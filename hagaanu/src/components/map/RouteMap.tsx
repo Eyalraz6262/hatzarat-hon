@@ -102,7 +102,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
       {leg ? (
         <Polyline
           coordinates={leg}
-          strokeColor={s.accent.base}
+          strokeColor={s.primary.base}
           strokeWidth={3}
           lineCap="round"
           // A straight line between two points, not a driving route: this app
@@ -117,9 +117,9 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
           <Circle
             center={destination.coords}
             radius={radiusM}
-            strokeColor={s.accent.base}
+            strokeColor={s.primary.base}
             strokeWidth={2}
-            fillColor={s.accent.soft}
+            fillColor={s.primary.soft}
           />
           <Marker
             coordinate={destination.coords}
@@ -131,7 +131,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMap(
               tracksViewChanges off after first paint: a custom marker view
               that keeps re-rasterising is a well-known Android frame sink.
             */}
-            <View style={[styles.goal, { backgroundColor: s.bg, borderColor: s.accent.base }]} />
+            <View style={[styles.goal, { backgroundColor: s.bg, borderColor: s.primary.base }]} />
           </Marker>
         </>
       ) : null}

@@ -85,9 +85,13 @@ export const space = {
  * so the roles below are the whole vocabulary.
  */
 export const radius = {
-  control: 12,
-  card: 18,
-  sheet: 24,
+  /** Inputs, segments, small controls. */
+  control: 14,
+  /** A raised plane inside a screen. */
+  card: 20,
+  /** The bottom sheet, and the map's own corners under it. */
+  sheet: 28,
+  /** The primary action and status chips. */
   pill: 999,
 } as const;
 
@@ -167,14 +171,28 @@ export const MAX_CHROME_SCALE = 1.35;
  * Android, which is how "designed on a Mac" apps end up flat on half their
  * install base.
  */
-export function elevation(level: 1 | 2, scheme: Scheme): ViewStyle {
+export function elevation(level: 1 | 2 | 3, scheme: Scheme): ViewStyle {
+  if (level === 3) {
+    // The bottom sheet over the map. Wide and very soft: the sheet should look
+    // like it is floating a few millimetres off the map, not cut out of it.
+    return Platform.select<ViewStyle>({
+      ios: {
+        shadowColor: scheme.shadow,
+        shadowOpacity: scheme.name === 'dark' ? 0.7 : 0.13,
+        shadowRadius: 28,
+        shadowOffset: { width: 0, height: -6 },
+      },
+      android: { elevation: 16 },
+      default: {},
+    })!;
+  }
   if (level === 1) {
     return Platform.select<ViewStyle>({
       ios: {
         shadowColor: scheme.shadow,
-        shadowOpacity: scheme.name === 'dark' ? 0.5 : 0.09,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: scheme.name === 'dark' ? 0.45 : 0.07,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 4 },
       },
       android: { elevation: 2 },
       default: {},
@@ -218,7 +236,9 @@ export const motion = {
   pressIn: 90,
   pressOut: 180,
   state: 260,
-  /** The live node on the rail. Slow enough to read as "running". */
+  /** The sheet settling between snap points. Spring, not duration. */
+  sheet: { damping: 26, stiffness: 240, mass: 0.9 },
+  /** The armed beacon. Slow enough to read as "running", not as a spinner. */
   pulse: 2400,
 } as const;
 
@@ -230,4 +250,4 @@ export const motion = {
  * One family (Lucide), one stroke, three sizes. Set here so a component can
  * never introduce a fourth.
  */
-export const icon = { sm: 16, md: 20, lg: 24, stroke: 2 } as const;
+export const icon = { sm: 16, md: 20, lg: 24, xl: 28, stroke: 2 } as const;

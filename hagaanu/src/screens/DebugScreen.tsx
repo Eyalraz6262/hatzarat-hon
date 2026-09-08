@@ -303,7 +303,7 @@ export function DebugScreen({ onClose }: { onClose: () => void }) {
                       {stamp(entry.at)}
                     </Txt>
                     <View style={styles.entryBody}>
-                      <Txt variant="captionStrong" tone="accent">
+                      <Txt variant="captionStrong" tone="primary">
                         {entry.kind}
                       </Txt>
                       <Txt variant="caption" tone="muted">

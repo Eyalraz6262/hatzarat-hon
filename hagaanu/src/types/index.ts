@@ -119,6 +119,13 @@ export type AlarmSession = {
    * re-posting on every fix would be a wake-up per fix for no benefit.
    */
   statusDistanceLabel?: string | null;
+  /**
+   * When a snooze ends, or null when none is pending.
+   *
+   * Persisted so a screen that remounts mid-snooze knows not to show the alarm
+   * as ringing, and so the debug journal can explain a gap in the timeline.
+   */
+  snoozedUntil?: number | null;
 };
 
 

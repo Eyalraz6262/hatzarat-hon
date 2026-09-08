@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { DEFAULT_RADIUS_M, EARLY_RADIUS_M, MIN_RADIUS_M } from '../constants/config';
+import { DEFAULT_RADIUS_M, EARLY_RADIUS_M, SNOOZE_MS } from '../constants/config';
 import { t } from '../i18n';
 import { AlarmService } from '../services/alarm/AlarmService';
 import { ArrivalCoordinator } from '../services/alarm/ArrivalCoordinator';
@@ -63,8 +63,10 @@ type AlarmState = {
   arm: () => Promise<boolean>;
   cancel: () => Promise<void>;
   dismissAlarm: () => Promise<void>;
-  /** Re-arms at the destination itself after the first alarm was dismissed. */
-  wakeAgain: () => Promise<void>;
+  /** Silences the alarm and rings again in two minutes. */
+  snooze: () => Promise<void>;
+  /** True while a snooze is counting down. */
+  snoozed: boolean;
   /** Applied when a background task decides we arrived while the UI is mounted. */
   onArrival: (session: AlarmSession) => void;
 
@@ -106,6 +108,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   saved: [],
   killed: false,
   stale: false,
+  snoozed: false,
 
   setDestination: (destination) =>
     set((state) => ({
@@ -305,7 +308,13 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ status: 'idle', session: null, busy: false, error: null });
   },
 
+  async snooze() {
+    set({ snoozed: true });
+    await ArrivalCoordinator.snooze(SNOOZE_MS);
+  },
+
   async dismissAlarm() {
+    set({ snoozed: false });
     set({ busy: true });
 
     // A journey with a change carries on. Dismissing the alarm at the transfer
@@ -337,21 +346,14 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     set({ status: 'idle', session: null, destination: null, distanceM: null, busy: false, error: null });
   },
 
-  async wakeAgain() {
-    const ok = await ArrivalCoordinator.wakeAgain();
-    if (!ok) {
-      set({ status: 'idle', session: null, destination: null, distanceM: null, error: null });
-      return;
-    }
-    const session = await AlarmStorage.read();
-    set({ status: 'armed', session, radiusM: session?.radiusM ?? MIN_RADIUS_M });
-  },
-
   onArrival: (session) =>
     set({
       status: 'ringing',
       session,
       destination: session.destination,
       radiusM: session.radiusM,
+      // A snooze that has come back around arrives through this same path, so
+      // the flag clears here rather than on a timer the UI would have to keep.
+      snoozed: false,
     }),
 }));

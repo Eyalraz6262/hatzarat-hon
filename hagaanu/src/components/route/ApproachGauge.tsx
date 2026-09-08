@@ -57,7 +57,7 @@ export function ApproachGauge({ approach }: { approach: Approach }) {
         <View
           style={[
             styles.band,
-            { top: `${bandTop * 100}%`, backgroundColor: s.accent.soft, borderTopColor: s.accent.base },
+            { top: `${bandTop * 100}%`, backgroundColor: s.primary.soft, borderTopColor: s.primary.base },
           ]}
         />
 
@@ -69,18 +69,18 @@ export function ApproachGauge({ approach }: { approach: Approach }) {
           <View
             style={[
               styles.track,
-              { backgroundColor: s.accent.base, bottom: undefined, height: `${herePosition * 100}%` },
+              { backgroundColor: s.primary.base, bottom: undefined, height: `${herePosition * 100}%` },
             ]}
           />
 
           <View style={[styles.here, { top: `${herePosition * 100}%` }]}>
-            <View style={[styles.hereDot, { backgroundColor: s.accent.base, borderColor: s.surface }]} />
+            <View style={[styles.hereDot, { backgroundColor: s.primary.base, borderColor: s.surface }]} />
           </View>
         </View>
 
         <View style={styles.labels}>
           <View style={[styles.bandLabel, { top: bandTop * HEIGHT }]}>
-            <Txt variant="captionStrong" tone="accent" nums>
+            <Txt variant="captionStrong" tone="primary" nums>
               {t('approach.wakeBand', { distance: formatDistance(band.radiusM) })}
             </Txt>
           </View>

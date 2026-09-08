@@ -94,7 +94,7 @@ export const NotificationService = {
           vibrationPattern: [...CHANNEL_VIBRATION_PATTERN],
           enableVibrate: true,
           enableLights: true,
-          lightColor: light.accent.base,
+          lightColor: light.primary.base,
           // Ring through Do Not Disturb. The user still has to grant DND
           // access; when they have not, Android silently ignores this rather
           // than failing, so it costs nothing to ask for.

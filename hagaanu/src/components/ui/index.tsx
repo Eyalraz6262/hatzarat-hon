@@ -79,20 +79,40 @@ export const row = (): ViewStyle['flexDirection'] =>
  * ------------------------------------------------------------------ */
 
 type Variant = keyof typeof type;
-type Tone = 'ink' | 'muted' | 'accent' | 'danger' | 'onAccent' | 'onAlarm' | 'alarmDim';
+/**
+ * The text colours, by role rather than by value.
+ *
+ * `primary` is the brand and appears on one thing per screen. `success` says
+ * the alarm is armed and nothing else. `danger` says cancel and nothing else.
+ * Anything else is the neutral ramp, which is most of the app.
+ */
+type Tone =
+  | 'ink'
+  | 'muted'
+  | 'faint'
+  | 'primary'
+  | 'success'
+  | 'danger'
+  | 'onPrimary'
+  | 'onAlarm'
+  | 'alarmDim';
 
 function toneColor(tone: Tone, s: Scheme): string {
   switch (tone) {
     case 'muted':
       return s.inkMuted;
-    case 'accent':
-      return s.accent.text;
+    case 'faint':
+      return s.inkFaint;
+    case 'primary':
+      return s.primary.text;
+    case 'success':
+      return s.success.text;
     case 'danger':
-      return s.danger;
-    case 'onAccent':
-      return s.accent.on;
+      return s.danger.text;
+    case 'onPrimary':
+      return s.primary.on;
     case 'onAlarm':
-      return s.alarm.ink;
+      return s.alarm.on;
     case 'alarmDim':
       return s.alarm.dim;
     default:
@@ -171,15 +191,25 @@ function usePressScale(to = 0.97) {
 }
 
 type TouchProps = PressableProps & {
+  /** This Touch is a flex child and should share its row equally. */
+  fill?: boolean;
   scaleTo?: number;
   children: ReactNode;
 };
 
 /** A Pressable with the app's press feedback already on it. */
-export function Touch({ style, scaleTo, children, ...rest }: TouchProps) {
+export function Touch({ style, scaleTo, fill, children, ...rest }: TouchProps) {
   const press = usePressScale(scaleTo);
   return (
-    <Animated.View style={press.style}>
+    /**
+     * The press scale lives on a wrapper, and a wrapper is not transparent to
+     * layout: a `flex: 1` on the Pressable inside it does nothing, because the
+     * wrapper is the flex child and it sizes to its content. That is why `fill`
+     * exists — every Touch that has to share a row equally (a tab bar, a
+     * segmented control) sets it, and the flex lands on the node that is
+     * actually being laid out.
+     */
+    <Animated.View style={[press.style, fill ? styles.fill : null]}>
       <Pressable style={style} onPressIn={press.onPressIn} onPressOut={press.onPressOut} {...rest}>
         {children}
       </Pressable>
@@ -222,7 +252,7 @@ export function PrimaryButton({ label, onPress, disabled, busy, icon, style }: B
         styles.btn,
         elevation(1, s),
         {
-          backgroundColor: pressed ? s.accent.pressed : s.accent.base,
+          backgroundColor: pressed ? s.primary.pressed : s.primary.base,
           opacity: off ? 0.5 : 1,
           flexDirection: row(),
         },
@@ -230,11 +260,11 @@ export function PrimaryButton({ label, onPress, disabled, busy, icon, style }: B
       ]}
     >
       {busy ? (
-        <ActivityIndicator color={s.accent.on} />
+        <ActivityIndicator color={s.primary.on} />
       ) : (
         <>
           {icon}
-          <Txt variant="button" tone="onAccent">
+          <Txt variant="button" tone="onPrimary">
             {label}
           </Txt>
         </>
@@ -358,17 +388,30 @@ export function Row({
 }
 
 /** A status chip. Used once per screen, next to the thing it describes. */
-export function Chip({ label, live }: { label: string; live?: boolean }) {
+/**
+ * A status pill.
+ *
+ * `success` is the armed state and the only place green appears in the app.
+ * `primary` is informational. `muted` is a state that is not good news but is
+ * not an error either, which is what a lost signal is.
+ */
+export function Chip({
+  label,
+  live,
+  tone = 'primary',
+}: {
+  label: string;
+  live?: boolean;
+  tone?: 'primary' | 'success' | 'muted';
+}) {
   const s = useTheme();
+  const fill = tone === 'success' ? s.success.soft : tone === 'muted' ? s.sunk : s.primary.soft;
+  const text: Tone = tone === 'success' ? 'success' : tone === 'muted' ? 'muted' : 'primary';
+
   return (
-    <View
-      style={[
-        styles.chip,
-        { backgroundColor: s.accent.soft, flexDirection: row() },
-      ]}
-    >
-      {live ? <LiveDot /> : null}
-      <Txt variant="captionStrong" tone="accent">
+    <View style={[styles.chip, { backgroundColor: fill, flexDirection: row() }]}>
+      {live ? <LiveDot tone={tone === 'success' ? 'success' : 'primary'} /> : null}
+      <Txt variant="captionStrong" tone={text}>
         {label}
       </Txt>
     </View>
@@ -382,7 +425,13 @@ export function Chip({ label, live }: { label: string; live?: boolean }) {
  * is the single question the armed state has to answer, and a dot that
  * breathes answers it without a word.
  */
-export function LiveDot({ size = 7 }: { size?: number }) {
+export function LiveDot({
+  size = 7,
+  tone = 'primary',
+}: {
+  size?: number;
+  tone?: 'primary' | 'success';
+}) {
   const s = useTheme();
   const reduced = useReducedMotion();
   const fade = useRef(new Animated.Value(1)).current;
@@ -415,7 +464,7 @@ export function LiveDot({ size = 7 }: { size?: number }) {
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: s.accent.base,
+        backgroundColor: tone === 'success' ? s.success.base : s.primary.base,
         opacity: fade,
       }}
     />
@@ -439,6 +488,7 @@ export function Skeleton({ width, height = 14 }: { width: number | `${number}%`;
 }
 
 const styles = StyleSheet.create({
+  fill: { flex: 1 },
   btn: {
     minHeight: 56,
     borderRadius: radius.pill,

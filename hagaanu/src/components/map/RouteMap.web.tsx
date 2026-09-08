@@ -55,27 +55,36 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
    * with room around them, so the ring's drawn size stays a true fraction of
    * the drawn distance.
    */
+  /**
+   * Once a destination exists the view frames the RING, not the whole journey.
+   *
+   * Framing both ends looks reasonable and is useless: 500 m inside an 80 km
+   * trip is six tenths of one percent of the width, so the one thing the map is
+   * here to show — how big the range you picked actually is — becomes a dot.
+   * A real map does the same thing when you drop a pin: it zooms to the pin.
+   */
   const span = useMemo(() => {
-    if (!destination || !here) return initialRegion.latitudeDelta;
-    const dLat = Math.abs(destination.coords.latitude - here.latitude);
-    const dLon = Math.abs(destination.coords.longitude - here.longitude) * 0.85;
-    return Math.max(dLat, dLon) * 2.4 || initialRegion.latitudeDelta;
-  }, [destination, here, initialRegion.latitudeDelta]);
+    if (!destination) return initialRegion.latitudeDelta;
+    // Roughly six ring-widths across, so the circle owns about a third of it.
+    return Math.max((radiusM * 6) / 111_000, 0.004);
+  }, [destination, radiusM, initialRegion.latitudeDelta]);
 
-  const centre = destination && here
-    ? {
-        latitude: (destination.coords.latitude + here.latitude) / 2,
-        longitude: (destination.coords.longitude + here.longitude) / 2,
-      }
-    : destination?.coords ?? here ?? initialRegion;
+  const centre = destination?.coords ?? here ?? initialRegion;
+
+  /**
+   * The destination sits above the middle, not at it: the sheet covers the
+   * lower half of the map, and a ring centred in the viewport is a ring you
+   * are looking at the top edge of.
+   */
+  const focusY = destination ? size.height * 0.27 : size.height / 2;
 
   const project = (p: LatLng) => ({
     left: size.width / 2 + ((p.longitude - centre.longitude) * 0.85 / span) * size.height,
-    top: size.height / 2 - ((p.latitude - centre.latitude) / span) * size.height,
+    top: focusY - ((p.latitude - centre.latitude) / span) * size.height,
   });
 
   const unproject = (x: number, y: number): LatLng => ({
-    latitude: centre.latitude + ((size.height / 2 - y) / size.height) * span,
+    latitude: centre.latitude + ((focusY - y) / size.height) * span,
     longitude: centre.longitude + ((x - size.width / 2) / size.height) * span / 0.85,
   });
 
@@ -130,17 +139,26 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
         />
       ))}
 
+      {/*
+        The line between the two points is drawn as a thin rotated bar rather
+        than a bounding box. The box version degenerated into a vertical stripe
+        the moment the two ends shared a longitude, which read as a pin on a
+        stick rather than as a route.
+      */}
       {goal && me ? (
         <View
           pointerEvents="none"
           style={[
             styles.leg,
             {
-              backgroundColor: s.accent.base,
-              left: Math.min(goal.left, me.left),
-              top: Math.min(goal.top, me.top),
-              width: Math.max(Math.abs(goal.left - me.left), 1),
-              height: Math.max(Math.abs(goal.top - me.top), 1),
+              backgroundColor: s.primary.base,
+              left: (goal.left + me.left) / 2,
+              top: (goal.top + me.top) / 2,
+              width: Math.hypot(goal.left - me.left, goal.top - me.top),
+              transform: [
+                { translateX: -Math.hypot(goal.left - me.left, goal.top - me.top) / 2 },
+                { rotate: `${Math.atan2(goal.top - me.top, goal.left - me.left)}rad` },
+              ],
             },
           ]}
         />
@@ -153,8 +171,8 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
             style={[
               styles.ring,
               {
-                borderColor: s.accent.base,
-                backgroundColor: s.accent.soft,
+                borderColor: s.primary.base,
+                backgroundColor: s.primary.soft,
                 width: Math.max(ringPx * 2, 12),
                 height: Math.max(ringPx * 2, 12),
                 left: goal.left - Math.max(ringPx, 6),
@@ -167,7 +185,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
             pointerEvents="none"
             style={[
               styles.goal,
-              { backgroundColor: s.bg, borderColor: s.accent.base, left: goal.left - 9, top: goal.top - 9 },
+              { backgroundColor: s.bg, borderColor: s.primary.base, left: goal.left - 9, top: goal.top - 9 },
             ]}
           />
         </>
@@ -176,7 +194,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
       {me ? (
         <View
           pointerEvents="none"
-          style={[styles.me, { backgroundColor: s.accent.text, borderColor: s.bg, left: me.left - 7, top: me.top - 7 }]}
+          style={[styles.me, { backgroundColor: s.primary.text, borderColor: s.bg, left: me.left - 7, top: me.top - 7 }]}
         />
       ) : null}
 
@@ -194,7 +212,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
 const styles = StyleSheet.create({
   ground: { ...StyleSheet.absoluteFill, overflow: 'hidden' },
   grid: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, opacity: 0.7 },
-  leg: { position: 'absolute', opacity: 0.32 },
+  leg: { position: 'absolute', height: 2, borderRadius: 2, opacity: 0.42 },
   ring: { position: 'absolute', borderWidth: 2 },
   goal: { position: 'absolute', width: 18, height: 18, borderRadius: 9, borderWidth: 4 },
   me: { position: 'absolute', width: 14, height: 14, borderRadius: 7, borderWidth: 3 },

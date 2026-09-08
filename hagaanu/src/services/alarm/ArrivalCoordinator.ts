@@ -6,7 +6,6 @@ import { LiveActivity } from '../../../modules/live-activity';
 import { Journal } from '../debug/Journal';
 import { liveCard } from '../notifications/liveCard';
 import { AlarmStorage } from '../storage/AlarmStorage';
-import { MIN_RADIUS_M } from '../../constants/config';
 import type { AlarmReason, AlarmSession, LatLng } from '../../types';
 import { distanceMeters } from '../../utils/geo';
 import { log } from '../../utils/logger';
@@ -14,6 +13,9 @@ import { log } from '../../utils/logger';
 type Listener = (session: AlarmSession) => void;
 
 const listeners = new Set<Listener>();
+
+/** The pending snooze, so a dismissal cancels it instead of ringing later. */
+let snoozeTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * The single place that decides "we have arrived" and acts on it.
@@ -117,62 +119,6 @@ export const ArrivalCoordinator = {
   },
 
   /**
-   * Re-arms at the destination itself after the user dismissed the first alarm.
-   *
-   * The radius drops to the minimum the OS will monitor rather than to zero: a
-   * geofence with no radius is not a geofence, and iOS quietly refuses regions
-   * below about 100m. This is the "wake me again at the stop itself" path.
-   */
-  async wakeAgain(): Promise<boolean> {
-    const session = await AlarmStorage.read();
-    if (!session) return false;
-
-    await AlarmService.stop();
-    await NotificationService.dismissAll();
-
-    const again: AlarmSession = {
-      ...session,
-      status: 'armed',
-      radiusM: MIN_RADIUS_M,
-      earlyRadiusM: null,
-      earlySent: true,
-      triggeredAt: null,
-      triggeredBy: null,
-      reason: null,
-      // A fresh low-water mark: the previous trip's closest approach would
-      // read as an immediate overshoot against the tighter ring.
-      closestM: null,
-      staleNoticed: false,
-      statusDistanceLabel: null,
-    };
-
-    await AlarmStorage.write(again);
-
-    try {
-      if (!again.foregroundOnly) {
-        await GeofencingService.start(again.destination, again.radiusM);
-        await LocationService.startBackgroundTracking(
-          LocationService.tierForDistance(again.lastDistanceM ?? 0)
-        );
-      }
-      await NotificationService.presentArmedStatus(again.destination.label);
-      const againCard = liveCard(again.lastDistanceM ?? null, again.radiusM);
-      await LiveActivity.start(
-        again.destination.label,
-        againCard.distance,
-        againCard.note,
-        againCard.staleText
-      );
-      log.debug('alarm', 're-armed at the destination itself');
-      return true;
-    } catch (error) {
-      log.error('alarm', 'failed to re-arm', error);
-      await ArrivalCoordinator.standDown();
-      return false;
-    }
-  },
-
-  /**
    * Moves on to the next leg of the journey, if there is one.
    *
    * Called when the user dismisses an alarm. Returns false when the journey is
@@ -243,8 +189,54 @@ export const ArrivalCoordinator = {
     }
   },
 
+  /**
+   * Silences the alarm and rings again shortly.
+   *
+   * The session stays `ringing` on disk the whole time. That is deliberate: if
+   * the process dies during the two minutes, the app comes back knowing the
+   * alarm was going off and shows the wake screen rather than quietly deciding
+   * the trip is over. The cost is that a snooze does not survive a kill, which
+   * is the honest trade — nothing in a browser or a killed app can hold a timer.
+   *
+   * The geofence is NOT re-armed. It has already fired; the passenger is inside
+   * the ring and would get no second crossing to trigger on.
+   */
+  async snooze(ms: number): Promise<void> {
+    const session = await AlarmStorage.read();
+    if (!session || session.status !== 'ringing') return;
+
+    await AlarmService.stop();
+    await NotificationService.dismissAll();
+    await AlarmStorage.patch({ snoozedUntil: Date.now() + ms });
+    void Journal.record('alarm', `snoozed for ${Math.round(ms / 1000)}s`);
+
+    if (snoozeTimer) clearTimeout(snoozeTimer);
+    snoozeTimer = setTimeout(() => {
+      void (async () => {
+        const still = await AlarmStorage.read();
+        if (!still || still.status !== 'ringing' || !still.snoozedUntil) return;
+        await AlarmStorage.patch({ snoozedUntil: null });
+        await NotificationService.presentAlarm(still.destination.label, still.reason ?? 'arrived', {
+          distance: still.lastDistanceM,
+        });
+        await AlarmService.start();
+        listeners.forEach((listener) => {
+          try {
+            listener({ ...still, snoozedUntil: null });
+          } catch (error) {
+            log.error('alarm', 'snooze listener threw', error);
+          }
+        });
+      })();
+    }, ms);
+  },
+
   /** Stops everything and clears the session. Used by "I'm awake" and "cancel". */
   async standDown(): Promise<void> {
+    if (snoozeTimer) {
+      clearTimeout(snoozeTimer);
+      snoozeTimer = null;
+    }
     await AlarmService.stop();
     await Promise.all([GeofencingService.stop(), LocationService.stopBackgroundTracking()]);
     await NotificationService.dismissAll();

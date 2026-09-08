@@ -106,8 +106,6 @@ export const he = {
     title: 'הגעתם.',
     body: '{destination} ממש כאן.',
     dismiss: 'אני ער',
-    wakeAgain: 'תעירו שוב ביעד עצמו',
-    wakeAgainDone: 'נעיר אתכם שוב',
     channelGroup: 'התראות הגעה',
     notificationTitle: 'הגעתם ל{destination}',
     notificationBody: 'זה הזמן לרדת.',
@@ -182,6 +180,7 @@ export const he = {
 
     sectionAlarm: 'ההתראה',
     sectionApp: 'האפליקציה',
+    sectionLocation: 'מיקום',
     sectionPrivacy: 'פרטיות',
     sectionHelp: 'עזרה',
 
@@ -260,6 +259,52 @@ export const he = {
     simulating: 'נוסעים…',
     simulateNote: 'מזיז אתכם ליעד בכ‑40 שניות, כדי לראות את המסך משתנה ואת ההתראה מצלצלת.',
     reset: 'התחלה מחדש',
+  },
+
+  tabs: {
+    map: 'מפה',
+    places: 'יעדים',
+    settings: 'הגדרות',
+  },
+
+  onboarding: {
+    /* Three screens, and each one earns its place: the problem, the control,
+       the promise. No dots-and-skip carousel. */
+    oneTitle: 'נרדמתם באוטובוס?',
+    oneBody: 'קורה לכולם. ״הגענו?״ שומרת עליכם בזמן שאתם ישנים.',
+    twoTitle: 'בוחרים יעד',
+    twoBody: 'מסמנים על המפה איפה אתם יורדים, ובאיזה מרחק להעיר אתכם.',
+    threeTitle: 'ונרדמים',
+    threeBody: 'נועלים את הטלפון. כשמתקרבים ליעד, הוא מצלצל.',
+    start: 'מתחילים',
+    skip: 'דילוג',
+  },
+
+  places: {
+    title: 'היעדים שלכם',
+    saved: 'שמורים',
+    recent: 'אחרונים',
+    empty: 'עוד אין יעדים שמורים.',
+    emptyBody: 'כל יעד שתפעילו עליו התראה יופיע כאן, ואפשר לשמור אותו בכוכב.',
+    goToMap: 'לבחירת יעד',
+    useAgain: 'הפעלה מחדש',
+  },
+
+  snooze: {
+    action: 'עוד 2 דקות',
+    active: 'נעיר אתכם שוב בעוד 2 דקות',
+  },
+
+  status: {
+    /* The states a screen can be in, said in the app's own voice. */
+    noGps: 'אין קליטת GPS',
+    noGpsBody: 'לא הצלחנו לאתר אתכם. בדקו שהמיקום מופעל במכשיר.',
+    noNetwork: 'אין חיבור לאינטרנט',
+    noNetworkBody: 'חיפוש כתובות דורש רשת. אפשר לבחור יעד בלחיצה על המפה.',
+    locationDenied: 'הרשאת המיקום כבויה',
+    locationDeniedBody: 'בלי מיקום אי אפשר לדעת מתי הגעתם.',
+    searching: 'מחפשים…',
+    locating: 'מאתרים אתכם…',
   },
 };
 

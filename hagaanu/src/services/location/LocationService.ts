@@ -106,8 +106,8 @@ export const LocationService = {
         notificationBody: t('active.serviceBody'),
         // The Android notification tint. Read from the light scheme rather than a
         // hook: this runs in a background JS context with no React tree, and the
-        // accent is the same value in both schemes anyway.
-        notificationColor: light.accent.base,
+        // the brand colour is the same value in both schemes anyway.
+        notificationColor: light.primary.base,
         killServiceOnDestroy: false,
       },
       mayShowUserSettingsDialog: false,

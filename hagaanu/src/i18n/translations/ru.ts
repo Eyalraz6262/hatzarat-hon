@@ -110,8 +110,6 @@ export const ru: TranslationSchema = {
     title: 'Вы на месте.',
     body: '«{destination}» прямо здесь.',
     dismiss: 'Я не сплю',
-    wakeAgain: 'Разбудить ещё раз на самой остановке',
-    wakeAgainDone: 'Разбудим ещё раз',
     channelGroup: 'Будильники прибытия',
     notificationTitle: 'Вы прибыли на «{destination}»',
     notificationBody: 'Пора выходить.',
@@ -183,6 +181,7 @@ export const ru: TranslationSchema = {
 
     sectionAlarm: 'Будильник',
     sectionApp: 'Приложение',
+    sectionLocation: 'Геолокация',
     sectionPrivacy: 'Конфиденциальность',
     sectionHelp: 'Помощь',
 
@@ -254,5 +253,41 @@ export const ru: TranslationSchema = {
     simulating: 'Едем…',
     simulateNote: 'Довезёт вас за ~40 секунд, чтобы увидеть, как меняется экран и срабатывает будильник.',
     reset: 'Начать заново',
+  },
+
+  tabs: { map: 'Карта', places: 'Места', settings: 'Настройки' },
+
+  onboarding: {
+    oneTitle: 'Уснули в автобусе?',
+    oneBody: 'Бывает со всеми. «Приехали?» присмотрит за вами, пока вы спите.',
+    twoTitle: 'Выберите место',
+    twoBody: 'Отметьте, где выходите, и за сколько метров вас разбудить.',
+    threeTitle: 'И спите',
+    threeBody: 'Заблокируйте телефон. У самого места он зазвонит.',
+    start: 'Начать',
+    skip: 'Пропустить',
+  },
+
+  places: {
+    title: 'Ваши места',
+    saved: 'Сохранённые',
+    recent: 'Недавние',
+    empty: 'Сохранённых мест пока нет.',
+    emptyBody: 'Каждое место, на которое вы ставили будильник, появится здесь, а звёздочка его сохранит.',
+    goToMap: 'Выбрать место',
+    useAgain: 'Включить снова',
+  },
+
+  snooze: { action: 'Ещё 2 минуты', active: 'Разбудим ещё раз через 2 минуты' },
+
+  status: {
+    noGps: 'Нет сигнала GPS',
+    noGpsBody: 'Не удалось вас найти. Проверьте, включена ли геолокация.',
+    noNetwork: 'Нет интернета',
+    noNetworkBody: 'Поиск адреса требует сети. Можно вместо этого нажать на карту.',
+    locationDenied: 'Доступ к геолокации выключен',
+    locationDeniedBody: 'Без геолокации нельзя понять, что вы приехали.',
+    searching: 'Поиск…',
+    locating: 'Определяем ваше место…',
   },
 };

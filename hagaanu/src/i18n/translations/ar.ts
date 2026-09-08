@@ -108,8 +108,6 @@ export const ar: TranslationSchema = {
     title: 'وصلت.',
     body: '{destination} هنا تماماً.',
     dismiss: 'أنا مستيقظ',
-    wakeAgain: 'أيقظني مرة أخرى عند المحطة نفسها',
-    wakeAgainDone: 'سنوقظك مرة أخرى',
     channelGroup: 'منبّهات الوصول',
     notificationTitle: 'وصلت إلى {destination}',
     notificationBody: 'حان وقت النزول.',
@@ -181,6 +179,7 @@ export const ar: TranslationSchema = {
 
     sectionAlarm: 'المنبّه',
     sectionApp: 'التطبيق',
+    sectionLocation: 'الموقع',
     sectionPrivacy: 'الخصوصية',
     sectionHelp: 'مساعدة',
 
@@ -252,5 +251,41 @@ export const ar: TranslationSchema = {
     simulating: 'في الطريق…',
     simulateNote: 'ينقلكم إلى الوجهة خلال 40 ثانية تقريبًا، لرؤية الشاشة تتغيّر والمنبّه يرنّ.',
     reset: 'البدء من جديد',
+  },
+
+  tabs: { map: 'خريطة', places: 'وجهات', settings: 'إعدادات' },
+
+  onboarding: {
+    oneTitle: 'نمتم في الحافلة؟',
+    oneBody: 'يحدث للجميع. «وصلنا؟» تنتبه لكم بينما تنامون.',
+    twoTitle: 'اختاروا وجهة',
+    twoBody: 'حدّدوا على الخريطة أين تنزلون، وعلى أي بُعد نوقظكم.',
+    threeTitle: 'وناموا',
+    threeBody: 'اقفلوا الهاتف. وعند الاقتراب من الوجهة سيرنّ.',
+    start: 'لنبدأ',
+    skip: 'تخطٍّ',
+  },
+
+  places: {
+    title: 'وجهاتكم',
+    saved: 'محفوظة',
+    recent: 'الأخيرة',
+    empty: 'لا توجد وجهات محفوظة بعد.',
+    emptyBody: 'كل وجهة تضبطون لها منبّهًا تظهر هنا، والنجمة تحفظها.',
+    goToMap: 'اختيار وجهة',
+    useAgain: 'تشغيل من جديد',
+  },
+
+  snooze: { action: 'دقيقتان إضافيتان', active: 'سنوقظكم مجددًا بعد دقيقتين' },
+
+  status: {
+    noGps: 'لا إشارة GPS',
+    noGpsBody: 'لم نتمكن من تحديد موقعكم. تأكدوا أن الموقع مفعّل.',
+    noNetwork: 'لا اتصال بالإنترنت',
+    noNetworkBody: 'البحث عن عنوان يحتاج شبكة. يمكنكم الضغط على الخريطة بدلاً من ذلك.',
+    locationDenied: 'إذن الموقع مغلق',
+    locationDeniedBody: 'بدون الموقع لا يمكن معرفة متى وصلتم.',
+    searching: 'جارٍ البحث…',
+    locating: 'جارٍ تحديد موقعكم…',
   },
 };

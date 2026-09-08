@@ -1,23 +1,25 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Linking, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
 
 import { AlarmScreen } from './src/screens/AlarmScreen';
-import { ActiveScreen } from './src/screens/ActiveScreen';
 import { DemoScreen } from './src/screens/DemoScreen';
-import { HomeScreen } from './src/screens/HomeScreen';
+import { MapScreen } from './src/screens/MapScreen';
+import { OnboardingScreen } from './src/screens/OnboardingScreen';
+import { PlacesScreen } from './src/screens/PlacesScreen';
 import { PermissionsScreen } from './src/screens/PermissionsScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
-import { ArrivalCoordinator } from './src/services/alarm/ArrivalCoordinator';
+import { TabBar, type Tab } from './src/navigation/TabBar';
 import { useAppFonts } from './src/hooks/useAppFonts';
 import { useArrivalListener } from './src/hooks/useArrivalListener';
 import { useLocationTracking } from './src/hooks/useLocationTracking';
 import { useForegroundArrivalCheck } from './src/hooks/useForegroundArrivalCheck';
 import { useProcessGuard } from './src/hooks/useProcessGuard';
 import { useDemoTrip } from './src/hooks/useDemoTrip';
+import { useHomeScreenMeta } from './src/hooks/useHomeScreenMeta';
 import { useSilenceWatch } from './src/hooks/useSilenceWatch';
 import { NotificationService } from './src/services/notifications/NotificationService';
 import { useAlarmStore } from './src/state/useAlarmStore';
@@ -57,7 +59,7 @@ export default function App() {
   // Session-scoped: the user chose to continue without background location. Not
   // persisted, so the next cold start asks once more — the ask matters too much.
   const [skippedBackground, setSkippedBackground] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [tab, setTab] = useState<Tab>('map');
   const [showDebug, setShowDebug] = useState(false);
 
   const permissionsReady = usePermissionsStore((state) => state.ready);
@@ -66,16 +68,10 @@ export default function App() {
 
   const status = useAlarmStore((state) => state.status);
   const destination = useAlarmStore((state) => state.destination);
-  const radiusM = useAlarmStore((state) => state.radiusM);
-  const distanceM = useAlarmStore((state) => state.distanceM);
-  const position = useAlarmStore((state) => state.position);
-  const stale = useAlarmStore((state) => state.stale);
-  const killed = useAlarmStore((state) => state.killed);
-  const dismissKilled = useAlarmStore((state) => state.dismissKilled);
   const hydrate = useAlarmStore((state) => state.hydrate);
-  const cancel = useAlarmStore((state) => state.cancel);
   const dismissAlarm = useAlarmStore((state) => state.dismissAlarm);
-  const wakeAgain = useAlarmStore((state) => state.wakeAgain);
+  const snooze = useAlarmStore((state) => state.snooze);
+  const snoozed = useAlarmStore((state) => state.snoozed);
   const session = useAlarmStore((state) => state.session);
 
   const fontsReady = useAppFonts();
@@ -83,6 +79,7 @@ export default function App() {
   const settingsReady = useSettingsStore((state) => state.ready);
   const hydrateSettings = useSettingsStore((state) => state.hydrate);
   const demoSeen = useSettingsStore((state) => state.demoSeen);
+  const onboarded = useSettingsStore((state) => state.onboarded);
   const setSetting = useSettingsStore((state) => state.set);
 
   // Tracking lives here, not in a screen: HomeScreen unmounts the moment the
@@ -97,6 +94,8 @@ export default function App() {
   useProcessGuard();
   // The browser demo's simulated journey. Compiles to nothing on a device.
   useDemoTrip();
+  // Lets the web build be added to an iPhone home screen. Also a no-op natively.
+  useHomeScreenMeta();
 
   useEffect(() => {
     void (async () => {
@@ -155,52 +154,52 @@ export default function App() {
       <StatusBar style={theme.statusBar} />
       <View style={[styles.root, { backgroundColor: theme.bg }]}>
         {/*
-          A plain state machine rather than a navigator: there are only four
-          destinations, and the alarm has to be able to take the screen from any
-          of them — which a stack navigator would only complicate.
+          A plain state machine rather than a router. There are three tabs and
+          one full-screen interrupt, no deep links beyond the app's own scheme,
+          and no pushed detail screens — a file-based router would be a
+          dependency and a migration for a tree this shallow. The onboarding and
+          permission gates are groups in the same sense: they own the screen
+          entirely until they are satisfied.
         */}
-        {needsPermissions ? (
+        {!onboarded ? (
+          <OnboardingScreen onDone={() => setSetting('onboarded', true)} />
+        ) : needsPermissions ? (
           <PermissionsScreen onSkipBackground={() => setSkippedBackground(true)} />
         ) : !demoSeen ? (
           // Shown once, after the permissions and before the first trip. Hearing
           // the alarm once is what turns "I locked my phone and trusted an app
           // that has never made a sound at me" into a decision.
           <DemoScreen onDone={() => setSetting('demoSeen', true)} />
-        ) : status === 'armed' && destination ? (
-          <ActiveScreen
-            destination={destination}
-            radiusM={radiusM}
-            distanceM={distanceM}
-            here={position?.coords ?? null}
-            remaining={session?.remaining ?? []}
-            stale={stale}
-            killed={killed}
-            onDismissKilled={dismissKilled}
-            onOpenBatterySettings={() => void Linking.openSettings()}
-            onCancel={() => void cancel()}
-            onSimulateArrival={() => void ArrivalCoordinator.trigger('manual')}
-          />
         ) : (
-          <HomeScreen onOpenSettings={() => setShowSettings(true)} />
+          <>
+            <View style={styles.tabBody}>
+              {tab === 'map' ? (
+                <MapScreen onOpenPlaces={() => setTab('places')} />
+              ) : tab === 'places' ? (
+                <PlacesScreen onPicked={() => setTab('map')} />
+              ) : (
+                <SettingsScreen onOpenDebug={() => setShowDebug(true)} />
+              )}
+            </View>
+
+            {/*
+              Hidden while armed. At that point the app has one job and one
+              control, and offering to wander into settings while someone is
+              trying to fall asleep is offering the wrong thing.
+            */}
+            {status === 'armed' ? null : <TabBar active={tab} onChange={setTab} />}
+          </>
         )}
 
-        {showSettings ? (
-          <SettingsScreen
-            onClose={() => setShowSettings(false)}
-            onOpenDebug={() => setShowDebug(true)}
-          />
-        ) : null}
-
-        {/* Above settings, below the alarm: the alarm outranks everything. */}
         {__DEV__ && showDebug ? <DebugScreen onClose={() => setShowDebug(false)} /> : null}
 
-        {status === 'ringing' && destination ? (
+        {status === 'ringing' && destination && !snoozed ? (
           <AlarmScreen
             destination={destination}
             reason={session?.reason ?? 'arrived'}
             lastDistanceM={session?.lastDistanceM ?? null}
             onDismiss={onDismissAlarm}
-            onWakeAgain={() => void wakeAgain()}
+            onSnooze={() => void snooze()}
           />
         ) : null}
       </View>
@@ -210,6 +209,9 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: {
+    flex: 1,
+  },
+  tabBody: {
     flex: 1,
   },
   boot: {

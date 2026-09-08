@@ -57,6 +57,14 @@ export const EARLY_RADIUS_M = 2000;
  * train is rarely better than that anyway. Enforced on custom radius input.
  */
 export const MIN_RADIUS_M = 150;
+
+/**
+ * How long a snooze lasts.
+ *
+ * Two minutes, which is short enough that it cannot outlast the stop it was
+ * pressed at. A five-minute snooze on a train is a missed station.
+ */
+export const SNOOZE_MS = 2 * 60 * 1000;
 export const MAX_RADIUS_M = 20000;
 
 /**

@@ -45,8 +45,8 @@ const config: ExpoConfig = {
    * opposite colour.
    */
   userInterfaceStyle: 'automatic',
-  // The light scheme's ground, which is what App paints before the first frame.
-  backgroundColor: '#F6F6F3',
+  // The light ground, which is what App paints before the first frame.
+  backgroundColor: '#F7F8FA',
 
   ios: {
     bundleIdentifier: 'com.hagaanu.app',
@@ -122,8 +122,9 @@ const config: ExpoConfig = {
     package: 'com.hagaanu.app',
     adaptiveIcon: {
       foregroundImage: './assets/android-icon-foreground.png',
-      // The dark scheme's ground, the same one the iOS icon sits on.
-      backgroundColor: '#0F1315',
+      // The brand itself: the adaptive icon's mark is white, so the tile is
+      // the colour rather than a dark ground the mark sits on.
+      backgroundColor: '#2B4EF0',
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     permissions: [
@@ -166,7 +167,7 @@ const config: ExpoConfig = {
       'expo-notifications',
       {
         icon: './assets/notification-icon.png',
-        color: '#0EA36F',
+        color: '#2B4EF0',
         // Copies every tone into res/raw (Android) and the app bundle (iOS) so
         // the notification itself can play the one the user chose — including
         // when our JS process is gone by the time the notification is shown.
@@ -191,12 +192,12 @@ const config: ExpoConfig = {
         image: './assets/splash-icon.png',
         imageWidth: 180,
         resizeMode: 'contain',
-        backgroundColor: '#F6F6F3',
+        backgroundColor: '#F7F8FA',
         // A separate mark for the dark ground: one asset cannot be legible on
-        // both #F6F6F3 and #0F1315, and the splash now follows the device.
+        // both #F7F8FA and #0E1116, and the splash follows the device.
         dark: {
           image: './assets/splash-icon-dark.png',
-          backgroundColor: '#0F1315',
+          backgroundColor: '#0E1116',
         },
       },
     ],

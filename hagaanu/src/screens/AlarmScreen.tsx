@@ -29,7 +29,7 @@ export function AlarmScreen({
   reason = 'arrived',
   lastDistanceM = null,
   onDismiss,
-  onWakeAgain,
+  onSnooze,
 }: {
   destination: Destination;
   /** Why we are ringing. Changes what the screen says, not how loud it is. */
@@ -37,13 +37,8 @@ export function AlarmScreen({
   /** The last distance we actually measured, for the lost-signal message. */
   lastDistanceM?: number | null;
   onDismiss: () => void;
-  /**
-   * Re-arms at the destination itself.
-   *
-   * Absent in the demo and on the overshoot screen, where "wake me again at
-   * the stop" would be an offer to wake someone at a place they have left.
-   */
-  onWakeAgain?: () => void;
+  /** Silences it and rings again in two minutes. */
+  onSnooze?: () => void;
 }) {
   const s = useTheme();
   const reduced = useReducedMotion();
@@ -94,11 +89,11 @@ export function AlarmScreen({
             <Animated.View
               style={[
                 styles.ring,
-                { borderColor: s.alarm.ink, opacity: ringFade, transform: [{ scale: ringScale }] },
+                { borderColor: s.alarm.on, opacity: ringFade, transform: [{ scale: ringScale }] },
               ]}
               pointerEvents="none"
             />
-            <View style={[styles.core, { backgroundColor: s.alarm.ink }]} />
+            <View style={[styles.core, { backgroundColor: s.alarm.on }]} />
           </View>
 
           <View style={styles.copy}>
@@ -112,22 +107,23 @@ export function AlarmScreen({
         </View>
 
         {/*
-          Offered only when arriving, and only for five seconds' worth of
-          attention: after an overshoot there is nothing left to be woken for,
-          and after a lost signal we do not know enough to promise a second try.
+          Snooze is offered on every reason, because "two more minutes" is a
+          request about the person, not about the trip: they heard it, they are
+          not ready, and two minutes is short enough that it cannot outlast the
+          stop it was pressed at.
         */}
-        {onWakeAgain && reason === 'arrived' ? (
+        {onSnooze ? (
           <Touch
             accessibilityRole="button"
-            accessibilityLabel={t('alarm.wakeAgain')}
+            accessibilityLabel={t('snooze.action')}
             onPress={() => {
               Feedback.tick();
-              onWakeAgain();
+              onSnooze();
             }}
             style={[styles.again, { borderColor: s.alarm.line }]}
           >
             <Txt variant="captionStrong" tone="onAlarm">
-              {t('alarm.wakeAgain')}
+              {t('snooze.action')}
             </Txt>
           </Touch>
         ) : null}
@@ -143,7 +139,7 @@ export function AlarmScreen({
           style={({ pressed }) => [
             styles.dismiss,
             {
-              backgroundColor: s.alarm.ink,
+              backgroundColor: s.alarm.on,
               opacity: pressed ? 0.86 : 1,
             },
           ]}

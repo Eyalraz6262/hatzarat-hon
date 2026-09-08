@@ -32,6 +32,8 @@ export type Settings = {
   /** Null means "follow the device language". */
   language: LanguageCode | null;
   crashReports: boolean;
+  /** The three-screen intro has been seen. */
+  onboarded: boolean;
   /** True once the first-run demo has played, so it is not offered twice. */
   demoSeen: boolean;
   /** True once the Android battery-optimisation note has been shown. */
@@ -46,6 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   language: null,
   crashReports: true,
+  onboarded: false,
   demoSeen: false,
   batteryNoticeSeen: false,
 };
@@ -79,6 +82,7 @@ export function normaliseSettings(raw: unknown): Settings {
     theme: THEMES.includes(r.theme as ThemeMode) ? (r.theme as ThemeMode) : DEFAULT_SETTINGS.theme,
     language: LANGUAGES.includes(r.language as LanguageCode) ? (r.language as LanguageCode) : null,
     crashReports: bool(r.crashReports, DEFAULT_SETTINGS.crashReports),
+    onboarded: bool(r.onboarded, DEFAULT_SETTINGS.onboarded),
     demoSeen: bool(r.demoSeen, DEFAULT_SETTINGS.demoSeen),
     batteryNoticeSeen: bool(r.batteryNoticeSeen, DEFAULT_SETTINGS.batteryNoticeSeen),
   };

@@ -90,7 +90,7 @@ export function SavedList({
               },
             ]}
           >
-            <Mark size={icon.md} strokeWidth={icon.stroke} color={s.accent.text} />
+            <Mark size={icon.md} strokeWidth={icon.stroke} color={s.primary.text} />
             <View style={styles.text}>
               <View style={[styles.name, { flexDirection: row() }]}>
                 {/*
@@ -99,7 +99,7 @@ export function SavedList({
                   weekday commute down the list. A pin is the user overriding it.
                 */}
                 {item.pinned ? (
-                  <Pin size={icon.sm - 2} strokeWidth={icon.stroke} color={s.accent.text} />
+                  <Pin size={icon.sm - 2} strokeWidth={icon.stroke} color={s.primary.text} />
                 ) : null}
                 <Txt variant="labelStrong" numberOfLines={1} style={styles.nameText}>
                   {item.name}

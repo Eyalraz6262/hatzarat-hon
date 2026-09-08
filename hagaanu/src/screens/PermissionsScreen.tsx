@@ -152,7 +152,7 @@ function Ask({
         styles.ask,
         {
           backgroundColor: active ? s.surface : 'transparent',
-          borderColor: active ? s.accent.base : s.line,
+          borderColor: active ? s.primary.base : s.line,
           flexDirection: row(),
           // A step neither done nor current is context, not an instruction.
           opacity: active || done ? 1 : 0.55,
@@ -162,11 +162,11 @@ function Ask({
       <View
         style={[
           styles.askMark,
-          { backgroundColor: done ? s.accent.base : s.sunk },
+          { backgroundColor: done ? s.primary.base : s.sunk },
         ]}
       >
         {done ? (
-          <Check size={icon.md} strokeWidth={2.4} color={s.accent.on} />
+          <Check size={icon.md} strokeWidth={2.4} color={s.primary.on} />
         ) : (
           <Mark size={icon.md} strokeWidth={icon.stroke} color={s.inkMuted} />
         )}
@@ -178,7 +178,7 @@ function Ask({
             {title}
           </Txt>
           {done ? (
-            <Txt variant="caption" tone="accent">
+            <Txt variant="caption" tone="primary">
               {t('permissions.granted')}
             </Txt>
           ) : null}

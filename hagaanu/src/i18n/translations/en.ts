@@ -98,8 +98,6 @@ export const en: TranslationSchema = {
     title: 'You are here.',
     body: '{destination} is right here.',
     dismiss: 'I am awake',
-    wakeAgain: 'Wake me again at the stop itself',
-    wakeAgainDone: 'We will wake you again',
     channelGroup: 'Arrival alarms',
     notificationTitle: 'You have reached {destination}',
     notificationBody: 'Time to get off.',
@@ -171,6 +169,7 @@ export const en: TranslationSchema = {
 
     sectionAlarm: 'The alarm',
     sectionApp: 'The app',
+    sectionLocation: 'Location',
     sectionPrivacy: 'Privacy',
     sectionHelp: 'Help',
 
@@ -242,5 +241,41 @@ export const en: TranslationSchema = {
     simulating: 'Travelling…',
     simulateNote: 'Moves you to the destination in about 40 seconds, so you can watch the screen change and the alarm fire.',
     reset: 'Start again',
+  },
+
+  tabs: { map: 'Map', places: 'Places', settings: 'Settings' },
+
+  onboarding: {
+    oneTitle: 'Fell asleep on the bus?',
+    oneBody: 'It happens to everyone. Hagaanu keeps watch while you sleep.',
+    twoTitle: 'Pick a destination',
+    twoBody: 'Mark where you get off, and how far out to wake you.',
+    threeTitle: 'And go to sleep',
+    threeBody: 'Lock the phone. As you near the destination, it rings.',
+    start: 'Get started',
+    skip: 'Skip',
+  },
+
+  places: {
+    title: 'Your places',
+    saved: 'Saved',
+    recent: 'Recent',
+    empty: 'No saved places yet.',
+    emptyBody: 'Every destination you set an alarm for shows up here, and a star keeps it.',
+    goToMap: 'Pick a destination',
+    useAgain: 'Use again',
+  },
+
+  snooze: { action: '2 more minutes', active: 'We will wake you again in 2 minutes' },
+
+  status: {
+    noGps: 'No GPS signal',
+    noGpsBody: 'We could not locate you. Check that location is on.',
+    noNetwork: 'No internet connection',
+    noNetworkBody: 'Address search needs a network. You can tap the map instead.',
+    locationDenied: 'Location permission is off',
+    locationDeniedBody: 'Without location there is no way to know when you have arrived.',
+    searching: 'Searching…',
+    locating: 'Locating you…',
   },
 };

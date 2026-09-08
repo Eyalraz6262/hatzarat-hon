@@ -24,15 +24,14 @@ from PIL import Image, ImageDraw
 SS = 4  # supersample factor
 
 # ── from src/theme/colors.ts ──────────────────────────────────────
-GROUND      = (0x0F, 0x13, 0x15)  # dark.bg
-ACCENT      = (0x22, 0xC8, 0x8A)  # dark.accent.base
-ACCENT_DEEP = (0x0E, 0xA3, 0x6F)  # light.accent.base — for light grounds
-RAIL_DIM    = (0x39, 0x43, 0x47)  # just above dark.lineStrong: it carries the whole line
-LIGHT_BG    = (0xF6, 0xF6, 0xF3)  # light.bg
-RAIL_LIGHT  = (0xB2, 0xB7, 0xAC)  # darker than light.lineStrong: on the splash the
-                                  # mark stands alone with no chrome to sit against
-STATION     = (0x62, 0x6E, 0x72)  # the station strokes, a step brighter than the rail
-STATION_LIGHT = (0x8E, 0x94, 0x89)
+GROUND      = (0x2B, 0x4E, 0xF0)  # light.primary.base — the brand takes the tile
+ACCENT      = (0xFF, 0xFF, 0xFF)  # what sits on it, at 6.09:1
+ACCENT_DEEP = (0x2B, 0x4E, 0xF0)  # the mark itself, for light grounds
+RAIL_DIM    = (0x8F, 0xA6, 0xFA)  # the line, a lifted tint of the brand
+LIGHT_BG    = (0xF7, 0xF8, 0xFA)  # light.bg
+RAIL_LIGHT  = (0xB9, 0xC6, 0xFB)
+STATION     = (0xC5, 0xD3, 0xFD)  # the stations, brighter than the line
+STATION_LIGHT = (0x93, 0xA9, 0xFA)
 
 # ── proportions, as fractions of the canvas ───────────────────────
 # Three nodes on a line, which is the grammar every transit diagram in the world
