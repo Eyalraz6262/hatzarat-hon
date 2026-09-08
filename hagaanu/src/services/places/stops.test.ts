@@ -71,6 +71,27 @@ describe('snapping a tap to a stop', () => {
   });
 });
 
+describe('a term too broad to narrow', () => {
+  it('is answered from the whole country, not from part of the alphabet', () => {
+    // "הר" is a word or a prefix in thousands of names. The index refuses to
+    // narrow on it, so the scan is over everything — which is the only way the
+    // nearest stop can win when the user's town sorts late in the alphabet.
+    const hits = searchStops(['הר'], TEL_AVIV, 10);
+    assert.ok(hits.length > 0);
+    assert.ok(hits[0].distanceM !== null && hits[0].distanceM < 5_000);
+    assert.ok(hits.some((hit) => hit.town === 'תל אביב יפו'));
+  });
+
+  it('gives the same answer however many other words narrowed it', () => {
+    // One broad term alone, and the same term beside a narrow one, must agree
+    // about the stop they both describe.
+    const broad = searchStops(['הרצל'], TEL_AVIV, 20).map((hit) => hit.name);
+    const narrowed = searchStops(['הר', 'יהודה'], TEL_AVIV, 20).map((hit) => hit.name);
+    const shared = narrowed.filter((name) => broad.includes(name));
+    assert.ok(shared.length > 0);
+  });
+});
+
 describe('search stays fast enough to type into', () => {
   it('answers a two-letter term without scanning the country', () => {
     searchStops(['תל'], TEL_AVIV, 6); // warm: the first call builds the index

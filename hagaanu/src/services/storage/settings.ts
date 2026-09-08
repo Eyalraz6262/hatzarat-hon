@@ -31,7 +31,6 @@ export type Settings = {
   theme: ThemeMode;
   /** Null means "follow the device language". */
   language: LanguageCode | null;
-  crashReports: boolean;
   /** The three-screen intro has been seen. */
   onboarded: boolean;
   /** True once the first-run demo has played, so it is not offered twice. */
@@ -47,7 +46,6 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultRadiusM: DEFAULT_RADIUS_M,
   theme: 'system',
   language: null,
-  crashReports: true,
   onboarded: false,
   demoSeen: false,
   batteryNoticeSeen: false,
@@ -81,7 +79,6 @@ export function normaliseSettings(raw: unknown): Settings {
       : DEFAULT_SETTINGS.defaultRadiusM,
     theme: THEMES.includes(r.theme as ThemeMode) ? (r.theme as ThemeMode) : DEFAULT_SETTINGS.theme,
     language: LANGUAGES.includes(r.language as LanguageCode) ? (r.language as LanguageCode) : null,
-    crashReports: bool(r.crashReports, DEFAULT_SETTINGS.crashReports),
     onboarded: bool(r.onboarded, DEFAULT_SETTINGS.onboarded),
     demoSeen: bool(r.demoSeen, DEFAULT_SETTINGS.demoSeen),
     batteryNoticeSeen: bool(r.batteryNoticeSeen, DEFAULT_SETTINGS.batteryNoticeSeen),

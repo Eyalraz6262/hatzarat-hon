@@ -25,6 +25,16 @@ import { COORD_SCALE, LAT_ORIGIN, LON_ORIGIN, STOPS, TOWNS } from './stops.gener
 
 type Index = {
   names: string[];
+  /**
+   * The name and town normalised, space padded at both ends.
+   *
+   * Scoring used to normalise and split each candidate on every keystroke,
+   * which is the whole cost of a broad query. Padded, a whole-word match is
+   * `includes(' word ')` and a prefix match is `includes(' word')` — no regex,
+   * no allocation, and cheap enough that a query too broad to narrow can just
+   * scan the country rather than guess at a subset of it.
+   */
+  hay: string[];
   town: Uint16Array;
   lat: Float64Array;
   lon: Float64Array;
@@ -41,6 +51,7 @@ function build(): Index {
   const count = lines.length;
 
   const names = new Array<string>(count);
+  const hay = new Array<string>(count);
   const town = new Uint16Array(count);
   const lat = new Float64Array(count);
   const lon = new Float64Array(count);
@@ -70,14 +81,17 @@ function build(): Index {
     lat[i] = LAT_ORIGIN + parseInt(line.slice(b + 1, c), 36) / COORD_SCALE;
     lon[i] = LON_ORIGIN + parseInt(line.slice(c + 1), 36) / COORD_SCALE;
 
-    for (const word of normalize(name).split(' ')) if (word) add(word, i);
-    for (const word of normalize(TOWNS[townAt] ?? '').split(' ')) if (word) add(word, i);
+    const words = normalize(name).split(' ').filter(Boolean);
+    const townWords = normalize(TOWNS[townAt] ?? '').split(' ').filter(Boolean);
+    hay[i] = ` ${[...words, ...townWords].join(' ')} `;
+    for (const word of words) add(word, i);
+    for (const word of townWords) add(word, i);
   }
 
   const words = [...buckets.keys()].sort();
   const postings = words.map((word) => Int32Array.from(buckets.get(word)!));
 
-  return { names, town, lat, lon, words, postings };
+  return { names, hay, town, lat, lon, words, postings };
 }
 
 function ensure(): Index {
@@ -106,13 +120,15 @@ function lowerBound(words: string[], word: string): number {
 }
 
 /**
- * Stops whose name or town has a word starting with `term`.
+ * When a term stops being worth indexing.
  *
- * Capped, because a two-letter term matches tens of thousands of stops and
- * nobody is going to read past the sixth. The cap is generous enough that the
- * ranking below still has room to choose.
+ * A two-letter term can appear in thousands of names, and building a Set of
+ * them costs more than the scan it was meant to save. Past this the index says
+ * so rather than returning the first few thousand it happened to reach: those
+ * would be whichever words sort earliest, which is a silent bias towards one
+ * end of the alphabet and against whichever town the user is standing in.
  */
-const CANDIDATE_CAP = 4_000;
+const TOO_BROAD = 4_000;
 
 /**
  * The forms of a term worth looking up.
@@ -127,14 +143,15 @@ function variants(term: string): string[] {
   return bare ? [term, bare] : [term, `\u05d4${term}`];
 }
 
-function candidates(idx: Index, term: string): Set<number> | null {
+/** `null` when nothing matches, `'all'` when the term is too broad to narrow. */
+function candidates(idx: Index, term: string): Set<number> | 'all' | null {
   const found = new Set<number>();
   for (const form of variants(term)) {
     for (let w = lowerBound(idx.words, form); w < idx.words.length; w++) {
       if (!idx.words[w].startsWith(form)) break;
       for (const stop of idx.postings[w]) {
         found.add(stop);
-        if (found.size >= CANDIDATE_CAP) return found;
+        if (found.size > TOO_BROAD) return 'all';
       }
     }
   }
@@ -175,40 +192,41 @@ export function searchStops(
   const idx = ensure();
 
   // Start from the rarest term: it is the one that narrows hardest, and every
-  // other term is then a test on a small set rather than another scan.
+  // other term is then a test on a small set rather than another scan. A term
+  // too broad to narrow contributes nothing, and if every term is like that we
+  // walk the whole index — bounded, and the same answer every time.
   let pool: Set<number> | null = null;
   for (const term of terms) {
     const found = candidates(idx, term);
     if (!found) return [];
+    if (found === 'all') continue;
     if (!pool || found.size < pool.size) pool = found;
   }
-  if (!pool) return [];
+
+  // Each term is tested against the padded haystack: ' word ' is a whole word,
+  // ' word is a word that starts with it.
+  const forms = terms.map(variants);
 
   const hits: StopHit[] = [];
-  for (const at of pool) {
-    const name = idx.names[at];
-    const town = TOWNS[idx.town[at]] ?? '';
-    const words = `${normalize(name)} ${normalize(town)}`.split(' ');
+  const consider = (at: number) => {
+    const hay = idx.hay[at];
 
     let score = 0;
-    let matchedAll = true;
-    for (const term of terms) {
-      const forms = variants(term);
+    for (const alternatives of forms) {
       let best = 0;
-      for (const word of words) {
-        if (forms.includes(word)) {
+      for (const form of alternatives) {
+        if (hay.includes(` ${form} `)) {
           best = 300;
           break;
         }
-        if (forms.some((form) => word.startsWith(form))) best = 200;
+        if (hay.includes(` ${form}`)) best = 200;
       }
-      if (best === 0) {
-        matchedAll = false;
-        break;
-      }
+      if (best === 0) return;
       score += best;
     }
-    if (!matchedAll) continue;
+
+    const name = idx.names[at];
+    const town = TOWNS[idx.town[at]] ?? '';
 
     const stopKind = kindOf(name);
     // Same weight the curated list gives it: saying "רכבת" should lift the
@@ -221,6 +239,12 @@ export function searchStops(
     score += proximityScore(distanceM);
 
     hits.push({ name, town, coords, kind: stopKind, distanceM, score });
+  };
+
+  if (pool) {
+    for (const at of pool) consider(at);
+  } else {
+    for (let at = 0; at < idx.names.length; at++) consider(at);
   }
 
   // Name breaks a tie so the same query always returns the same list. Without

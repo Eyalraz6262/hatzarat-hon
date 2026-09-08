@@ -234,16 +234,6 @@ export function SettingsScreen({ onOpenDebug }: { onOpenDebug: () => void }) {
 
           {/* ── privacy ───────────────────────────────────────────── */}
           <Section title={t('settings.sectionPrivacy')}>
-            <Card padded={false}>
-              <ToggleRow
-                first
-                label={t('settings.crashReports')}
-                note={t('settings.crashReportsNote')}
-                value={settings.crashReports}
-                onChange={(v) => settings.set('crashReports', v)}
-              />
-            </Card>
-
             <Card>
               <Txt variant="labelStrong">{t('settings.privacyTitle')}</Txt>
               <Txt variant="caption" tone="muted" style={styles.prose}>

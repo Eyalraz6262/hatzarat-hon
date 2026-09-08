@@ -58,7 +58,6 @@ test('booleans are taken only when they really are booleans', () => {
   assert.equal(normalise({ vibrate: false }).vibrate, false);
   // "false" from a bad JSON round trip must not read as true.
   assert.equal(normalise({ vibrate: 'false' as unknown as boolean }).vibrate, true);
-  assert.equal(normalise({ crashReports: false }).crashReports, false);
   assert.equal(normalise({ demoSeen: true }).demoSeen, true);
 });
 

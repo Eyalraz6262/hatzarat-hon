@@ -15,6 +15,14 @@ expo-env.d.ts
 *.jks
 *.p8
 *.p12
+# Android signing. EAS keeps the upload key for you; if you ever generate one
+# locally, losing it is recoverable and committing it is not.
+*.keystore
+*.jks
+# Dropped in by the Firebase/Play consoles. Not secret in the strictest sense,
+# but they identify the project and have no business in a public repo.
+google-services.json
+GoogleService-Info.plist
 *.key
 *.mobileprovision
 

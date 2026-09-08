@@ -204,12 +204,10 @@ export const en: TranslationSchema = {
     demo: 'Run the demo',
     demoNote: 'Plays your chosen sound and shows the arrival screen.',
 
-    crashReports: 'Crash reports',
-    crashReportsNote: 'Helps fix faults that stop the alarm working. No location, no identifier, no usage tracking.',
 
     privacyTitle: 'What leaves your device',
     privacyBody:
-      'Your location stays on the phone and is never sent to a server of ours. The one exception is searching an address or tapping the map: the text or the two coordinates go to the device’s own mapping service — Apple on iOS, Google on Android — to get a place name back. Once armed, the app does not touch the network at all.',
+      'Your location stays on the phone and is never sent to a server of ours. The stop list is bundled into the app, so most searches never leave the device at all. The exception is searching for an address that is not a stop, or tapping a point on the map with no stop on it: the text or the two coordinates go to the phone\'s own map service — Apple on iOS, Google on Android — to get a place name. Once armed, the app does not touch the network at all.',
 
     whyNotWork: 'Why did the alarm not fire?',
     whyNotWorkBody: 'Both operating systems reserve the right to delay background events to save battery, and Android also closes background apps. We use three detection layers to narrow that gap, but no app can promise a hundred percent.',
