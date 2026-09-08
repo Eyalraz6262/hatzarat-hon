@@ -3,17 +3,28 @@ import * as Location from 'expo-location';
 import { ISRAEL_BOUNDS } from '../../constants/config';
 import { t } from '../../i18n';
 import type { Destination, LatLng } from '../../types';
+import { distanceMeters } from '../../utils/geo';
 import { log } from '../../utils/logger';
+import type { PlaceKind } from '../places/catalog';
+import { labelFor, searchCatalog } from '../places/match';
 
 /**
  * Address search and reverse lookup.
  *
- * Uses the *platform* geocoder (CLGeocoder on iOS, Android's Geocoder backed by
- * Play Services) rather than a hosted API. That is a deliberate MVP choice: no
- * API key to provision, no billing account, no third party seeing where our
- * users sleep. The trade-off is that results are thinner than Google Places
- * autocomplete — swapping in a Places/Mapbox client later means reimplementing
- * only this file.
+ * Two sources, in order.
+ *
+ * First the bundled catalog (../places): every railway station and the named
+ * landmarks people give as a destination. It answers offline, instantly, and it
+ * is the only one of the two that knows what "סמי עופר" is.
+ *
+ * Then the *platform* geocoder — CLGeocoder on iOS, Android's Geocoder backed
+ * by Play Services — for everything else, which in practice means street
+ * addresses. That is a deliberate choice over a hosted place API: no key to
+ * provision, no billing account, no third party seeing where our users sleep.
+ * Its limitation is the reason the catalog exists at all: it resolves
+ * addresses, so it cannot find a station, a stadium or a mall by name.
+ *
+ * Swapping in Places or Mapbox later means reimplementing only this file.
  */
 
 /** True when a coordinate falls inside the country the app currently serves. */
@@ -43,14 +54,67 @@ function labelFromAddress(address: Location.LocationGeocodedAddress): string {
     .join(', ');
 }
 
-export type SearchResult = Destination;
+export type SearchResult = Destination & {
+  /** Set for catalog hits, so the list can show what kind of place it is. */
+  kind?: PlaceKind;
+  /** Metres from the user, when their position is known. */
+  distanceM?: number | null;
+};
+
+/**
+ * Close enough that two results are the same place.
+ *
+ * The geocoder often resolves a station's street address, which lands within a
+ * block of the catalog entry. Showing both would be two identical-looking rows.
+ */
+const SAME_PLACE_M = 400;
 
 export const GeocodingService = {
-  /** Forward geocode a free-text query into candidate destinations. */
-  async search(query: string): Promise<SearchResult[]> {
+  /**
+   * Turn a free-text query into candidate destinations.
+   *
+   * `near` is the user's last known position. It never filters — someone in
+   * Haifa searching for a stadium in Jerusalem means it — it only decides the
+   * order when the query alone cannot.
+   */
+  async search(query: string, near: LatLng | null = null): Promise<SearchResult[]> {
     const trimmed = query.trim();
     if (trimmed.length < 2) return [];
 
+    const fromCatalog: SearchResult[] = searchCatalog(trimmed, near).map((hit) => ({
+      coords: hit.place.coords,
+      label: labelFor(hit.place),
+      kind: hit.place.kind,
+      distanceM: hit.distanceM,
+    }));
+
+    // A confident catalog answer is better than anything the address geocoder
+    // can offer, and it is already on screen while the network call is out.
+    const fromGeocoder = await GeocodingService.geocode(trimmed).catch((error) => {
+      log.warn('location', 'forward geocode failed', error);
+      // Only a hard failure when the catalog had nothing either — otherwise the
+      // user has results and does not need to hear about it.
+      if (fromCatalog.length === 0) throw error;
+      return [] as SearchResult[];
+    });
+
+    const merged = [...fromCatalog];
+    for (const result of fromGeocoder) {
+      const duplicate = merged.some(
+        (existing) => distanceMeters(existing.coords, result.coords) < SAME_PLACE_M
+      );
+      if (duplicate) continue;
+      merged.push({
+        ...result,
+        distanceM: near ? Math.round(distanceMeters(near, result.coords)) : null,
+      });
+    }
+
+    return merged.slice(0, 8);
+  },
+
+  /** The platform geocoder alone. Addresses, not places. */
+  async geocode(trimmed: string): Promise<SearchResult[]> {
     const matches = await Location.geocodeAsync(trimmed);
     if (!matches.length) return [];
 

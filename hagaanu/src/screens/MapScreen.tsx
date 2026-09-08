@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DemoBanner } from '../components/DemoBanner';
 import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
-import { nearestLandmark } from '../components/map/landmarks';
 import { SearchField } from '../components/map/SearchField';
+import { labelFor, nearestPlace } from '../services/places/match';
 import { ApproachGauge } from '../components/route/ApproachGauge';
 import { RangeSlider } from '../components/route/RangeSlider';
 import { buildApproach } from '../components/route/approach';
@@ -89,15 +89,15 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
    */
   const pickPoint = useCallback(
     (coords: LatLng) => {
-      // A tap next to a real station takes its name straight away. Without it
-      // every demo destination is "the place you chose", which tells the reader
-      // nothing about where they are going.
-      const near = nearestLandmark(coords);
-      setDestination({
-        coords: near ? near.coords : coords,
-        label: near ? near.name : t('errors.unknownPlace'),
-      });
-      if (near) return;
+      // A tap on a station takes its name straight away, and its coordinate:
+      // the geofence should be centred where the search would have centred it,
+      // not a few hundred metres off at wherever the finger landed.
+      const near = nearestPlace(coords);
+      if (near) {
+        setDestination({ coords: near.coords, label: labelFor(near) });
+        return;
+      }
+      setDestination({ coords, label: t('errors.unknownPlace') });
       void (async () => {
         const label = await GeocodingService.describe(coords);
         const current = useAlarmStore.getState().destination;
@@ -172,6 +172,7 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
         {!armed ? (
           <View style={styles.searchDock}>
             <SearchField
+              near={position?.coords ?? null}
               onPick={onPick}
               onFocusChange={setSearching}
               onClear={destination ? () => setDestination(null) : undefined}

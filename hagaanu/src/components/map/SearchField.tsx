@@ -1,5 +1,12 @@
+import Bus from 'lucide-react-native/icons/bus';
+import GraduationCap from 'lucide-react-native/icons/graduation-cap';
 import MapPin from 'lucide-react-native/icons/map-pin';
+import Plane from 'lucide-react-native/icons/plane';
 import Search from 'lucide-react-native/icons/search';
+import ShoppingBag from 'lucide-react-native/icons/shopping-bag';
+import Stethoscope from 'lucide-react-native/icons/stethoscope';
+import TrainFront from 'lucide-react-native/icons/train-front';
+import Trophy from 'lucide-react-native/icons/trophy';
 import X from 'lucide-react-native/icons/x';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Keyboard, StyleSheet, TextInput, View } from 'react-native';
@@ -7,7 +14,9 @@ import { ActivityIndicator, Keyboard, StyleSheet, TextInput, View } from 'react-
 import { t } from '../../i18n';
 import { GeocodingService, type SearchResult } from '../../services/location/GeocodingService';
 import { elevation, HIT, hitSlop, icon, radius, space, type, useTheme } from '../../theme';
-import type { Destination } from '../../types';
+import type { PlaceKind } from '../../services/places/catalog';
+import type { Destination, LatLng } from '../../types';
+import { formatDistance } from '../../utils/geo';
 import { log } from '../../utils/logger';
 import { Touch, Txt, align, row } from '../ui';
 
@@ -16,14 +25,33 @@ import { Touch, Txt, align, row } from '../ui';
  *
  * Debounced at 400ms because forward geocoding on both platforms is a real
  * network call per keystroke, and a passenger typing a station name generates
- * a dozen of them. The list is capped at five by the geocoder, so a plain View
- * is correct here and a virtualized list would be overhead for nothing.
+ * a dozen of them. The list is capped at eight, so a plain View is correct here
+ * and a virtualized list would be overhead for nothing.
  */
+
+/**
+ * What a result is, at a glance.
+ *
+ * A row reading "נתניה" is a different decision depending on whether it is the
+ * railway station, the bus terminal or the stadium, and all three are in the
+ * catalog. The pin is for results from the address geocoder, which has no idea
+ * what kind of thing it found.
+ */
+const KIND_ICON: Record<PlaceKind, typeof MapPin> = {
+  train: TrainFront,
+  bus: Bus,
+  stadium: Trophy,
+  airport: Plane,
+  campus: GraduationCap,
+  hospital: Stethoscope,
+  mall: ShoppingBag,
+};
 export function SearchField({
   onPick,
   placeholder,
   onFocusChange,
   onClear,
+  near,
 }: {
   onPick: (destination: Destination) => void;
   /** Defaults to the destination prompt. */
@@ -35,6 +63,11 @@ export function SearchField({
   onFocusChange?: (focused: boolean) => void;
   /** Present only when there is a destination to clear. */
   onClear?: () => void;
+  /**
+   * Where the user is, if we know. Only ever reorders results — searching for
+   * somewhere far away is the entire point of the app.
+   */
+  near?: LatLng | null;
 }) {
   const s = useTheme();
   const [query, setQuery] = useState('');
@@ -42,6 +75,10 @@ export function SearchField({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const requestId = useRef(0);
+  // Read at call time, not depended on: a position update every second would
+  // otherwise restart the debounce and the query would never fire.
+  const nearRef = useRef(near);
+  nearRef.current = near;
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -56,7 +93,7 @@ export function SearchField({
     const timer = setTimeout(() => {
       void (async () => {
         try {
-          const found = await GeocodingService.search(trimmed);
+          const found = await GeocodingService.search(trimmed, nearRef.current ?? null);
           // A slower earlier request must not overwrite a newer one.
           if (id !== requestId.current) return;
           setResults(found);
@@ -154,28 +191,36 @@ export function SearchField({
               </Txt>
             </View>
           ) : (
-            results.map((result, index) => (
-              <Touch
-                key={`${result.label}-${index}`}
-                accessibilityRole="button"
-                accessibilityLabel={result.label}
-                onPress={() => pick(result)}
-                style={({ pressed }) => [
-                  styles.result,
-                  {
-                    flexDirection: row(),
-                    backgroundColor: pressed ? s.sunk : 'transparent',
-                    borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
-                    borderTopColor: s.line,
-                  },
-                ]}
-              >
-                <MapPin size={icon.md} strokeWidth={icon.stroke} color={s.inkMuted} />
-                <Txt variant="label" numberOfLines={2} style={styles.resultText}>
-                  {result.label}
-                </Txt>
-              </Touch>
-            ))
+            results.map((result, index) => {
+              const Icon = result.kind ? KIND_ICON[result.kind] : MapPin;
+              return (
+                <Touch
+                  key={`${result.label}-${index}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={result.label}
+                  onPress={() => pick(result)}
+                  style={({ pressed }) => [
+                    styles.result,
+                    {
+                      flexDirection: row(),
+                      backgroundColor: pressed ? s.sunk : 'transparent',
+                      borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
+                      borderTopColor: s.line,
+                    },
+                  ]}
+                >
+                  <Icon size={icon.md} strokeWidth={icon.stroke} color={s.inkMuted} />
+                  <Txt variant="label" numberOfLines={2} style={styles.resultText}>
+                    {result.label}
+                  </Txt>
+                  {typeof result.distanceM === 'number' ? (
+                    <Txt variant="caption" tone="faint">
+                      {formatDistance(result.distanceM)}
+                    </Txt>
+                  ) : null}
+                </Touch>
+              );
+            })
           )}
         </View>
       ) : null}

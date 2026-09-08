@@ -202,10 +202,7 @@ export const RouteMap = forwardRef<RouteMapHandle, Props>(function RouteMapWeb(
             <View
               style={[
                 styles.landmarkDot,
-                {
-                  backgroundColor: landmark.kind === 'station' ? s.inkMuted : 'transparent',
-                  borderColor: s.inkMuted,
-                },
+                { backgroundColor: s.inkMuted, borderColor: s.inkMuted },
               ]}
             />
             <Txt variant="caption" tone="muted" numberOfLines={1} style={styles.landmarkName}>
