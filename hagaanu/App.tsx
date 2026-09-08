@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Linking, StyleSheet, View } from 'react-native';
+import { I18nManager, Linking, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
@@ -22,6 +22,7 @@ import { NotificationService } from './src/services/notifications/NotificationSe
 import { useAlarmStore } from './src/state/useAlarmStore';
 import { usePermissionsStore } from './src/state/usePermissionsStore';
 import { useSettingsStore } from './src/state/useSettingsStore';
+import { isRTLLanguage } from './src/i18n';
 import { resolveLanguage } from './src/i18n/resolve';
 import { currentScheme, useTheme } from './src/theme';
 import { log } from './src/utils/logger';
@@ -103,7 +104,16 @@ export default function App() {
         // after this line, including the notification channel names and the
         // window colour below.
         await hydrateSettings();
-        resolveLanguage(useSettingsStore.getState().language);
+        const language = resolveLanguage(useSettingsStore.getState().language);
+
+        // The native flag, written from the language we actually resolved.
+        // It only takes effect on the NEXT launch — React Native fixes layout
+        // direction at native startup — so this is about the views we do not
+        // draw ourselves: the caret in a TextInput, the button order in an
+        // Alert. Our own components already follow the language directly.
+        if (I18nManager.isRTL !== isRTLLanguage(language)) {
+          I18nManager.forceRTL(isRTLLanguage(language));
+        }
 
         // Paints the native window behind React with the app's own ground, so
         // a cold start never flashes the wrong colour before the first frame.

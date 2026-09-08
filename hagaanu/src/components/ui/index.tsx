@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-  I18nManager,
   Pressable,
   StyleSheet,
   Text as RNText,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 
 import { useReducedMotion } from '../../hooks/useReducedMotion';
+import { isRTL } from '../../i18n';
 import {
   HIT,
   MAX_CHROME_SCALE,
@@ -44,11 +44,21 @@ import {
 
 /**
  * The app is Hebrew-first, so RTL is the normal case rather than a mode.
- * These read `I18nManager` instead of hardcoding, so an English build lays
- * out correctly without touching a single screen.
+ *
+ * These follow the LANGUAGE rather than `I18nManager.isRTL`, and the
+ * difference is not academic. React Native fixes the native flag at startup
+ * from whatever the previous launch wrote, so reading it gets the app wrong
+ * twice: a Hebrew user's very first launch renders left-to-right because
+ * nothing has written the flag yet, and an English or Russian user renders
+ * mirrored from their second launch onward because a previous launch wrote
+ * RTL. The language is known before the first frame and is always right.
+ *
+ * The native flag still matters for views we do not draw — the caret in a
+ * `TextInput`, the button order in an `Alert` — and `App` writes it from the
+ * resolved language so those converge on the next launch.
  */
-export const align = (): TextStyle['textAlign'] => (I18nManager.isRTL ? 'right' : 'left');
-export const row = (): ViewStyle['flexDirection'] => (I18nManager.isRTL ? 'row-reverse' : 'row');
+export const align = (): TextStyle['textAlign'] => (isRTL() ? 'right' : 'left');
+export const row = (): ViewStyle['flexDirection'] => (isRTL() ? 'row-reverse' : 'row');
 
 /* ------------------------------------------------------------------ *
  * Text
