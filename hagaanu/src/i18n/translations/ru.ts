@@ -50,6 +50,8 @@ export const ru: TranslationSchema = {
     settings: 'Настройки',
     emptyTitle: 'Куда едете сегодня?',
     emptyBody: 'Выберите пункт назначения, и мы разбудим вас заранее.',
+    nearbyTitle: 'Рядом с вами',
+    savedTitle: 'Сохранённые',
   },
 
   route: {

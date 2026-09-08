@@ -2,7 +2,7 @@ import type { LatLng } from '../../types';
 import { distanceMeters } from '../../utils/geo';
 import { PLACES, type Place, type PlaceKind } from './catalog';
 import { normalize, proximityScore, tokensOf, withoutArticle } from './normalize';
-import { nearestStop, searchStops, type StopHit } from './stops';
+import { nearestStop, nearestStops, searchStops, type StopHit } from './stops';
 
 /**
  * Ranking a typed query against the bundled catalog.
@@ -343,4 +343,36 @@ export function nearestPlace(coords: LatLng, withinM = 700): Place | null {
   // address for telling them where they are about to be woken.
   const stop = nearestStop(coords, withinM);
   return stop ? asPlace(stop) : null;
+}
+
+/**
+ * What is worth going to, near where you are.
+ *
+ * The idle sheet used to be a title, one line of encouragement and a button —
+ * a placeholder where the app should have been offering something. This is what
+ * it offers: the places around you people actually name as a destination.
+ *
+ * Curated entries first and only then stops, because "מרכז עזריאלי" is a
+ * destination and "עזריאלי/דרך מנחם בגין" is a kerb. Someone in the middle of
+ * nowhere still gets the stops, which is better than an empty list.
+ */
+export function nearbyPlaces(near: LatLng, limit = 8): PlaceHit[] {
+  const curated: PlaceHit[] = PLACES.map((place) => ({
+    place,
+    distanceM: Math.round(distanceMeters(near, place.coords)),
+  }))
+    .filter((hit) => (hit.distanceM ?? Infinity) < 25_000)
+    .sort((a, b) => (a.distanceM ?? 0) - (b.distanceM ?? 0))
+    .slice(0, limit);
+
+  if (curated.length >= limit) return curated;
+
+  const seen = curated.map((hit) => hit.place.coords);
+  for (const stop of nearestStops(near, limit * 3)) {
+    if (curated.length >= limit) break;
+    if (seen.some((at) => distanceMeters(at, stop.coords) < SAME_SPOT_M)) continue;
+    seen.push(stop.coords);
+    curated.push({ place: asPlace(stop), distanceM: stop.distanceM ?? null });
+  }
+  return curated;
 }

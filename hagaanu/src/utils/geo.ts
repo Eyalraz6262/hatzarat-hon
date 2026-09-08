@@ -34,7 +34,13 @@ export function formatDistance(meters: number): string {
   }
 
   const km = meters / 1000;
-  const value = km < 10 ? km.toFixed(1) : String(Math.round(km));
+  // A round number of kilometres does not want a decimal: the radius picker
+  // read "1.0 ק״מ / 2.0 ק״מ" beside "300 מ׳ / 500 מ׳", and the trailing zero
+  // was the only thing making those two look like different kinds of number.
+  const value =
+    km >= 10 ? String(Math.round(km))
+    : Number.isInteger(km) ? String(km)
+    : km.toFixed(1);
   return t('common.kilometers', { value });
 }
 

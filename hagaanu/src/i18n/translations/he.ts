@@ -40,6 +40,8 @@ export const he = {
     settings: 'הגדרות',
     emptyTitle: 'לאן נוסעים היום?',
     emptyBody: 'בחרו יעד ונעיר אתכם לפניו.',
+    nearbyTitle: 'יעדים בסביבה',
+    savedTitle: 'שמורים',
   },
 
   route: {

@@ -7,7 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DemoBanner } from '../components/DemoBanner';
 import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
 import { SearchField } from '../components/map/SearchField';
-import { labelFor, nearestPlace } from '../services/places/match';
+import { NearbyList } from '../components/route/NearbyList';
+import { SavedList } from '../components/route/SavedList';
+import { labelFor, nearbyPlaces, nearestPlace, type PlaceHit } from '../services/places/match';
+import type { SavedDestination } from '../services/storage/saved';
 import { warmStops } from '../services/places/stops';
 import { ApproachGauge } from '../components/route/ApproachGauge';
 import { RangeSlider } from '../components/route/RangeSlider';
@@ -38,7 +41,7 @@ import { formatDistance } from '../utils/geo';
  *            map follows the slider live.
  *   armed    the sheet becomes the reassurance, and everything else goes away.
  */
-export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
+export function MapScreen(_: { onOpenPlaces: () => void }) {
   const s = useTheme();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<RouteMapHandle>(null);
@@ -48,6 +51,10 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
   const destination = useAlarmStore((state) => state.destination);
   const radiusM = useAlarmStore((state) => state.radiusM);
   const position = useAlarmStore((state) => state.position);
+  const saved = useAlarmStore((state) => state.saved);
+  const useSavedDestination = useAlarmStore((state) => state.useSaved);
+  const removeSaved = useAlarmStore((state) => state.removeSaved);
+  const pinSaved = useAlarmStore((state) => state.pinSaved);
   const distanceM = useAlarmStore((state) => state.distanceM);
   const busy = useAlarmStore((state) => state.busy);
   const error = useAlarmStore((state) => state.error);
@@ -146,17 +153,29 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
    * there is also a gauge, which is most of a panel on its own. Holding one
    * height for both meant the gauge ran off the bottom.
    */
-  const snap: Snap = searching
-    ? 'full'
-    : armed
-      ? approach && approach.phase !== 'far'
-        ? 'full'
-        : 'half'
-      : destination
-        ? 'half'
-        : 'peek';
+  // Idle used to peek, because there was nothing in the sheet worth opening it
+  // for. There is now — what you used last and what is around you — so it opens
+  // to the same height as every other state and the map keeps the top half.
+  const snap: Snap =
+    searching || (armed && approach && approach.phase !== 'far') ? 'full' : 'half';
 
   const sheetH = useSheetHeight(snap);
+
+  /**
+   * What to offer when nothing is chosen yet.
+   *
+   * Recomputed only when the user has moved a few hundred metres: the list is
+   * "places around here", and a new one every second because a GPS fix wobbled
+   * would reshuffle the rows under the reader's thumb.
+   */
+  const nearby: PlaceHit[] = useMemo(
+    () => (position ? nearbyPlaces(position.coords, 7) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      position ? Math.round(position.coords.latitude * 300) : null,
+      position ? Math.round(position.coords.longitude * 300) : null,
+    ]
+  );
 
   // The national stop index costs a couple of hundred milliseconds to build.
   // Spend it now, while the map is being looked at, rather than inside the
@@ -198,6 +217,12 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
           </View>
         ) : null}
 
+        {/* Under the search rather than in the sheet: a notice about the build
+            is the least important thing on the screen, and it was the first. */}
+        <View style={[styles.demoDock, { flexDirection: row() }]} pointerEvents="box-none">
+          <DemoBanner />
+        </View>
+
         <View style={styles.spacer} pointerEvents="none" />
 
         <View style={[styles.mapTools, { flexDirection: row() }]} pointerEvents="box-none">
@@ -231,8 +256,6 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
           ) : null
         }
       >
-        <DemoBanner />
-
         {armed && approach ? (
           <ArmedPanel
             approach={approach}
@@ -251,7 +274,16 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
             error={error}
           />
         ) : (
-          <IdlePanel granted={locationGranted} locating={!position} onOpenPlaces={onOpenPlaces} />
+          <IdlePanel
+            granted={locationGranted}
+            locating={!position}
+            saved={saved}
+            nearby={nearby}
+            onPick={onPick}
+            onSaved={(item) => void useSavedDestination(item)}
+            onRemove={(id) => void removeSaved(id)}
+            onPin={(id, pinned) => void pinSaved(id, pinned)}
+          />
         )}
       </BottomSheet>
     </View>
@@ -266,14 +298,22 @@ export function MapScreen({ onOpenPlaces }: { onOpenPlaces: () => void }) {
 function IdlePanel({
   granted,
   locating,
-  onOpenPlaces,
+  saved,
+  nearby,
+  onPick,
+  onSaved,
+  onRemove,
+  onPin,
 }: {
   granted: boolean;
   locating: boolean;
-  onOpenPlaces: () => void;
+  saved: SavedDestination[];
+  nearby: PlaceHit[];
+  onPick: (destination: Destination) => void;
+  onSaved: (item: SavedDestination) => void;
+  onRemove: (id: string) => void;
+  onPin: (id: string, pinned: boolean) => void;
 }) {
-  const s = useTheme();
-
   if (!granted) {
     return (
       <View style={styles.state}>
@@ -287,22 +327,36 @@ function IdlePanel({
     );
   }
 
+  /*
+    What this panel used to be: a heading, a line of encouragement and a button,
+    over a third of the screen, on the screen the whole app is for. Three lines
+    of furniture is not a sheet — and the emptiness underneath them is the whole
+    reason the app read as unfinished.
+
+    What it is now, in the order somebody actually decides: what they have used
+    before, then what is around them. Both are one tap from armed.
+  */
   return (
-    <View style={styles.state}>
-      <Txt variant="heading">{t('home.emptyTitle')}</Txt>
-      <Txt variant="body" tone="muted">
-        {locating ? t('status.locating') : t('home.emptyBody')}
-      </Txt>
-      <Touch
-        accessibilityRole="button"
-        accessibilityLabel={t('places.title')}
-        onPress={onOpenPlaces}
-        style={[styles.quietLink, { borderColor: s.line }]}
-      >
-        <Txt variant="labelStrong" tone="primary">
-          {t('places.title')}
-        </Txt>
-      </Touch>
+    <View style={styles.idle}>
+      {saved.length > 0 ? (
+        <View style={styles.idleSection}>
+          <Txt variant="caption" tone="faint" style={styles.sectionLabel}>
+            {t('home.savedTitle')}
+          </Txt>
+          <SavedList items={saved} onPick={onSaved} onRemove={onRemove} onPin={onPin} />
+        </View>
+      ) : null}
+
+      {nearby.length > 0 ? (
+        <NearbyList places={nearby} onPick={onPick} />
+      ) : (
+        <View style={styles.state}>
+          <Txt variant="heading">{t('home.emptyTitle')}</Txt>
+          <Txt variant="body" tone="muted">
+            {locating ? t('status.locating') : t('home.emptyBody')}
+          </Txt>
+        </View>
+      )}
     </View>
   );
 }
@@ -324,18 +378,27 @@ function ChosenPanel({
   error: string | null;
 }) {
   const s = useTheme();
+
+  /*
+    "אבן גבירול/ארלוזורוב, תל אביב יפו" does not fit on one line of a phone and
+    was being cut mid-word with an ellipsis. It is two facts, so it is two
+    lines: the stop, and the town it is in.
+  */
+  const [name, ...rest] = destination.label.split(', ');
+  const town = rest.join(', ');
+
   return (
     <View style={styles.panel}>
       <View style={[styles.titleRow, { flexDirection: row() }]}>
         <View style={styles.grow}>
-          <Txt variant="title" numberOfLines={1}>
-            {destination.label}
+          <Txt variant="title" numberOfLines={2}>
+            {name}
           </Txt>
-          {distanceM !== null ? (
-            <Txt variant="caption" tone="muted" nums>
-              {t('route.distanceNote', { distance: formatDistance(distanceM) })}
-            </Txt>
-          ) : null}
+          <Txt variant="caption" tone="muted" numberOfLines={1} nums>
+            {[town, distanceM !== null ? formatDistance(distanceM) : null]
+              .filter(Boolean)
+              .join(' · ')}
+          </Txt>
         </View>
         <Touch
           accessibilityRole="button"
@@ -349,10 +412,6 @@ function ChosenPanel({
       </View>
 
       <RangeSlider value={radiusM} onChange={onRadius} />
-
-      <Txt variant="body" tone="muted">
-        {t('approach.preview', { distance: formatDistance(radiusM) })}
-      </Txt>
 
       {error ? (
         <Txt variant="caption" tone="danger">
@@ -446,6 +505,7 @@ const styles = StyleSheet.create({
   },
   searchDock: { width: '100%' },
   spacer: { flex: 1 },
+  demoDock: { paddingTop: space.sm },
   mapTools: {
     justifyContent: 'flex-end',
     paddingBottom: space.md,
@@ -471,6 +531,13 @@ const styles = StyleSheet.create({
   reading: { gap: space.xs },
   readingRow: { alignItems: 'flex-end', gap: space.md },
   unit: { paddingBottom: 8, gap: 1 },
+  idle: { gap: space.lg },
+  idleSection: { gap: space.sm },
+  sectionLabel: {
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    paddingHorizontal: space.xs,
+  },
   quietLink: {
     alignSelf: 'flex-start',
     marginTop: space.sm,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   PanResponder,
@@ -43,7 +43,11 @@ type Props = {
   footer?: ReactNode;
 };
 
-/** Fractions of the usable height. `peek` is a hint, not a panel. */
+/** The grab handle, and the footer's own padded height. Both are fixed. */
+const GRIP = 22;
+const FOOTER = 76;
+
+/** Fractions of the usable height — the CEILING for each snap, not the size. */
 const FRACTION: Record<Snap, number> = { peek: 0.28, half: 0.56, full: 0.9 };
 
 /**
@@ -67,7 +71,22 @@ export function BottomSheet({ snap, children, onCollapse, footer }: Props) {
   const reduced = useReducedMotion();
 
   const usable = Math.max(screenH - insets.top - 48, 320);
-  const target = Math.round(usable * FRACTION[snap]);
+
+  /*
+    The sheet is as tall as what is in it, up to the snap point — not the snap
+    point regardless.
+
+    A fixed fraction is why every state had a void in it: the chosen panel is a
+    title, a slider and a button, and stretching that to 56% of the screen left
+    two hundred empty pixels above the button on the app's main screen. Content
+    that overflows still scrolls and still stops at the snap; content that does
+    not simply hands the rest of the screen back to the map, which is the thing
+    the user is trying to look at.
+  */
+  const [content, setContent] = useState(0);
+  const ceiling = Math.round(usable * FRACTION[snap]);
+  const chrome = GRIP + (footer ? FOOTER : 0);
+  const target = content > 0 ? Math.min(ceiling, Math.round(content) + chrome) : ceiling;
 
   const height = useRef(new Animated.Value(target)).current;
   // Tracked separately because Animated.Value cannot be read synchronously
@@ -146,6 +165,12 @@ export function BottomSheet({ snap, children, onCollapse, footer }: Props) {
           contentContainerStyle={styles.bodyContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          // Measured rather than guessed: this is what lets the sheet be the
+          // size of its content. Height only, and only while not dragging, so
+          // a scroll position change cannot fight the gesture.
+          onContentSizeChange={(_w, h) => {
+            if (!dragging.current) setContent(h);
+          }}
         >
           {children}
         </ScrollView>

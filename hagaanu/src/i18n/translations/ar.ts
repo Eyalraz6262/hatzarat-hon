@@ -48,6 +48,8 @@ export const ar: TranslationSchema = {
     settings: 'الإعدادات',
     emptyTitle: 'إلى أين اليوم؟',
     emptyBody: 'اختر وجهتك وسنوقظك قبلها.',
+    nearbyTitle: 'وجهات قريبة',
+    savedTitle: 'محفوظة',
   },
 
   route: {

@@ -393,3 +393,35 @@ export function stopsIn(
   }
   return out;
 }
+
+/**
+ * The nearest stops to a point, in order.
+ *
+ * A full scan rather than an index: 26,699 distance checks is under a
+ * millisecond, and any spatial structure that beat it would have to be built
+ * and kept for a list that is recomputed whenever the user moves.
+ */
+export function nearestStops(coords: LatLng, limit: number): StopHit[] {
+  const idx = ensure();
+  const found: StopHit[] = [];
+
+  for (let i = 0; i < idx.names.length; i++) {
+    // Cheap rectangle first — a degree of latitude is 111km, and nothing
+    // outside this box can be near enough to matter.
+    if (Math.abs(idx.lat[i] - coords.latitude) > 0.2) continue;
+    if (Math.abs(idx.lon[i] - coords.longitude) > 0.24) continue;
+    const at = { latitude: idx.lat[i], longitude: idx.lon[i] };
+    found.push({
+      name: idx.names[i],
+      town: TOWNS[idx.town[i]] ?? '',
+      coords: at,
+      kind: kindOf(idx.names[i]),
+      distanceM: Math.round(distanceMeters(coords, at)),
+      score: 0,
+    });
+  }
+
+  return found
+    .sort((a, b) => (a.distanceM ?? 0) - (b.distanceM ?? 0))
+    .slice(0, limit);
+}

@@ -38,6 +38,8 @@ export const en: TranslationSchema = {
     settings: 'Settings',
     emptyTitle: 'Where are you headed?',
     emptyBody: 'Pick a destination and we will wake you before it.',
+    nearbyTitle: 'Around you',
+    savedTitle: 'Saved',
   },
 
   route: {
