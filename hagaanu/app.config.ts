@@ -107,7 +107,8 @@ const config: ExpoConfig = {
     package: 'com.hagaanu.app',
     adaptiveIcon: {
       foregroundImage: './assets/android-icon-foreground.png',
-      backgroundColor: '#14161C',
+      // The dark scheme's ground, the same one the iOS icon sits on.
+      backgroundColor: '#0F1315',
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     permissions: [
@@ -176,7 +177,12 @@ const config: ExpoConfig = {
         imageWidth: 180,
         resizeMode: 'contain',
         backgroundColor: '#F6F6F3',
-        dark: { backgroundColor: '#0F1315' },
+        // A separate mark for the dark ground: one asset cannot be legible on
+        // both #F6F6F3 and #0F1315, and the splash now follows the device.
+        dark: {
+          image: './assets/splash-icon-dark.png',
+          backgroundColor: '#0F1315',
+        },
       },
     ],
     [
