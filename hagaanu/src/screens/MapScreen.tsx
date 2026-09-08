@@ -9,7 +9,7 @@ import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
 import { SearchField } from '../components/map/SearchField';
 import { NearbyList } from '../components/route/NearbyList';
 import { SavedList } from '../components/route/SavedList';
-import { labelFor, nearbyPlaces, nearestPlace, type PlaceHit } from '../services/places/match';
+import { journeyDestinations, labelFor, nearestPlace, type PlaceHit } from '../services/places/match';
 import type { SavedDestination } from '../services/storage/saved';
 import { warmStops } from '../services/places/stops';
 import { ApproachGauge } from '../components/route/ApproachGauge';
@@ -164,12 +164,12 @@ export function MapScreen(_: { onOpenPlaces: () => void }) {
   /**
    * What to offer when nothing is chosen yet.
    *
-   * Recomputed only when the user has moved a few hundred metres: the list is
-   * "places around here", and a new one every second because a GPS fix wobbled
-   * would reshuffle the rows under the reader's thumb.
+   * Recomputed only when the user has moved a few hundred metres. The list is
+   * "where a long ride from here ends", and a new one every second because a
+   * GPS fix wobbled would reshuffle the rows under the reader's thumb.
    */
   const nearby: PlaceHit[] = useMemo(
-    () => (position ? nearbyPlaces(position.coords, 7) : []),
+    () => (position ? journeyDestinations(position.coords, 6) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       position ? Math.round(position.coords.latitude * 300) : null,

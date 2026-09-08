@@ -40,7 +40,10 @@ export const he = {
     settings: 'הגדרות',
     emptyTitle: 'לאן נוסעים היום?',
     emptyBody: 'בחרו יעד ונעיר אתכם לפניו.',
-    nearbyTitle: 'יעדים בסביבה',
+    nearbyTitle: 'לנסיעה ארוכה',
+    kindTrain: 'רכבת',
+    kindBus: 'תחנה מרכזית',
+    kindAirport: 'שדה תעופה',
     savedTitle: 'שמורים',
   },
 

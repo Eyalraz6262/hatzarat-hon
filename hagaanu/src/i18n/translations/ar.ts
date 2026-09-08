@@ -48,7 +48,10 @@ export const ar: TranslationSchema = {
     settings: 'الإعدادات',
     emptyTitle: 'إلى أين اليوم؟',
     emptyBody: 'اختر وجهتك وسنوقظك قبلها.',
-    nearbyTitle: 'وجهات قريبة',
+    nearbyTitle: 'لرحلة طويلة',
+    kindTrain: 'قطار',
+    kindBus: 'محطة مركزية',
+    kindAirport: 'مطار',
     savedTitle: 'محفوظة',
   },
 

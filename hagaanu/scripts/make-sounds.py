@@ -194,6 +194,17 @@ BAR = [
 ]
 
 # A small struck bell: inharmonic, long fundamental, prominent minor third.
+# A struck wooden bar with a soft mallet: strong fundamental, a weak
+# inharmonic partial well above it, and almost nothing in between. Warmer than
+# the bell and far less piercing, which is what a tone meant to wake one person
+# in a quiet carriage actually needs.
+KALIMBA = [
+    (1.00, 1.00, 1.25),
+    (2.01, 0.22, 0.55),
+    (5.85, 0.09, 0.22),
+    (0.50, 0.16, 1.60),   # a little octave-below body, for a phone speaker
+]
+
 BELL = [
     (0.50, 0.36, 1.90),   # hum
     (1.00, 1.00, 1.55),   # prime
@@ -222,18 +233,29 @@ def make_soft() -> list[float]:
 
 def make_normal() -> list[float]:
     """
-    רגיל — a rising three-note bell figure, struck firmly.
+    רגיל — an arrival chime, not an alarm clock.
 
-    The default. Clearly an alarm, and still something you would not mind
-    hearing in a quiet carriage.
+    The default, and the one tone the app is named after. It is the figure a
+    station announcement opens with: a low root that sets the key, four notes
+    rising through it, and the top note left to ring over a rest. Someone
+    hearing it on a bus should read "you are here" before they read "get up".
+
+    A major sixth chord in A, arpeggiated — A, C#, E, A — with the root an
+    octave and a half below the first struck note so it has body on a phone
+    speaker instead of sitting entirely in the thin part of the range. The
+    second pass is quieter and one note shorter: it answers rather than
+    repeats, which is what keeps a loop from turning into nagging.
     """
-    buf = silence(2.6)
-    mix_into(buf, struck(587.33, 2.0, BELL, amp=0.92), 0.00)  # D5
-    mix_into(buf, struck(783.99, 2.0, BELL, amp=0.96), 0.30)  # G5
-    mix_into(buf, struck(1046.50, 1.8, BELL, amp=1.00), 0.60) # C6
-    mix_into(buf, struck(783.99, 1.4, BELL, amp=0.62), 1.45)  # G5, answer
-    buf = tail(buf, amount=0.17, delay_ms=71.0)
-    return seal_loop(normalise(soft_clip(buf, 1.5), 0.90))
+    buf = silence(3.4)
+    mix_into(buf, struck(110.00, 3.0, KALIMBA, attack=0.03, amp=0.30), 0.00)  # A2 root
+    mix_into(buf, struck(440.00, 1.9, KALIMBA, amp=0.86), 0.06)              # A4
+    mix_into(buf, struck(554.37, 1.9, KALIMBA, amp=0.90), 0.30)              # C#5
+    mix_into(buf, struck(659.25, 1.9, KALIMBA, amp=0.94), 0.54)              # E5
+    mix_into(buf, struck(880.00, 2.4, KALIMBA, amp=1.00), 0.78)              # A5, held
+    mix_into(buf, struck(659.25, 1.6, KALIMBA, amp=0.52), 1.86)              # E5, answer
+    mix_into(buf, struck(554.37, 1.6, KALIMBA, amp=0.44), 2.10)              # C#5
+    buf = tail(buf, amount=0.22, delay_ms=88.0)
+    return seal_loop(normalise(soft_clip(buf, 1.15), 0.88))
 
 
 def make_sharp() -> list[float]:

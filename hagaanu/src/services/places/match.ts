@@ -2,7 +2,7 @@ import type { LatLng } from '../../types';
 import { distanceMeters } from '../../utils/geo';
 import { PLACES, type Place, type PlaceKind } from './catalog';
 import { normalize, proximityScore, tokensOf, withoutArticle } from './normalize';
-import { nearestStop, nearestStops, searchStops, type StopHit } from './stops';
+import { nearestStop, searchStops, townMarks, type StopHit } from './stops';
 
 /**
  * Ranking a typed query against the bundled catalog.
@@ -346,33 +346,73 @@ export function nearestPlace(coords: LatLng, withinM = 700): Place | null {
 }
 
 /**
- * What is worth going to, near where you are.
+ * Where a long ride ends.
  *
- * The idle sheet used to be a title, one line of encouragement and a button —
- * a placeholder where the app should have been offering something. This is what
- * it offers: the places around you people actually name as a destination.
+ * The first version of this list offered the nearest places of any kind, and
+ * that was the wrong question. Somebody who wants to be woken has settled in
+ * for a journey — nobody sets an alarm for the mall a kilometre away. What they
+ * need is the far end: the stations and terminals a bus or a train takes an
+ * hour to reach.
  *
- * Curated entries first and only then stops, because "מרכז עזריאלי" is a
- * destination and "עזריאלי/דרך מנחם בגין" is a kerb. Someone in the middle of
- * nowhere still gets the stops, which is better than an empty list.
+ * So: transport only, nothing closer than a ride worth sleeping through, and
+ * ranked by where people actually go rather than by raw distance. A town's stop
+ * count stands in for its pull — Haifa has 1,366 and Bet Yehoshua has four —
+ * divided down by how far away it is, which is what puts Haifa and Jerusalem in
+ * front of the next station up the line without ever hiding the near ones.
  */
-export function nearbyPlaces(near: LatLng, limit = 8): PlaceHit[] {
-  const curated: PlaceHit[] = PLACES.map((place) => ({
-    place,
-    distanceM: Math.round(distanceMeters(near, place.coords)),
-  }))
-    .filter((hit) => (hit.distanceM ?? Infinity) < 25_000)
-    .sort((a, b) => (a.distanceM ?? 0) - (b.distanceM ?? 0))
-    .slice(0, limit);
+const MIN_JOURNEY_M = 12_000;
 
-  if (curated.length >= limit) return curated;
+/** Distance at which a place's pull is halved. Roughly an hour on a bus. */
+const PULL_HALVES_AT_KM = 60;
 
-  const seen = curated.map((hit) => hit.place.coords);
-  for (const stop of nearestStops(near, limit * 3)) {
-    if (curated.length >= limit) break;
-    if (seen.some((at) => distanceMeters(at, stop.coords) < SAME_SPOT_M)) continue;
-    seen.push(stop.coords);
-    curated.push({ place: asPlace(stop), distanceM: stop.distanceM ?? null });
-  }
-  return curated;
+export function journeyDestinations(near: LatLng, limit = 6): PlaceHit[] {
+  const towns = townMarks();
+
+  const townAt = (coords: LatLng): { name: string; stops: number } => {
+    // A place with no town near it is still somewhere, and still deserves a
+    // weight; it just does not get to claim a town's slot.
+    let best = { name: '', stops: 60 };
+    let bestM = 8_000;
+    for (const town of towns) {
+      const m = distanceMeters(coords, town.coords);
+      if (m < bestM) {
+        bestM = m;
+        best = town;
+      }
+    }
+    return best;
+  };
+
+  const scored = PLACES.filter(
+    (place) => place.kind === 'train' || place.kind === 'bus' || place.kind === 'airport'
+  )
+    .map((place) => {
+      const distanceM = Math.round(distanceMeters(near, place.coords));
+      const town = townAt(place.coords);
+      return {
+        hit: { place, distanceM } as PlaceHit,
+        town: town.name,
+        score: town.stops / (1 + distanceM / 1000 / PULL_HALVES_AT_KM),
+        distanceM,
+      };
+    })
+    .filter((entry) => entry.distanceM >= MIN_JOURNEY_M)
+    .sort((a, b) => b.score - a.score);
+
+  // One row per town. Jerusalem has a railway station and a bus terminal a
+  // kilometre apart, and spending two of six rows saying "Jerusalem" twice
+  // costs the reader a city they might actually have wanted.
+  const seenTowns = new Set<string>();
+  return scored
+    .filter((entry) => {
+      if (!entry.town) return true;
+      if (seenTowns.has(entry.town)) return false;
+      seenTowns.add(entry.town);
+      return true;
+    })
+    .slice(0, limit)
+    // Chosen by pull, listed by distance: a list that jumps about in distance
+    // reads as unordered even when the order is meaningful.
+    .sort((a, b) => a.distanceM - b.distanceM)
+    .map((entry) => entry.hit);
 }
