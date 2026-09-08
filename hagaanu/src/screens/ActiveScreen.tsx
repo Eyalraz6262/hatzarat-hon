@@ -127,65 +127,90 @@ export function ActiveScreen({
             </Card>
           ) : null}
 
-          <Chip
-            label={
-              stale
-                ? t('active.noSignal')
-                : phase === 'arriving'
-                  ? t('approach.almost')
-                  : phase === 'closing'
-                    ? t('approach.closing')
-                    : t('active.statusActive')
-            }
-            live={!stale}
-          />
-
           {/*
             The one number. It is the distance to the thing we will wake you
             for next — the transfer on the first leg of a journey with a
             change, the destination otherwise — because that is the only
             distance that decides anything.
           */}
-          <View style={styles.headline}>
-            {distanceM === null || stale ? (
-              <Txt variant="title" tone="muted">
-                {stale ? t('active.noSignal') : t('active.waitingFix')}
-              </Txt>
-            ) : (
-              <View style={[styles.reading, { flexDirection: row() }]}>
-                <Txt variant="counter" tone="accent" nums>
-                  {formatDistance(approach.hereM ?? distanceM).replace(/[^\d.,]/g, '')}
-                </Txt>
-                <Txt variant="label" tone="muted" style={styles.unit}>
-                  {unitOf(approach.hereM ?? distanceM)}
-                  {'\n'}
-                  {next ? t('approach.toTransfer') : t('approach.toGo')}
-                </Txt>
-              </View>
-            )}
+          <View style={styles.middle}>
+            <View style={styles.headline}>
+              {/*
+                Inside the centred block rather than pinned to the top of the
+                screen: the status, the number and the sentence are one thing
+                the eye lands on, and separating them left a gap under the chip
+                that read as a mistake.
+              */}
+              <Chip
+                label={
+                  stale
+                    ? t('active.noSignal')
+                    : phase === 'arriving'
+                      ? t('approach.almost')
+                      : phase === 'closing'
+                        ? t('approach.closing')
+                        : t('active.statusActive')
+                }
+                live={!stale}
+              />
 
-            <Txt variant="body" tone="muted" style={styles.reassure}>
-              {stale
-                ? t('active.noSignalBody', {
-                    distance: distanceM === null ? '' : formatDistance(distanceM),
-                  })
-                : phase === 'arriving'
-                  ? t('active.body')
-                  : t('approach.sleep') + ' · ' + t('active.body')}
-            </Txt>
+              {distanceM === null || stale ? (
+                <Txt variant="title" tone="muted">
+                  {stale ? t('active.noSignal') : t('active.waitingFix')}
+                </Txt>
+              ) : (
+                <View style={[styles.reading, { flexDirection: row() }]}>
+                  <Txt variant="counter" tone="accent" nums>
+                    {formatDistance(approach.hereM ?? distanceM).replace(/[^\d.,]/g, '')}
+                  </Txt>
+                  <View style={styles.unit}>
+                    <Txt variant="labelStrong" tone="muted">
+                      {unitOf(approach.hereM ?? distanceM)}
+                    </Txt>
+                    <Txt variant="caption" tone="muted">
+                      {next ? t('approach.toTransfer') : t('approach.toGo')}
+                    </Txt>
+                  </View>
+                </View>
+              )}
+
+              <Txt variant="heading" numberOfLines={2} style={styles.where}>
+                {next ? next.label : destination.label}
+              </Txt>
+
+              <Txt variant="body" tone="muted" style={styles.reassure}>
+                {stale
+                  ? t('active.noSignalBody', {
+                      distance: distanceM === null ? '' : formatDistance(distanceM),
+                    })
+                  : phase === 'arriving'
+                    ? t('active.body')
+                    : t('approach.sleep') + ' · ' + t('active.body')}
+              </Txt>
+            </View>
+
+            {/*
+              Drawn only once it can be drawn truthfully. Further out a 500 m
+              ring inside a 40 km trip is a hairline, and a gauge whose most
+              important mark is invisible is worse than no gauge at all.
+            */}
+            {phase !== 'far' ? (
+              <Card>
+                <ApproachGauge approach={approach} />
+              </Card>
+            ) : null}
           </View>
 
           {/*
-            Drawn only once it can be drawn truthfully. Further out a 500 m
-            ring inside a 40 km trip is a hairline, and a gauge whose most
-            important mark is invisible is worse than no gauge at all.
-          */}
-          {phase !== 'far' ? (
-            <Card>
-              <ApproachGauge approach={approach} />
-            </Card>
-          ) : null}
+            The detail only appears once there is something to detail.
 
+            Far out, the number and the destination's name are the whole
+            picture, and a card repeating the distance underneath it was three
+            lines saying what one line already said — with a void above it where
+            the layout gave up. The screen earning its content as the trip
+            closes in is the same idea as the gauge appearing.
+          */}
+          {phase === 'far' ? null : (
           <Card>
             <Row label={t('active.destination')} first>
               <Txt variant="labelStrong" numberOfLines={1}>
@@ -199,22 +224,13 @@ export function ActiveScreen({
                 </Txt>
               </Row>
             ) : null}
-            <Row label={t('active.distanceLeft')}>
-              {/*
-                A stale distance is shown muted rather than hidden: the last
-                thing we actually measured is useful, and presenting it as live
-                would be the app quietly lying.
-              */}
-              <Txt variant="labelStrong" tone={stale ? 'muted' : 'ink'} nums>
-                {distanceM === null ? t('active.waitingFix') : formatDistance(distanceM)}
-              </Txt>
-            </Row>
             <Row label={t('active.wakeRange')}>
               <Txt variant="labelStrong" tone="accent" nums>
                 {formatDistance(radiusM)}
               </Txt>
             </Row>
           </Card>
+          )}
         </ScrollView>
 
         <View style={[styles.dock, { borderTopColor: s.line }]}>
@@ -241,10 +257,20 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scroll: { flex: 1 },
   body: {
+    // `flexGrow` rather than a fixed height: the middle block then absorbs
+    // whatever is left over, so the number sits in the centre of the screen it
+    // is almost alone on instead of clinging to the top with a void beneath.
+    flexGrow: 1,
     paddingHorizontal: space.screen,
     paddingTop: space.lg,
-    paddingBottom: space.xxxl,
+    paddingBottom: space.xxl,
     gap: space.lg,
+  },
+  middle: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    gap: space.xxl,
+    paddingVertical: space.xl,
   },
   headline: {
     gap: space.md,
@@ -254,7 +280,11 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   unit: {
-    paddingBottom: 6,
+    paddingBottom: 8,
+    gap: 1,
+  },
+  where: {
+    marginTop: -space.xs,
   },
   reassure: {
     maxWidth: '92%',

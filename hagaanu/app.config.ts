@@ -103,6 +103,21 @@ const config: ExpoConfig = {
     },
   },
 
+  /**
+   * The web build is a DEMO, not the product.
+   *
+   * A browser cannot register an OS geofence, cannot wake a terminated tab,
+   * and cannot make a sound with the screen off — which is the entire premise
+   * of this app. What the web build is good for is seeing and operating every
+   * screen without a Mac, an Android device or a store account, so the design
+   * and the flow can be judged before any of that exists.
+   */
+  web: {
+    bundler: 'metro',
+    output: 'single',
+    favicon: './assets/favicon.png',
+  },
+
   android: {
     package: 'com.hagaanu.app',
     adaptiveIcon: {

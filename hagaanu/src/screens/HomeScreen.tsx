@@ -1,8 +1,9 @@
 import LocateFixed from 'lucide-react-native/icons/locate-fixed';
 import Settings from 'lucide-react-native/icons/settings';
 import Check from 'lucide-react-native/icons/check';
+import Plus from 'lucide-react-native/icons/plus';
 import X from 'lucide-react-native/icons/x';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,9 +12,9 @@ import { t } from '../i18n';
 import { RouteMap, type RouteMapHandle } from '../components/map/RouteMap';
 import { SearchField } from '../components/map/SearchField';
 import { RangePicker } from '../components/route/RangePicker';
+import { DemoBanner } from '../components/DemoBanner';
 import { SavedList } from '../components/route/SavedList';
 import {
-  Card,
   GhostButton,
   PrimaryButton,
   Touch,
@@ -21,9 +22,11 @@ import {
   row,
 } from '../components/ui';
 import { Feedback } from '../services/feedback/Haptics';
+import { GeocodingService } from '../services/location/GeocodingService';
 import { formatDistance } from '../utils/geo';
 import { useAlarmStore } from '../state/useAlarmStore';
 import { usePermissionsStore } from '../state/usePermissionsStore';
+import type { LatLng } from '../types';
 import { HIT, elevation, hitSlop, icon, radius, space, useTheme } from '../theme';
 
 /**
@@ -45,6 +48,7 @@ import { HIT, elevation, hitSlop, icon, radius, space, useTheme } from '../theme
 export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
   const s = useTheme();
   const mapRef = useRef<RouteMapHandle>(null);
+  const [addingStop, setAddingStop] = useState(false);
 
   const destination = useAlarmStore((state) => state.destination);
   const radiusM = useAlarmStore((state) => state.radiusM);
@@ -77,6 +81,32 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destination, radiusM]);
 
+  /**
+   * A tap on the map becomes a named place.
+   *
+   * The destination is set immediately with a placeholder and the name is
+   * filled in when the geocoder answers, rather than the other way round: the
+   * ring and the distance are useful the instant the point exists, and making
+   * the user wait on a lookup to see them would spend the ten-second budget on
+   * a label. If the lookup fails — no network, or a browser with no platform
+   * geocoder — the placeholder simply stays.
+   */
+  const pickPoint = useCallback(
+    (coords: LatLng) => {
+      const placeholder = { coords, label: t('errors.unknownPlace') };
+      setDestination(placeholder);
+      void (async () => {
+        const label = await GeocodingService.describe(coords);
+        // Only if the user has not moved on in the meantime.
+        const current = useAlarmStore.getState().destination;
+        if (current?.coords.latitude === coords.latitude && current.label !== label) {
+          setDestination({ coords, label });
+        }
+      })();
+    },
+    [setDestination]
+  );
+
   const onSave = useCallback(() => {
     if (!destination) return;
     void saveCurrent(destination.label, 'favourite');
@@ -102,9 +132,7 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
           radiusM={radiusM}
           here={position?.coords ?? null}
           mode={destination ? 'band' : 'picker'}
-          onPickPoint={(coords) =>
-            setDestination({ coords, label: t('errors.unknownPlace') })
-          }
+          onPickPoint={pickPoint}
         />
       </View>
 
@@ -161,65 +189,36 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/*
-              What will happen, in two lines, and nothing else.
+            <DemoBanner />
 
-              This card used to be a list of transit stops between here and the
-              destination, taken from OpenStreetMap within 450 m of the straight
-              line. The app does not know which line the passenger is on, or
-              whether it is a bus, a train or a shuttle, so it could not know
-              that the vehicle stops at any of them — and it was drawn as a
-              route the passenger was about to travel. What is left is what is
-              measured: how far the place is, and how early we will wake them.
+            {/*
+              The range comes first, because it is the only decision left and
+              the whole screen is budgeted at about ten seconds. An earlier
+              version led with a card of facts and pushed this below the fold,
+              which put the one control the user came here for out of sight.
             */}
-            <Card>
-              <View style={[styles.factRow, { flexDirection: row() }]}>
-                <Txt variant="label" tone="muted" style={styles.grow}>
-                  {t('active.distanceLeft')}
-                </Txt>
-                <Txt variant="labelStrong" nums>
-                  {distanceM === null ? t('active.waitingFix') : formatDistance(distanceM)}
-                </Txt>
-              </View>
-              <Txt variant="body" tone="muted" style={styles.factNote}>
+            <RangePicker value={radiusM} onChange={setRadius} />
+
+            {/*
+              The consequence of that choice, in one sentence, plus the one
+              measured fact about the journey.
+
+              This was a list of transit stops taken from OpenStreetMap within
+              450 m of the straight line to the destination. The app does not
+              know which line the passenger is on, or whether it is a bus, a
+              train or a shuttle, so it could not know the vehicle stops at any
+              of them. What is left is what is measured.
+            */}
+            <View style={styles.consequence}>
+              <Txt variant="body">
                 {t('approach.preview', { distance: formatDistance(radiusM) })}
               </Txt>
-
-              {transfer ? (
-                <View style={[styles.stopRow, { borderTopColor: s.line, flexDirection: row() }]}>
-                  <Txt variant="labelStrong" numberOfLines={1} style={styles.grow}>
-                    {transfer.label}
-                  </Txt>
-                  <Touch
-                    accessibilityRole="button"
-                    accessibilityLabel={t('route.removeStop')}
-                    hitSlop={hitSlop}
-                    onPress={() => {
-                      Feedback.tick();
-                      setTransfer(null);
-                    }}
-                  >
-                    <Txt variant="captionStrong" tone="muted">
-                      {t('route.removeStop')}
-                    </Txt>
-                  </Touch>
-                </View>
-              ) : (
-                <View style={[styles.stopRow, { borderTopColor: s.line }]}>
-                  {/*
-                    A change is chosen the same way the destination is — by
-                    naming a real place. It is never inferred from a route the
-                    app cannot see.
-                  */}
-                  <Txt variant="caption" tone="muted" style={styles.factNote}>
-                    {t('route.addStopHint')}
-                  </Txt>
-                  <SearchField onPick={setTransfer} placeholder={t('route.addStop')} />
-                </View>
-              )}
-            </Card>
-
-            <RangePicker value={radiusM} onChange={setRadius} />
+              <Txt variant="caption" tone="muted" nums style={styles.factNote}>
+                {distanceM === null
+                  ? t('active.waitingFix')
+                  : t('route.distanceNote', { distance: formatDistance(distanceM) })}
+              </Txt>
+            </View>
 
             {/*
               Off by default. Most trips do not need a second notification, and
@@ -268,6 +267,60 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
                 ) : null}
               </View>
             </Touch>
+
+            {/*
+              A change of vehicle: collapsed until asked for. Most journeys do
+              not have one, and an always-open search field for it competed for
+              attention with the range picker.
+            */}
+            {transfer ? (
+              <View style={[styles.stopRow, { borderColor: s.accent.base, backgroundColor: s.accent.soft, flexDirection: row() }]}>
+                <Txt variant="labelStrong" tone="accent" numberOfLines={1} style={styles.grow}>
+                  {transfer.label}
+                </Txt>
+                <Touch
+                  accessibilityRole="button"
+                  accessibilityLabel={t('route.removeStop')}
+                  hitSlop={hitSlop}
+                  onPress={() => {
+                    Feedback.tick();
+                    setTransfer(null);
+                  }}
+                >
+                  <Txt variant="captionStrong" tone="muted">
+                    {t('route.removeStop')}
+                  </Txt>
+                </Touch>
+              </View>
+            ) : addingStop ? (
+              <View style={styles.stopOpen}>
+                <Txt variant="caption" tone="muted">
+                  {t('route.addStopHint')}
+                </Txt>
+                <SearchField
+                  onPick={(place) => {
+                    setTransfer(place);
+                    setAddingStop(false);
+                  }}
+                  placeholder={t('route.addStop')}
+                />
+              </View>
+            ) : (
+              <Touch
+                accessibilityRole="button"
+                accessibilityLabel={t('route.addStop')}
+                onPress={() => {
+                  Feedback.tick();
+                  setAddingStop(true);
+                }}
+                style={[styles.stopRow, { borderColor: s.line, flexDirection: row() }]}
+              >
+                <Plus size={icon.sm} strokeWidth={icon.stroke} color={s.inkMuted} />
+                <Txt variant="label" tone="muted" style={styles.grow}>
+                  {t('route.addStop')}
+                </Txt>
+              </Touch>
+            )}
 
             {!backgroundGranted ? (
               <View style={[styles.warn, { backgroundColor: s.sunk, flexDirection: row() }]}>
@@ -338,8 +391,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   band: {
-    height: '30%',
-    minHeight: 190,
+    // Enough to place the destination and show the ring's size against the
+    // journey, and no more. The decision happens below it, and an earlier
+    // version pushed the range picker — the actual decision — off screen.
+    height: '20%',
+    minHeight: 132,
+    maxHeight: 190,
   },
   safe: {
     flex: 1,
@@ -435,20 +492,23 @@ const styles = StyleSheet.create({
   },
   earlyText: { flex: 1, gap: 2 },
   earlyNote: { marginTop: 1 },
-  factRow: {
-    alignItems: 'center',
-    gap: space.md,
+  consequence: {
+    paddingHorizontal: space.xs,
+    marginTop: -space.sm,
   },
   factNote: {
     marginTop: space.xs,
   },
   stopRow: {
-    marginTop: space.lg,
-    paddingTop: space.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     gap: space.md,
     minHeight: HIT,
+    paddingHorizontal: space.lg,
+    borderRadius: radius.control,
+    borderWidth: 1.5,
+  },
+  stopOpen: {
+    gap: space.md,
   },
   grow: {
     flexGrow: 1,

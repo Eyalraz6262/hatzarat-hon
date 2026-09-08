@@ -50,6 +50,7 @@ export const en: TranslationSchema = {
     earlyWarningNote: 'A silent notice {distance} before, and the full alarm at your chosen range.',
     addStop: 'Add a stop on the way',
     addStopHint: 'Changing vehicle on the way? Add where. We will wake you there too.',
+    distanceNote: 'The destination is {distance} away right now.',
     removeStop: 'Remove this stop',
   },
 
@@ -230,5 +231,15 @@ export const en: TranslationSchema = {
   warnings: {
     foregroundOnly: 'Without background location we can only wake you while the app is open.',
     batteryOptimisation: 'Android may stop background apps. If the alarm did not fire, turn off battery optimisation for this app.',
+  },
+
+  web: {
+    mapHint: 'Tap the map to choose a destination',
+    banner: 'Browser demo',
+    bannerBody: 'A browser cannot register an OS geofence or wake a closed tab. Here you can arm it and see every screen — the journey itself is simulated.',
+    simulate: 'Run the journey',
+    simulating: 'Travelling…',
+    simulateNote: 'Moves you to the destination in about 40 seconds, so you can watch the screen change and the alarm fire.',
+    reset: 'Start again',
   },
 };

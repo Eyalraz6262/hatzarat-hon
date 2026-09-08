@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Platform,
   Pressable,
   StyleSheet,
   Text as RNText,
@@ -58,7 +59,20 @@ import {
  * resolved language so those converge on the next launch.
  */
 export const align = (): TextStyle['textAlign'] => (isRTL() ? 'right' : 'left');
-export const row = (): ViewStyle['flexDirection'] => (isRTL() ? 'row-reverse' : 'row');
+
+/**
+ * `row-reverse` on a device, plain `row` in a browser — and the difference is
+ * not a quirk to paper over.
+ *
+ * React Native only mirrors a `row` when its own RTL flag was set at native
+ * startup, which is exactly the flag we cannot trust, so the direction has to
+ * be spelled out. CSS mirrors a `row` whenever the document direction is rtl,
+ * which the web build sets from the language on the first paint. Spelling it
+ * out there as well would reverse an already-reversed row and hand every
+ * screen back to left-to-right.
+ */
+export const row = (): ViewStyle['flexDirection'] =>
+  Platform.OS === 'web' ? 'row' : isRTL() ? 'row-reverse' : 'row';
 
 /* ------------------------------------------------------------------ *
  * Text
