@@ -11,6 +11,7 @@ import { GeofencingService } from '../services/geofencing/GeofencingService';
 import { LocationService } from '../services/location/LocationService';
 import { NotificationService } from '../services/notifications/NotificationService';
 import { AlarmStorage } from '../services/storage/AlarmStorage';
+import { TripStorage, type Trip } from '../services/storage/TripStorage';
 import { SavedStorage, type SavedDestination, type SavedKind } from '../services/storage/SavedStorage';
 import { usePermissionsStore } from './usePermissionsStore';
 import type { AlarmSession, AlarmStatus, Destination, Leg, PositionSample } from '../types';
@@ -46,6 +47,8 @@ type AlarmState = {
   error: string | null;
   /** Ordered by last use — the trip taken yesterday is the likely one now. */
   saved: SavedDestination[];
+  /** Every alarm this device has armed, newest first. Local only. */
+  trips: Trip[];
 
   setDestination: (destination: Destination | null) => void;
   setRadius: (radiusM: number) => void;
@@ -58,6 +61,7 @@ type AlarmState = {
   saveCurrent: (name: string, kind: SavedKind) => Promise<void>;
   useSaved: (item: SavedDestination) => Promise<void>;
   removeSaved: (id: string) => Promise<void>;
+  clearTrips: () => Promise<void>;
   /** Pins a route to the front of the list, or unpins it. */
   pinSaved: (id: string, pinned: boolean) => Promise<void>;
   arm: () => Promise<boolean>;
@@ -106,6 +110,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   busy: false,
   error: null,
   saved: [],
+  trips: [],
   killed: false,
   stale: false,
   snoozed: false,
@@ -143,7 +148,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   setStale: (stale) => set({ stale }),
 
   async hydrate() {
-    set({ saved: await SavedStorage.readAll() });
+    set({ saved: await SavedStorage.readAll(), trips: await TripStorage.readAll() });
 
     const session = await AlarmStorage.read();
     if (!session) return;
@@ -207,6 +212,10 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
   async pinSaved(id, pinned) {
     set({ saved: await SavedStorage.setPinned(id, pinned) });
+  },
+
+  async clearTrips() {
+    set({ trips: await TripStorage.clear() });
   },
 
   async removeSaved(id) {
@@ -291,6 +300,21 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
       AlarmService.confirmationBuzz();
       set({ status: 'armed', session, destination: session.destination, busy: false });
+
+      // History is written here rather than on arrival, so a trip that is
+      // cancelled or that the app never sees the end of is still recorded.
+      // It carries the session's own id, which is what lets the close-out
+      // below match it without guessing.
+      set({
+        trips: await TripStorage.record({
+          id: session.id,
+          destination: session.destination,
+          radiusM: session.radiusM,
+          armedAt: session.armedAt,
+          endedAt: null,
+          outcome: 'open',
+        }),
+      });
       return true;
     } catch (error) {
       log.error('store', 'failed to arm alarm', error);
@@ -303,9 +327,16 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
   async cancel() {
     if (get().busy) return;
+    const id = get().session?.id;
     set({ busy: true });
     await ArrivalCoordinator.standDown();
-    set({ status: 'idle', session: null, busy: false, error: null });
+    set({
+      status: 'idle',
+      session: null,
+      busy: false,
+      error: null,
+      trips: await TripStorage.close('cancelled', id),
+    });
   },
 
   async snooze() {
@@ -314,6 +345,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   },
 
   async dismissAlarm() {
+    const dismissedId = get().session?.id;
     set({ snoozed: false });
     set({ busy: true });
 
@@ -343,7 +375,16 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
     // wake them at the station they just reached. "One tap for the return trip"
     // sounded convenient and reads as the app not having noticed they arrived.
     // A clean map is the honest ending.
-    set({ status: 'idle', session: null, destination: null, distanceM: null, busy: false, error: null });
+    set({
+      status: 'idle',
+      session: null,
+      destination: null,
+      distanceM: null,
+      busy: false,
+      error: null,
+      // The alarm rang and the user acknowledged it: this trip worked.
+      trips: await TripStorage.close('woken', dismissedId),
+    });
   },
 
   onArrival: (session) =>

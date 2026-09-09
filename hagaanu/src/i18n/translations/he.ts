@@ -32,10 +32,13 @@ export const he = {
   },
 
   home: {
+    brand: 'הגענו',
+    tagline: 'תירדם בדרך. אנחנו נעיר אותך לפני היעד.',
     searchPlaceholder: 'לאן נוסעים?',
     searching: 'מחפשים…',
     noResults: 'לא מצאנו מקום כזה. נסו שם של תחנה או רחוב.',
     myLocation: 'המיקום שלי',
+    useMyLocation: 'המיקום הנוכחי שלי',
     clearSearch: 'ניקוי',
     settings: 'הגדרות',
     emptyTitle: 'לאן נוסעים היום?',
@@ -49,6 +52,9 @@ export const he = {
 
   route: {
     changeDestination: 'שינוי יעד',
+    saveThis: 'שמירת היעד',
+    savePrompt: 'איך לקרוא ליעד?',
+    saved: 'נשמר',
     wakeRange: 'מתי להעיר?',
     arm: 'תעירו אותי',
     arming: 'מפעילים…',
@@ -73,10 +79,13 @@ export const he = {
     then: 'ואז',
     /* Shown under the range picker, before arming. */
     preview: 'נעיר אתכם {distance} לפני היעד.',
+    radiusHint: 'ברכבת מומלץ 700 מ׳ עד 1 ק״מ. באוטובוס 300 עד 500 מ׳ בדרך כלל מספיק.',
   },
 
   active: {
-    body: 'אפשר לנעול את הטלפון. ההתראה תפעל גם אם האפליקציה סגורה.',
+    headline: 'ההתראה פעילה',
+
+    body: 'הכל מוכן. אפשר לנעול את הטלפון ולנוח — ההתראה תפעל גם אם האפליקציה סגורה.',
     distanceLeft: 'מרחק ליעד',
     wakeRange: 'טווח ההתראה',
     destination: 'היעד',
@@ -108,8 +117,8 @@ export const he = {
   },
 
   alarm: {
-    title: 'הגעתם.',
-    body: '{destination} ממש כאן.',
+    title: 'הגענו! 🚉',
+    body: 'אתם מתקרבים ליעד שבחרתם.',
     dismiss: 'אני ער',
     channelGroup: 'התראות הגעה',
     notificationTitle: 'הגעתם ל{destination}',
@@ -163,6 +172,21 @@ export const he = {
     sample: 'תחנת הדוגמה',
   },
 
+  trips: {
+    title: 'נסיעות',
+    subtitle: 'ההתראות שהפעלתם, החדשה למעלה.',
+    emptyTitle: 'עוד לא הפעלתם התראה',
+    emptyBody: 'כל נסיעה שתפעילו עליה התראה תישמר כאן, על המכשיר בלבד.',
+    woken: 'העיר אתכם',
+    cancelled: 'בוטלה',
+    open: 'פעילה',
+    radius: '{distance} לפני היעד',
+    clear: 'מחיקת ההיסטוריה',
+    clearConfirm: 'למחוק את כל הנסיעות?',
+    again: 'שוב לכאן',
+    today: 'היום',
+    yesterday: 'אתמול',
+  },
   saved: {
     title: 'יעדים שמורים',
     add: 'שמירת היעד',
@@ -266,20 +290,20 @@ export const he = {
   },
 
   tabs: {
-    map: 'מפה',
-    places: 'יעדים',
-    settings: 'הגדרות',
+    home: 'בית',
+    saved: 'שמורים',
+    trips: 'נסיעות',
   },
 
   onboarding: {
     /* Three screens, and each one earns its place: the problem, the control,
        the promise. No dots-and-skip carousel. */
-    oneTitle: 'נרדמתם באוטובוס?',
-    oneBody: 'קורה לכולם. ״הגענו?״ שומרת עליכם בזמן שאתם ישנים.',
-    twoTitle: 'בוחרים יעד',
-    twoBody: 'מסמנים על המפה איפה אתם יורדים, ובאיזה מרחק להעיר אתכם.',
-    threeTitle: 'ונרדמים',
-    threeBody: 'נועלים את הטלפון. כשמתקרבים ליעד, הוא מצלצל.',
+    oneTitle: 'תירדם בראש שקט',
+    oneBody: 'בחרו יעד ואנחנו נעקוב אחרי הדרך במקומכם.',
+    twoTitle: 'נעיר אתכם בזמן',
+    twoBody: 'קבלו התראה כשאתם מתקרבים ליעד, לא אחריו.',
+    threeTitle: 'גם כשהמסך נעול',
+    threeBody: 'נבקש מיקום ברקע רק כשתפעילו התראה, כדי שהיא תמשיך לעבוד.',
     start: 'מתחילים',
     skip: 'דילוג',
   },

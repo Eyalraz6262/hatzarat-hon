@@ -40,10 +40,13 @@ export const ar: TranslationSchema = {
   },
 
   home: {
+    brand: 'وصلنا',
+    tagline: 'نم في الطريق. سنوقظك قبل محطتك.',
     searchPlaceholder: 'إلى أين أنت ذاهب؟',
     searching: 'جارٍ البحث…',
     noResults: 'لا توجد نتيجة. جرّب اسم محطة أو شارع.',
     myLocation: 'موقعي',
+    useMyLocation: 'موقعي الحالي',
     clearSearch: 'مسح',
     settings: 'الإعدادات',
     emptyTitle: 'إلى أين اليوم؟',
@@ -57,6 +60,9 @@ export const ar: TranslationSchema = {
 
   route: {
     changeDestination: 'تغيير الوجهة',
+    saveThis: 'حفظ الوجهة',
+    savePrompt: 'بأي اسم نحفظها؟',
+    saved: 'حُفظت',
     wakeRange: 'متى نوقظك؟',
     arm: 'أيقظني',
     arming: 'جارٍ التفعيل…',
@@ -79,10 +85,13 @@ export const ar: TranslationSchema = {
     almost: 'سنوقظكم بعد لحظات',
     then: 'ثم',
     preview: 'سنوقظكم على بعد {distance} من الوجهة.',
+    radiusHint: 'في القطار يُنصح بـ700 م حتى 1 كم. في الحافلة 300 إلى 500 م تكفي عادةً.',
   },
 
   active: {
-    body: 'يمكنك قفل الهاتف. المنبّه يعمل حتى لو أُغلق التطبيق.',
+    headline: 'التنبيه مفعّل',
+
+    body: 'كل شيء جاهز. أقفل الهاتف واسترح؛ التنبيه يعمل حتى والتطبيق مغلق.',
     distanceLeft: 'المسافة المتبقية',
     wakeRange: 'مدى التنبيه',
     destination: 'الوجهة',
@@ -110,8 +119,8 @@ export const ar: TranslationSchema = {
   },
 
   alarm: {
-    title: 'وصلت.',
-    body: '{destination} هنا تماماً.',
+    title: 'وصلنا! 🚉',
+    body: 'أنت تقترب من الوجهة التي اخترتها.',
     dismiss: 'أنا مستيقظ',
     channelGroup: 'منبّهات الوصول',
     notificationTitle: 'وصلت إلى {destination}',
@@ -162,6 +171,21 @@ export const ar: TranslationSchema = {
     sample: 'محطة تجريبية',
   },
 
+  trips: {
+    title: 'الرحلات',
+    subtitle: 'التنبيهات التي فعّلتها، الأحدث أولاً.',
+    emptyTitle: 'لم تفعّل أي تنبيه بعد',
+    emptyBody: 'كل رحلة تفعّل لها تنبيهًا تُحفظ هنا، على هذا الجهاز فقط.',
+    woken: 'أيقظك',
+    cancelled: 'أُلغي',
+    open: 'نشط',
+    radius: '{distance} قبل المحطة',
+    clear: 'مسح السجل',
+    clearConfirm: 'حذف كل الرحلات؟',
+    again: 'إلى هنا مجددًا',
+    today: 'اليوم',
+    yesterday: 'أمس',
+  },
   saved: {
     title: 'وجهات محفوظة',
     add: 'حفظ الوجهة',
@@ -258,15 +282,15 @@ export const ar: TranslationSchema = {
     reset: 'البدء من جديد',
   },
 
-  tabs: { map: 'خريطة', places: 'وجهات', settings: 'إعدادات' },
+  tabs: { home: 'الرئيسية', saved: 'محفوظة', trips: 'الرحلات' },
 
   onboarding: {
-    oneTitle: 'نمتم في الحافلة؟',
-    oneBody: 'يحدث للجميع. «وصلنا؟» تنتبه لكم بينما تنامون.',
-    twoTitle: 'اختاروا وجهة',
-    twoBody: 'حدّدوا على الخريطة أين تنزلون، وعلى أي بُعد نوقظكم.',
-    threeTitle: 'وناموا',
-    threeBody: 'اقفلوا الهاتف. وعند الاقتراب من الوجهة سيرنّ.',
+    oneTitle: 'نم مطمئنًا',
+    oneBody: 'اختر وجهة وسنتابع الطريق نيابةً عنك.',
+    twoTitle: 'سنوقظك في الوقت',
+    twoBody: 'تنبيه عند اقترابك من محطتك، لا بعدها.',
+    threeTitle: 'حتى والشاشة مقفلة',
+    threeBody: 'نطلب الموقع في الخلفية فقط عند تفعيل تنبيه، كي يستمر في العمل.',
     start: 'لنبدأ',
     skip: 'تخطٍّ',
   },

@@ -9,6 +9,7 @@ import { AlarmScreen } from './src/screens/AlarmScreen';
 import { DemoScreen } from './src/screens/DemoScreen';
 import { MapScreen } from './src/screens/MapScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
+import { HistoryScreen } from './src/screens/HistoryScreen';
 import { PlacesScreen } from './src/screens/PlacesScreen';
 import { PermissionsScreen } from './src/screens/PermissionsScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
@@ -59,7 +60,10 @@ export default function App() {
   // Session-scoped: the user chose to continue without background location. Not
   // persisted, so the next cold start asks once more — the ask matters too much.
   const [skippedBackground, setSkippedBackground] = useState(false);
-  const [tab, setTab] = useState<Tab>('map');
+  const [tab, setTab] = useState<Tab>('home');
+  // Settings is no longer a tab. It opens over whichever tab you were on and
+  // returns you to it, which is what a preferences screen should do.
+  const [showSettings, setShowSettings] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
   const permissionsReady = usePermissionsStore((state) => state.ready);
@@ -173,12 +177,15 @@ export default function App() {
         ) : (
           <>
             <View style={styles.tabBody}>
-              {tab === 'map' ? (
-                <MapScreen onOpenPlaces={() => setTab('places')} />
-              ) : tab === 'places' ? (
-                <PlacesScreen onPicked={() => setTab('map')} />
+              {tab === 'home' ? (
+                <MapScreen
+                  onOpenPlaces={() => setTab('saved')}
+                  onOpenSettings={() => setShowSettings(true)}
+                />
+              ) : tab === 'saved' ? (
+                <PlacesScreen onPicked={() => setTab('home')} />
               ) : (
-                <SettingsScreen onOpenDebug={() => setShowDebug(true)} />
+                <HistoryScreen onPicked={() => setTab('home')} />
               )}
             </View>
 
@@ -188,6 +195,13 @@ export default function App() {
               trying to fall asleep is offering the wrong thing.
             */}
             {status === 'armed' ? null : <TabBar active={tab} onChange={setTab} />}
+
+            {showSettings ? (
+              <SettingsScreen
+                onOpenDebug={() => setShowDebug(true)}
+                onClose={() => setShowSettings(false)}
+              />
+            ) : null}
           </>
         )}
 

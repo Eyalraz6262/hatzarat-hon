@@ -2,6 +2,7 @@ import Bus from 'lucide-react-native/icons/bus';
 import GraduationCap from 'lucide-react-native/icons/graduation-cap';
 import MapPin from 'lucide-react-native/icons/map-pin';
 import Plane from 'lucide-react-native/icons/plane';
+import LocateFixed from 'lucide-react-native/icons/locate-fixed';
 import Search from 'lucide-react-native/icons/search';
 import ShoppingBag from 'lucide-react-native/icons/shopping-bag';
 import Stethoscope from 'lucide-react-native/icons/stethoscope';
@@ -74,6 +75,7 @@ export function SearchField({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [focused, setFocused] = useState(false);
   const requestId = useRef(0);
   // Read at call time, not depended on: a position update every second would
   // otherwise restart the debounce and the query would never fire.
@@ -125,6 +127,14 @@ export function SearchField({
 
   const showPanel = results.length > 0 || failed || (busy && query.trim().length >= 2);
 
+  /*
+    "Where I am now" is a destination like any other, and a legitimate one: the
+    return leg of a journey usually ends where the outward leg began. It is
+    offered only while the field is open and empty, because once somebody has
+    typed two letters they have told us they mean somewhere else.
+  */
+  const offerHere = focused && query.trim().length === 0 && !!near;
+
   return (
     <View style={styles.wrap}>
       <View
@@ -142,8 +152,14 @@ export function SearchField({
           placeholderTextColor={s.inkMuted}
           style={[styles.input, { color: s.ink, textAlign: align() }]}
           returnKeyType="search"
-          onFocus={() => onFocusChange?.(true)}
-          onBlur={() => onFocusChange?.(false)}
+          onFocus={() => {
+            setFocused(true);
+            onFocusChange?.(true);
+          }}
+          onBlur={() => {
+            setFocused(false);
+            onFocusChange?.(false);
+          }}
           autoCorrect={false}
           autoComplete="street-address"
           textContentType="fullStreetAddress"
@@ -181,6 +197,34 @@ export function SearchField({
         the shadow alone leaves the last result and the sheet's own heading
         reading as one list. The hairline is what ends it.
       */}
+      {offerHere && !showPanel ? (
+        <View
+          style={[
+            styles.panel,
+            elevation(2, s),
+            { backgroundColor: s.surface, borderColor: s.line },
+          ]}
+        >
+          <Touch
+            accessibilityRole="button"
+            accessibilityLabel={t('home.useMyLocation')}
+            onPress={() => {
+              Keyboard.dismiss();
+              onPick({ coords: near!, label: t('home.myLocation') });
+            }}
+            style={({ pressed }) => [
+              styles.result,
+              { flexDirection: row(), backgroundColor: pressed ? s.sunk : 'transparent' },
+            ]}
+          >
+            <LocateFixed size={icon.md} strokeWidth={icon.stroke} color={s.primary.text} />
+            <Txt variant="label" tone="primary" style={styles.resultText}>
+              {t('home.useMyLocation')}
+            </Txt>
+          </Touch>
+        </View>
+      ) : null}
+
       {showPanel ? (
         <View
           style={[

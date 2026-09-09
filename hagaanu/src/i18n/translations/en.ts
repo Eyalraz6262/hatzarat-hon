@@ -30,10 +30,13 @@ export const en: TranslationSchema = {
   },
 
   home: {
+    brand: 'Hagaanu',
+    tagline: 'Sleep on the way. We will wake you before your stop.',
     searchPlaceholder: 'Where are you going?',
     searching: 'Searching…',
     noResults: 'No match. Try a station or street name.',
     myLocation: 'My location',
+    useMyLocation: 'My current location',
     clearSearch: 'Clear',
     settings: 'Settings',
     emptyTitle: 'Where are you headed?',
@@ -47,6 +50,9 @@ export const en: TranslationSchema = {
 
   route: {
     changeDestination: 'Change destination',
+    saveThis: 'Save this stop',
+    savePrompt: 'What should we call it?',
+    saved: 'Saved',
     wakeRange: 'When should we wake you?',
     arm: 'Wake me',
     arming: 'Setting up…',
@@ -69,10 +75,13 @@ export const en: TranslationSchema = {
     almost: 'Waking you any moment',
     then: 'Then',
     preview: 'We will wake you {distance} before the destination.',
+    radiusHint: 'On a train, 700m to 1km works well. On a bus, 300 to 500m is usually enough.',
   },
 
   active: {
-    body: 'Lock your phone. The alarm works with the app closed.',
+    headline: 'Alarm is on',
+
+    body: 'All set. Lock the phone and rest; the alarm works even with the app closed.',
     distanceLeft: 'Distance to go',
     wakeRange: 'Alert range',
     destination: 'Destination',
@@ -100,8 +109,8 @@ export const en: TranslationSchema = {
   },
 
   alarm: {
-    title: 'You are here.',
-    body: '{destination} is right here.',
+    title: 'This is your stop 🚉',
+    body: 'You are approaching the stop you picked.',
     dismiss: 'I am awake',
     channelGroup: 'Arrival alarms',
     notificationTitle: 'You have reached {destination}',
@@ -152,6 +161,21 @@ export const en: TranslationSchema = {
     sample: 'Sample stop',
   },
 
+  trips: {
+    title: 'Trips',
+    subtitle: 'The alarms you set, newest first.',
+    emptyTitle: 'No alarms yet',
+    emptyBody: 'Every trip you set an alarm for is kept here, on this device only.',
+    woken: 'Woke you',
+    cancelled: 'Cancelled',
+    open: 'Active',
+    radius: '{distance} before the stop',
+    clear: 'Clear history',
+    clearConfirm: 'Delete every trip?',
+    again: 'Go here again',
+    today: 'Today',
+    yesterday: 'Yesterday',
+  },
   saved: {
     title: 'Saved destinations',
     add: 'Save destination',
@@ -248,15 +272,15 @@ export const en: TranslationSchema = {
     reset: 'Start again',
   },
 
-  tabs: { map: 'Map', places: 'Places', settings: 'Settings' },
+  tabs: { home: 'Home', saved: 'Saved', trips: 'Trips' },
 
   onboarding: {
-    oneTitle: 'Fell asleep on the bus?',
-    oneBody: 'It happens to everyone. Hagaanu keeps watch while you sleep.',
-    twoTitle: 'Pick a destination',
-    twoBody: 'Mark where you get off, and how far out to wake you.',
-    threeTitle: 'And go to sleep',
-    threeBody: 'Lock the phone. As you near the destination, it rings.',
+    oneTitle: 'Sleep easy',
+    oneBody: 'Pick a destination and we will follow the route for you.',
+    twoTitle: 'Woken in time',
+    twoBody: 'An alert as you approach your stop, not after it.',
+    threeTitle: 'Even with the screen locked',
+    threeBody: 'We ask for background location only when you set an alarm, so it keeps working.',
     start: 'Get started',
     skip: 'Skip',
   },

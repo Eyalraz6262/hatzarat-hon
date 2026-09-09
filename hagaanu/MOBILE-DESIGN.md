@@ -39,27 +39,38 @@ Two places the platforms diverge, both deliberate:
 ## Nav Read
 
 ```
-App.tsx — a state machine, not a navigator
+App.tsx — a phase machine wrapping three tabs
 ├── boot                (splash held until fonts + hydrate resolve)
+├── OnboardingScreen    first launch, three screens, then never again
 ├── PermissionsScreen   foreground or notifications ungranted, or background
 │                       ungranted and not yet skipped this session
 ├── AlarmScreen         phase === 'ringing'   (wins over everything, zIndex 100)
-├── ActiveScreen        phase === 'armed'
-└── HomeScreen          otherwise — two states on one screen, see below
+└── tabs (3)            hidden entirely while phase === 'armed'
+    ├── home    MapScreen      map + sheet: idle → chosen → armed, one screen
+    ├── saved   PlacesScreen   kept destinations, pinned first
+    └── trips   HistoryScreen  every alarm this device has set
+
+over the top, not a tab:
+    SettingsScreen       from the control in the search row; explicit close
+    DebugScreen          __DEV__ only, from settings
 ```
 
-**Zero tabs, zero stacks, and that is correct.** The nav audit found nothing to
-fix. The reasoning, so a future session does not "improve" this into a tab bar:
+**Three tabs, and the phases still are not routes.** Both halves of that matter:
 
-- There is one destination at a time. A tab bar advertises parallel sections
-  that do not exist.
-- The states are mutually exclusive and driven by app phase, not by user
-  navigation. A navigator would model them as pushes the user could pop, which
-  is exactly wrong for `ringing`.
-- **HomeScreen holds two states rather than two routes.** Picking a place and
-  confirming it are one continuous act; a route transition between them would
-  spend the ten-second arming budget the product is built around.
-- Saved destinations are a strip over the map, for the same reason.
+- The three tabs are genuinely parallel places a user returns to: where they
+  are going, what they keep, where they went. Trip history earned the third
+  slot from Settings, which is somewhere you visit twice and then never again
+  and now opens as an overlay from the home header.
+- The phases — ringing, armed, permissions — remain app state, not navigation.
+  A navigator would model them as pushes the user could pop, which is exactly
+  wrong for `ringing`.
+- **MapScreen holds three sheet states rather than three routes.** Picking a
+  place, setting the radius and arming are one continuous act; a route
+  transition between them would spend the ten-second arming budget the product
+  is built around.
+- The tab bar disappears while armed. At that point the app has one job and one
+  control, and offering to wander off while someone is falling asleep is
+  offering the wrong thing.
 
 **Never change silently:** the phase names (`idle` / `armed` / `ringing`) are
 persisted and read by the background task handlers in a fresh JS context.

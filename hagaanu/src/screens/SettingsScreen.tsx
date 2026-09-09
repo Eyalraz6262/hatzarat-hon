@@ -1,3 +1,4 @@
+import X from 'lucide-react-native/icons/x';
 import Check from 'lucide-react-native/icons/check';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import Play from 'lucide-react-native/icons/play';
@@ -39,7 +40,21 @@ import { Card, Touch, Txt, row } from '../components/ui';
 const VOLUME_STEPS = [0.4, 0.6, 0.8, 1.0] as const;
 const THEME_MODES: ThemeMode[] = ['system', 'light', 'dark'];
 
-export function SettingsScreen({ onOpenDebug }: { onOpenDebug: () => void }) {
+/**
+ * Preferences, opened over whatever you were doing.
+ *
+ * It used to hold a tab, and a tab is for somewhere you return to; this is
+ * somewhere you visit twice and then never again. As an overlay it needs a way
+ * out of its own, which is the X — a modal without an explicit close is a
+ * modal that traps anyone whose swipe does not register.
+ */
+export function SettingsScreen({
+  onOpenDebug,
+  onClose,
+}: {
+  onOpenDebug: () => void;
+  onClose?: () => void;
+}) {
   const s = useTheme();
   const permissions = usePermissionsStore((state) => state.snapshot);
   const allGranted =
@@ -68,8 +83,21 @@ export function SettingsScreen({ onOpenDebug }: { onOpenDebug: () => void }) {
   return (
     <View style={[styles.screen, { backgroundColor: s.bg }]}>
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <View style={styles.header}>
-          <Txt variant="title">{t('settings.title')}</Txt>
+        <View style={[styles.header, { flexDirection: row() }]}>
+          <Txt variant="title" style={styles.headerTitle}>
+            {t('settings.title')}
+          </Txt>
+          {onClose ? (
+            <Touch
+              accessibilityRole="button"
+              accessibilityLabel={t('common.close')}
+              hitSlop={hitSlop}
+              onPress={onClose}
+              style={[styles.close, { backgroundColor: s.sunk }]}
+            >
+              <X size={icon.md} strokeWidth={2.4} color={s.inkMuted} />
+            </Touch>
+          ) : null}
         </View>
 
         <ScrollView

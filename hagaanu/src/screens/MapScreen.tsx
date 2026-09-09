@@ -1,7 +1,9 @@
 import LocateFixed from 'lucide-react-native/icons/locate-fixed';
+import Star from 'lucide-react-native/icons/star';
+import SlidersHorizontal from 'lucide-react-native/icons/sliders-horizontal';
 import X from 'lucide-react-native/icons/x';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DemoBanner } from '../components/DemoBanner';
@@ -16,7 +18,7 @@ import { ApproachGauge } from '../components/route/ApproachGauge';
 import { RangeSlider } from '../components/route/RangeSlider';
 import { buildApproach } from '../components/route/approach';
 import { BottomSheet, useSheetHeight, type Snap } from '../components/sheet/BottomSheet';
-import { Chip, DangerButton, PrimaryButton, Touch, Txt, row } from '../components/ui';
+import { Chip, DangerButton, PrimaryButton, Touch, Txt, align, row } from '../components/ui';
 import { FALLBACK_REGION } from '../constants/config';
 import { t } from '../i18n';
 import { Feedback } from '../services/feedback/Haptics';
@@ -41,7 +43,12 @@ import { formatDistance } from '../utils/geo';
  *            map follows the slider live.
  *   armed    the sheet becomes the reassurance, and everything else goes away.
  */
-export function MapScreen(_: { onOpenPlaces: () => void }) {
+export function MapScreen({
+  onOpenSettings,
+}: {
+  onOpenPlaces: () => void;
+  onOpenSettings: () => void;
+}) {
   const s = useTheme();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<RouteMapHandle>(null);
@@ -55,6 +62,7 @@ export function MapScreen(_: { onOpenPlaces: () => void }) {
   const useSavedDestination = useAlarmStore((state) => state.useSaved);
   const removeSaved = useAlarmStore((state) => state.removeSaved);
   const pinSaved = useAlarmStore((state) => state.pinSaved);
+  const saveCurrent = useAlarmStore((state) => state.saveCurrent);
   const distanceM = useAlarmStore((state) => state.distanceM);
   const busy = useAlarmStore((state) => state.busy);
   const error = useAlarmStore((state) => state.error);
@@ -162,6 +170,28 @@ export function MapScreen(_: { onOpenPlaces: () => void }) {
   const sheetH = useSheetHeight(snap);
 
   /**
+   * Keeping a destination, named.
+   *
+   * `Alert.prompt` is iOS-only, so Android and the web demo get the stop's own
+   * name rather than a broken dialog — which is the name most people would
+   * have typed anyway. Renaming lives on the saved list, where there is room
+   * for a proper field.
+   */
+  const askToSave = useCallback(() => {
+    const current = useAlarmStore.getState().destination;
+    if (!current) return;
+    const keep = (name: string) => {
+      Feedback.release();
+      void saveCurrent(name.trim() || current.label, 'favourite');
+    };
+    if (Platform.OS === 'ios' && typeof Alert.prompt === 'function') {
+      Alert.prompt(t('route.saveThis'), t('route.savePrompt'), keep, 'plain-text', current.label);
+      return;
+    }
+    keep(current.label);
+  }, [saveCurrent]);
+
+  /**
    * What to offer when nothing is chosen yet.
    *
    * Recomputed only when the user has moved a few hundred metres. The list is
@@ -207,13 +237,33 @@ export function MapScreen(_: { onOpenPlaces: () => void }) {
         pointerEvents="box-none"
       >
         {!armed ? (
-          <View style={styles.searchDock}>
-            <SearchField
-              near={position?.coords ?? null}
-              onPick={onPick}
-              onFocusChange={setSearching}
-              onClear={destination ? () => setDestination(null) : undefined}
-            />
+          <View style={[styles.searchDock, { flexDirection: row() }]}>
+            <View style={styles.grow}>
+              <SearchField
+                near={position?.coords ?? null}
+                onPick={onPick}
+                onFocusChange={setSearching}
+                onClear={destination ? () => setDestination(null) : undefined}
+              />
+            </View>
+            {/*
+              Settings rides in the search row rather than floating on its own.
+              It is one control and it does not deserve a second layer over the
+              map — and this is where a maps app puts the account button, which
+              is the same slot doing the same job.
+            */}
+            <Touch
+              accessibilityRole="button"
+              accessibilityLabel={t('home.settings')}
+              hitSlop={hitSlop}
+              onPress={() => {
+                Feedback.tick();
+                onOpenSettings();
+              }}
+              style={[styles.round, elevation(1, s), { backgroundColor: s.surface }]}
+            >
+              <SlidersHorizontal size={icon.md} strokeWidth={icon.stroke} color={s.ink} />
+            </Touch>
           </View>
         ) : null}
 
@@ -271,6 +321,7 @@ export function MapScreen(_: { onOpenPlaces: () => void }) {
             distanceM={distanceM}
             onRadius={setRadius}
             onClear={() => setDestination(null)}
+            onSave={askToSave}
             error={error}
           />
         ) : (
@@ -338,6 +389,20 @@ function IdlePanel({
   */
   return (
     <View style={styles.idle}>
+      {/*
+        The one place the product introduces itself. It sits on the sheet and
+        not on the map because white text over cartography is a thing that
+        looks designed in a mockup and cannot be read on a bus.
+      */}
+      <View style={styles.brandRow}>
+        <Txt variant="title" style={{ textAlign: align() }}>
+          {t('home.brand')}
+        </Txt>
+        <Txt variant="body" tone="muted" style={{ textAlign: align() }}>
+          {t('home.tagline')}
+        </Txt>
+      </View>
+
       {saved.length > 0 ? (
         <View style={styles.idleSection}>
           <Txt variant="caption" tone="faint" style={styles.sectionLabel}>
@@ -368,6 +433,7 @@ function ChosenPanel({
   distanceM,
   onRadius,
   onClear,
+  onSave,
   error,
 }: {
   destination: Destination;
@@ -375,6 +441,7 @@ function ChosenPanel({
   distanceM: number | null;
   onRadius: (m: number) => void;
   onClear: () => void;
+  onSave: () => void;
   error: string | null;
 }) {
   const s = useTheme();
@@ -411,7 +478,37 @@ function ChosenPanel({
         </Touch>
       </View>
 
+      {/*
+        Saving lives here, next to the destination it saves, rather than only
+        on the list screen. Somebody who rides the same line every day sets
+        this trip up once and should never set it up again — and the moment
+        they know they want to keep it is the moment they are looking at it.
+      */}
+      <Touch
+        accessibilityRole="button"
+        accessibilityLabel={t('route.saveThis')}
+        onPress={onSave}
+        style={({ pressed }) => [
+          styles.saveRow,
+          { flexDirection: row(), opacity: pressed ? 0.6 : 1 },
+        ]}
+      >
+        <Star size={icon.sm} strokeWidth={icon.stroke} color={s.primary.text} />
+        <Txt variant="captionStrong" tone="primary">
+          {t('route.saveThis')}
+        </Txt>
+      </Touch>
+
       <RangeSlider value={radiusM} onChange={onRadius} />
+
+      {/*
+        A recommendation, not a rule. The right answer genuinely differs by
+        vehicle and the app cannot tell which one you are on, so it says what
+        each one wants and leaves the choice where it belongs.
+      */}
+      <Txt variant="caption" tone="faint" style={{ textAlign: align() }}>
+        {t('approach.radiusHint')}
+      </Txt>
 
       {error ? (
         <Txt variant="caption" tone="danger">
@@ -483,7 +580,11 @@ function ArmedPanel({
             ? t('active.noSignalBody', {
                 distance: distanceM === null ? '' : formatDistance(distanceM),
               })
-            : t('approach.sleep')}
+            : phase === 'far'
+              // Far out there is nothing to watch and the only useful thing to
+              // say is that it is safe to stop watching.
+              ? t('active.body')
+              : t('approach.sleep')}
         </Txt>
       </View>
 
@@ -503,7 +604,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.screen,
     zIndex: 2,
   },
-  searchDock: { width: '100%' },
+  saveRow: {
+    alignItems: 'center',
+    gap: space.xs,
+    alignSelf: 'flex-start',
+    paddingVertical: space.xs,
+  },
+  searchDock: { width: '100%', alignItems: 'center', gap: space.sm },
+  brandRow: { gap: 2, paddingBottom: space.xs },
+  brand: { letterSpacing: 0.2 },
   spacer: { flex: 1 },
   demoDock: { paddingTop: space.sm },
   mapTools: {

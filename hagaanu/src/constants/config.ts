@@ -38,9 +38,20 @@ export function alarmChannelFor(soundId: string): string {
 export const GEOFENCE_REGION_ID = 'hagaanu-destination';
 
 /** Quick-pick radius options, in meters. */
-export const RADIUS_PRESETS = [300, 500, 1000, 2000] as const;
+export const RADIUS_PRESETS = [300, 500, 700, 1000, 1500] as const;
 
-export const DEFAULT_RADIUS_M = 500;
+/**
+ * What to suggest, and why.
+ *
+ * A train at 100km/h covers 300 metres in eleven seconds, which is not enough
+ * to get a bag down and stand up; a bus in city traffic covers it in a minute
+ * and a half, and waking someone a kilometre early on a bus means sitting
+ * awake through four stops. The two vehicles genuinely want different answers,
+ * so the app says so rather than picking one and hoping.
+ */
+export const RADIUS_HINT_M = { bus: 500, train: 1000 } as const;
+
+export const DEFAULT_RADIUS_M = 700;
 
 /**
  * Where the optional early heads-up fires.
