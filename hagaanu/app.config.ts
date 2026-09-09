@@ -14,6 +14,24 @@ import type { ExpoConfig } from 'expo/config';
 
 const GOOGLE_MAPS_ANDROID_KEY = process.env.GOOGLE_MAPS_ANDROID_API_KEY ?? '';
 
+/*
+  Say so, loudly, once.
+
+  Without a key the Android Maps SDK draws a blank grey rectangle and reports
+  the reason only to logcat, which is the worst possible failure: the app looks
+  broken and nothing on screen or in the build output says why. iOS uses Apple
+  Maps and needs nothing, so this is genuinely Android-only — and every other
+  part of the app, the geofence and the alarm included, works without it.
+*/
+if (!GOOGLE_MAPS_ANDROID_KEY) {
+  console.warn(
+    '\n  GOOGLE_MAPS_ANDROID_API_KEY is not set.' +
+      '\n  The Android map will render blank. iOS is unaffected.' +
+      '\n  Local builds read it from .env; EAS builds need it as a secret.' +
+      '\n  See README → "מפתח Google Maps ל-Android".\n'
+  );
+}
+
 /**
  * The iOS Live Activity, behind an opt-in flag.
  *
