@@ -1,0 +1,470 @@
+<title>אפיון הגענו?</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Assistant:wght@400;500;600;700&display=swap">
+
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   A working document about a green transit app. The ground is a cool
+   near-neutral with a slight green bias so the app's own accent reads
+   as belonging here rather than pasted on; nothing else is coloured.
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --bg:      #F4F5F3;
+  --surface: #FFFFFF;
+  --sunk:    #EAECE9;
+  --ink:     #14171A;
+  --ink-2:   #3D4347;
+  --muted:   #5C6368;
+  --rule:    #DFE2DE;
+  --hair:    #ECEEEB;
+  --accent:  #0B7A54;
+  --accent-soft: #E7F3ED;
+  --open:    #B0611A;
+  --open-soft:#FBF0E4;
+  --risk:    #B23127;
+  --risk-soft:#FBEBE9;
+  --ui:   'Heebo', system-ui, sans-serif;
+  --body: 'Assistant', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101312; --surface: #171B1A; --sunk: #0B0E0D;
+    --ink: #E9EDEB; --ink-2: #BEC5C2; --muted: #8E9793;
+    --rule: #242A28; --hair: #1D2221;
+    --accent: #3FD69B; --accent-soft: rgba(63,214,155,.12);
+    --open: #E0A265; --open-soft: rgba(224,162,101,.12);
+    --risk: #FF8579; --risk-soft: rgba(255,133,121,.12);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101312; --surface: #171B1A; --sunk: #0B0E0D;
+  --ink: #E9EDEB; --ink-2: #BEC5C2; --muted: #8E9793;
+  --rule: #242A28; --hair: #1D2221;
+  --accent: #3FD69B; --accent-soft: rgba(63,214,155,.12);
+  --open: #E0A265; --open-soft: rgba(224,162,101,.12);
+  --risk: #FF8579; --risk-soft: rgba(255,133,121,.12);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; direction: rtl;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 16.5px; line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 44px 24px 96px; }
+
+/* ── masthead ─────────────────────────────────────────── */
+.eyebrow { font-family: var(--ui); font-size: 12px; font-weight: 500;
+           letter-spacing: .16em; color: var(--muted); }
+h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
+     font-size: clamp(32px,5vw,46px); line-height: 1.06; letter-spacing: -.03em; }
+.lede { margin: 16px 0 0; font-size: 18.5px; line-height: 1.62; color: var(--ink-2); max-width: 60ch; }
+
+.meta { margin-top: 26px; padding: 18px 20px; background: var(--surface);
+        border: 1px solid var(--rule); border-radius: 6px;
+        display: grid; gap: 12px 22px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+.meta div { display: flex; flex-direction: column; gap: 2px; }
+.meta dt, .meta b { font-family: var(--ui); font-size: 11px; font-weight: 500;
+                    letter-spacing: .13em; color: var(--muted); }
+.meta span { font-size: 15.5px; }
+
+/* ── sections ─────────────────────────────────────────── */
+h2 {
+  margin: 56px 0 0; padding-top: 22px; border-top: 2px solid var(--ink);
+  font-family: var(--ui); font-weight: 800; font-size: 25px;
+  letter-spacing: -.02em; display: flex; align-items: baseline; gap: 12px;
+}
+h2 i { font-style: normal; font-size: 14px; font-weight: 500; color: var(--muted);
+       font-variant-numeric: tabular-nums; }
+h3 { margin: 32px 0 0; font-family: var(--ui); font-weight: 700;
+     font-size: 18px; letter-spacing: -.01em; }
+p { margin: 12px 0 0; max-width: 66ch; }
+p.tight { margin-top: 6px; }
+ul { margin: 12px 0 0; padding-inline-start: 20px; max-width: 66ch; }
+li { margin: 6px 0; }
+li::marker { color: var(--muted); }
+strong { font-weight: 700; }
+code { font-family: ui-monospace, Menlo, monospace; font-size: 13.5px;
+       background: var(--sunk); padding: 1px 6px; border-radius: 4px; }
+
+/* ── decision rows ────────────────────────────────────── */
+.rows { margin-top: 16px; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.row { display: grid; grid-template-columns: minmax(120px, 190px) 1fr;
+       border-top: 1px solid var(--hair); background: var(--surface); }
+.row:first-child { border-top: 0; }
+.row > dt, .row > .k {
+  padding: 13px 18px; background: var(--sunk);
+  font-family: var(--ui); font-size: 13.5px; font-weight: 700; line-height: 1.45;
+}
+.row > dd, .row > .v { margin: 0; padding: 13px 18px; font-size: 15.5px; line-height: 1.6; }
+.row .v small { display: block; margin-top: 4px; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+@media (max-width: 620px) { .row { grid-template-columns: 1fr; } .row > .k { padding-bottom: 4px; } }
+
+/* ── tags ─────────────────────────────────────────────── */
+.tag { display: inline-block; font-family: var(--ui); font-size: 11px; font-weight: 700;
+       letter-spacing: .08em; padding: 3px 9px; border-radius: 999px; vertical-align: 2px; }
+.tag--set  { background: var(--accent-soft); color: var(--accent); }
+.tag--mine { background: var(--open-soft); color: var(--open); }
+.tag--open { background: var(--risk-soft); color: var(--risk); }
+
+/* ── callout ──────────────────────────────────────────── */
+.note { margin-top: 20px; padding: 16px 18px; border-radius: 6px;
+        background: var(--surface); border: 1px solid var(--rule);
+        border-inline-start: 3px solid var(--muted); }
+.note--risk { border-inline-start-color: var(--risk); background: var(--risk-soft); }
+.note--mine { border-inline-start-color: var(--open); background: var(--open-soft); }
+.note p:first-child { margin-top: 0; }
+.note__t { font-family: var(--ui); font-weight: 700; font-size: 14px; display: block; margin-bottom: 4px; }
+
+/* ── flow ─────────────────────────────────────────────── */
+.flow { margin-top: 18px; display: flex; flex-direction: column; }
+.step { display: grid; grid-template-columns: 30px 1fr; gap: 14px; align-items: start; }
+.step__n { position: relative; display: flex; justify-content: center; align-self: stretch; }
+.step__n::before { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--rule); }
+.step:first-child .step__n::before { top: 13px; }
+.step:last-child  .step__n::before { bottom: calc(100% - 13px); }
+.step__n b { position: relative; z-index: 1; width: 24px; height: 24px; margin-top: 2px;
+             border-radius: 999px; background: var(--accent); color: var(--bg);
+             font-family: var(--ui); font-size: 12px; font-weight: 700;
+             display: grid; place-items: center; box-shadow: 0 0 0 4px var(--bg); }
+.step__b { padding: 0 0 18px; }
+.step__b b { font-family: var(--ui); font-size: 15.5px; font-weight: 700; display: block; }
+.step__b span { display: block; margin-top: 3px; font-size: 15px; color: var(--ink-2); }
+
+/* ── table ────────────────────────────────────────────── */
+.tablewrap { margin-top: 18px; overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 14.5px; }
+th, td { text-align: start; padding: 11px 14px; border-top: 1px solid var(--hair); vertical-align: top; line-height: 1.55; }
+th { background: var(--sunk); font-family: var(--ui); font-size: 12.5px; font-weight: 700;
+     letter-spacing: .02em; border-top: 0; white-space: nowrap; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+
+.excl { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.excl span { font-family: var(--ui); font-size: 13.5px; font-weight: 500;
+             padding: 6px 13px; border-radius: 999px;
+             background: var(--sunk); color: var(--muted);
+             text-decoration: line-through; text-decoration-color: var(--risk); }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow">הגענו? · אפיון מוצר</span>
+    <h1>מה האפליקציה עושה, ומה קורה כשהיא נכשלת</h1>
+    <p class="lede">
+      אפליקציה אחת, משימה אחת: להעיר נוסע לפני התחנה שלו. המסמך הזה סוגר את ההתנהגות
+      לפני שנכתבת עוד שורת קוד. הסעיף הכי ארוך כאן הוא מצבי הכשל, כי באפליקציה שהכישלון
+      שלה הוא ״פספסת את התחנה״ זה הסעיף היחיד שבאמת חשוב.
+    </p>
+
+    <div class="meta">
+      <div><b>גרסה</b><span>1.0 · 8 בספטמבר 2026</span></div>
+      <div><b>כיוון עיצובי</b><span>קו · נעול</span></div>
+      <div><b>פלטפורמות</b><span>iOS ואנדרואיד, שוות</span></div>
+      <div><b>מודל</b><span>חינם, בלי חשבון</span></div>
+    </div>
+
+    <p style="margin-top:18px;font-size:14.5px;color:var(--muted)">
+      <span class="tag tag--set">סגור</span> החלטת ·
+      <span class="tag tag--mine">הכרעה שלי</span> השארת לי, קל לשנות ·
+      <span class="tag tag--open">פתוח</span> עדיין צריך תשובה
+    </p>
+  </header>
+
+  <!-- ═══ 1 ═══ -->
+  <h2><i>01</i> הקהל והקשר השימוש</h2>
+  <p>
+    זה לא פרט רקע. זו ההנחה שממנה נגזרת כל החלטה במסמך: <strong>יד אחת, חצי ישן,
+    ברכב בתנועה, בדרך כלל בחושך.</strong>
+  </p>
+  <p>ממנה נובע ישירות:</p>
+  <ul>
+    <li>מטרות מגע 48px ומעלה, וכפתור הכיבוי של ההתראה 88px.</li>
+    <li>החלטה אחת למסך. הכפתור הראשי תמיד בשליש התחתון.</li>
+    <li>שום פעולה לא דורשת דיוק מהאצבע. אין גוררים, אין שדות חופשיים בזמן נסיעה.</li>
+    <li>מצב כהה מלא, לא כתוספת.</li>
+    <li>תקציב הפעלה: עשר שניות מפתיחה עד ״מופעל״.</li>
+  </ul>
+
+  <!-- ═══ 2 ═══ -->
+  <h2><i>02</i> התרחיש המרכזי</h2>
+  <div class="flow">
+    <div class="step"><span class="step__n"><b>1</b></span><span class="step__b">
+      <b>פותחים</b><span>מפה מלאה, שורת חיפוש למעלה, יעדים שמורים למטה.</span></span></div>
+    <div class="step"><span class="step__n"><b>2</b></span><span class="step__b">
+      <b>בוחרים יעד</b><span>חיפוש, לחיצה על המפה, או לחיצה על יעד שמור. יעד שמור מדלג ישר לשלב 4.</span></span></div>
+    <div class="step"><span class="step__n"><b>3</b></span><span class="step__b">
+      <b>המפה מתכווצת, הפס מופיע</b><span>התחנות בדרך נטענות ברקע. בזמן הטעינה שלד, לא ספינר.</span></span></div>
+    <div class="step"><span class="step__n"><b>4</b></span><span class="step__b">
+      <b>בוחרים טווח</b><span>ארבעה צ׳יפים: 300 מ׳ · 500 מ׳ · 1 ק״מ · 2 ק״מ. ברירת מחדל מההגדרות.</span></span></div>
+    <div class="step"><span class="step__n"><b>5</b></span><span class="step__b">
+      <b>מפעילים</b><span>רטט אישור. מכאן אפשר לנעול את הטלפון.</span></span></div>
+    <div class="step"><span class="step__n"><b>6</b></span><span class="step__b">
+      <b>מעירים</b><span>מסך ההגעה, ירוק מלא, מטרה אחת גדולה.</span></span></div>
+  </div>
+
+  <!-- ═══ 3 ═══ -->
+  <h2><i>03</i> ההתראה</h2>
+
+  <dl class="rows">
+    <div class="row"><dt>הצליל</dt><dd>
+      <span class="tag tag--set">סגור</span> שלושה, מעדין עד חד: <strong>רך</strong> ·
+      <strong>רגיל</strong> · <strong>חודרת</strong>. ברירת מחדל: רגיל.
+      <small>מסונתזים בקוד. לא הקלטות — אני לא יכול להקליט או לרכוש רישיון.</small></dd></div>
+
+    <div class="row"><dt>עוצמה</dt><dd>
+      <span class="tag tag--mine">הכרעה שלי</span> ״רך״ מתחיל שקט ועולה על פני ארבע שניות.
+      השניים האחרים בעוצמה מלאה מיד.
+      <small>אפליקציה לא יכולה לשלוט בעוצמת המערכת. באנדרואיד אנחנו מנתבים לערוץ האזעקה
+      ונותנים גיין פנימי; ב־iOS אין גישה לעוצמה בכלל. המחוון בהגדרות יגיד את זה במפורש.</small></dd></div>
+
+    <div class="row"><dt>משך</dt><dd>
+      <span class="tag tag--set">סגור</span> ממשיכה עד שמכבים. תקרת בטיחות שלוש דקות,
+      ואז הצליל נעצר אבל הרטט וההתראה במסך הנעילה נשארים.</dd></div>
+
+    <div class="row"><dt>כיבוי</dt><dd>
+      <span class="tag tag--open">פתוח</span> ההמלצה שלי: <strong>חובה לפתוח את האפליקציה.</strong>
+      <small>התראה שמשתיקים בהעברת אצבע היא התראה שתשתיקו תוך כדי שינה. השאלה הזו לא
+      נענתה בסבבים — אם אתה מעדיף כפתור בהתראה עצמה, זה שינוי של חצי שעה.</small></dd></div>
+
+    <div class="row"><dt>אחרי הכיבוי</dt><dd>
+      <span class="tag tag--set">סגור</span> כפתור <strong>״תעירו אותי שוב ביעד עצמו״</strong>
+      במסך ההגעה. מפעיל התראה שנייה בטווח 0. נעלם אחרי חמש שניות.</dd></div>
+
+    <div class="row"><dt>התרעה מוקדמת</dt><dd>
+      <span class="tag tag--set">סגור</span> אופציונלית. מתג במסך ההפעלה, כבוי כברירת מחדל.
+      כשדולק: התראה שקטה בלבד בטווח הרחוק, וצלצול מלא בקרוב.</dd></div>
+
+    <div class="row"><dt>מסך נעול</dt><dd>
+      <span class="tag tag--set">סגור</span> ב־iOS: Live Activity עם מספר התחנות, גם ב־Dynamic Island.
+      באנדרואיד: התראה מתמשכת שמתעדכנת.
+      <small>ה־Live Activity דורש Widget Extension בסוויפט. זה החלק היחיד בפרויקט שיוצא
+      מגבולות ה־JS, וגם החלק שאני הכי פחות יכול לאמת מכאן.</small></dd></div>
+
+    <div class="row"><dt>הפעלה בחזית</dt><dd>
+      <span class="tag tag--mine">הכרעה שלי</span> אותו מסך הגעה מלא. גם אם האפליקציה
+      פתוחה מול העיניים, הפריצה חייבת להיות אותה פריצה — אחרת יש שתי חוויות הגעה שונות.</dd></div>
+  </dl>
+
+  <!-- ═══ 4 ═══ -->
+  <h2><i>04</i> מצבי כשל</h2>
+  <p>
+    הזיהוי בנוי משלוש שכבות: <strong>geofence של מערכת ההפעלה</strong> (ראשי, מעיר גם
+    תהליך שנסגר), <strong>זרם מיקום ברקע</strong> (גיבוי לעיכוב הקיבוץ של המערכת),
+    ו<strong>בדיקה בחזית</strong>. הטבלה היא מה שכל אחת מהן לא מכסה.
+  </p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>מה נשבר</th><th>למה</th><th>מה האפליקציה עושה</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>עיכוב geofence</td>
+          <td>שתי המערכות מקבצות אירועי אזור כדי לחסוך סוללה. רכבת ב־160 קמ״ש חוצה 500 מ׳ ב־11 שניות.</td>
+          <td>זרם המיקום ברקע דוגם בתדירות שעולה ככל שמתקרבים, ומצליב מול המרחק בעצמו.</td>
+        </tr>
+        <tr>
+          <td>אנדרואיד הורג את התהליך</td>
+          <td>מנהלי הסוללה של שיאומי, סמסונג, וואווי ואחרים סוגרים אפליקציות רקע באגרסיביות.</td>
+          <td>מזוהה בחזרה לחזית: התראה פעילה שלא דיווחה fix הרבה מעבר לתדירות הצפויה. אז מסבירים ומציעים קיצור להגדרות.</td>
+        </tr>
+        <tr>
+          <td>אין קליטת GPS</td>
+          <td>מנהרות הכרמל, הקטע התת־קרקעי לירושלים, תחנות עמוקות.</td>
+          <td>ראו למטה. לעולם לא משערים מיקום.</td>
+        </tr>
+        <tr>
+          <td>המסלול לא עובר בעיגול</td>
+          <td>היעד 800 מ׳ מהכביש והטווח 300 מ׳. הרכב פשוט לא נכנס.</td>
+          <td>מזוהה כשהמרחק מתחיל לגדול אחרי שהייתה התקרבות. מצלצל מיד, עם ההודעה ״עברתם את התחנה״.</td>
+        </tr>
+        <tr>
+          <td>מצב טיסה / מיקום כבוי</td>
+          <td>המשתמש שינה משהו באמצע הנסיעה.</td>
+          <td>אותו טיפול כמו אין קליטה.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>אין קליטה — שלושה כללים</h3>
+  <ul>
+    <li><strong>לעולם לא לשער מיקום.</strong> ניחוש לפי מהירות אחרונה יעיר בתחנה הלא נכונה, והנוסע ירד שם. גרוע יותר מפספוס.</li>
+    <li><strong>מעל 90 שניות בלי fix:</strong> ההתראה במסך הנעילה משתנה ל״אין קליטה. המרחק האחרון: 3.2 ק״מ״. הפס קופא בנקודה האחרונה ואומר את זה.</li>
+    <li><strong>מעל 3 דקות בלי fix, והמרחק האחרון היה עד פי־3 מהטווח:</strong> מצלצלים בכל זאת, עם ״איבדנו קליטה, יכול להיות שהגעתם״. לא טוענים שהגענו.</li>
+  </ul>
+
+  <div class="note note--mine">
+    <span class="note__t">למה הכלל השלישי אגרסיבי בכוונה</span>
+    <p class="tight">
+      מנהרות הן בדיוק המקום שבו אנשים מפספסים. הכלל מופעל רק כשכבר היינו קרובים, אז הוא
+      לא יצלצל באמצע שום מקום — אבל הוא כן יעיר מוקדם מדי לפעמים. זו החלפה מודעת:
+      אפליקציה כנה שמעירה קצת מוקדם עדיפה על אפליקציה שותקת.
+    </p>
+  </div>
+
+  <div class="note note--risk">
+    <span class="note__t">נקודה שאי אפשר לעקוף</span>
+    <p class="tight">
+      אף אחת מהשכבות לא נותנת אחריות של 100%. שתי מערכות ההפעלה שומרות לעצמן את הזכות
+      לעכב או לדלג על אירועי רקע. האפליקציה תגיד את זה במסך ההרשאות ובחנות, ולא תבטיח
+      מה שהמערכת לא מאפשרת.
+    </p>
+  </div>
+
+  <!-- ═══ 5 ═══ -->
+  <h2><i>05</i> המסכים</h2>
+
+  <dl class="rows">
+    <div class="row"><dt>בית · בלי יעד</dt><dd>מפה מלאה · חיפוש · כפתור מיקום · יעדים שמורים · <strong>איקון הגדרות בפינה</strong> (נעלם ברגע שיש יעד).</dd></div>
+    <div class="row"><dt>בית · עם יעד</dt><dd>המפה מתכווצת לרצועה · שם היעד · הפס · בורר טווח · מתג התרעה מוקדמת · כפתור הפעלה · שמירה.</dd></div>
+    <div class="row"><dt>מופעל</dt><dd>מספר התחנות בגדול · אותו פס עם הנקודה שלכם · מרחק וטווח · ביטול.</dd></div>
+    <div class="row"><dt>הגעה</dt><dd>ירוק מלא, מטרה אחת 88px, ״תעירו שוב ביעד״ למשך חמש שניות.</dd></div>
+    <div class="row"><dt>הרשאות</dt><dd>שלושה שלבים, אחד בכל פעם, הסיבה לפני הדיאלוג. מיקום ברקע ניתן לדילוג.</dd></div>
+    <div class="row"><dt>הגדרות</dt><dd>מסך חדש. ראו סעיף 07.</dd></div>
+    <div class="row"><dt>דיבאג</dt><dd><span class="tag tag--mine">הכרעה שלי</span> רק בבילדי פיתוח. מצב geofence, גיל ה־fix, מדרגת דגימה, ואילוץ כל שכבה בנפרד.</dd></div>
+  </dl>
+
+  <p>
+    <strong>אין טאבים ואין ניווט.</strong> יעד אחד בכל רגע, והמצבים נקבעים לפי שלב
+    האפליקציה ולא לפי ניווט של המשתמש. נַוָוט היה מדגמן את ״מצלצל״ כמסך שאפשר לחזור ממנו,
+    וזה בדיוק ההפך ממה שצריך.
+  </p>
+
+  <!-- ═══ 6 ═══ -->
+  <h2><i>06</i> יעדים, החלפות ומסלולים</h2>
+
+  <dl class="rows">
+    <div class="row"><dt>החלפה</dt><dd>
+      <span class="tag tag--set">סגור</span> עד <strong>שתי נקודות על פס אחד</strong>, לא שתי התראות נפרדות.
+      <small>נסיעה עם החלפה היא נסיעה אחת. הפס כבר מסודר לפי מרחק שנותר, אז החלפה היא
+      פשוט עוד צומת עליו: אתם כאן ← תחנות ← ⏰ לוד ← תחנות ← ⏰ באר שבע.</small></dd></div>
+
+    <div class="row"><dt>איך מוסיפים</dt><dd>
+      <span class="tag tag--set">סגור</span> שתי דרכים: לחיצה על תחנה בפס, או כפתור ״הוספת עצירה״ מתחתיו.</dd></div>
+
+    <div class="row"><dt>יעדים שמורים</dt><dd>
+      <span class="tag tag--set">סגור</span> מסודרים לפי שימוש אחרון. רצועה אופקית מעל המפה.
+      לחיצה ארוכה מוחקת. מקסימום 12.</dd></div>
+
+    <div class="row"><dt>מסלול קבוע</dt><dd>
+      <span class="tag tag--set">סגור</span> כוכב על יעד שמור מקבע אותו בראש הרצועה.
+      נשמרים <strong>יעד וטווח בלבד</strong> — לא החלפה ולא התרעה מוקדמת.</dd></div>
+
+    <div class="row"><dt>היסטוריה</dt><dd>
+      <span class="tag tag--set">סגור</span> אין. שום נסיעה לא נרשמת מעבר למה שהמשתמש בחר לשמור.</dd></div>
+  </dl>
+
+  <!-- ═══ 7 ═══ -->
+  <h2><i>07</i> הגדרות</h2>
+  <ul>
+    <li><strong>צליל</strong> — שלושה, עם האזנה מיידית לכל אחד.</li>
+    <li><strong>רטט</strong> — מתג.</li>
+    <li><strong>עוצמה</strong> — גיין פנימי, עם השורה שמסבירה שזו לא עוצמת המערכת.</li>
+    <li><strong>טווח ברירת מחדל</strong> — אחד מארבעת הצ׳יפים.</li>
+    <li><strong>שפה</strong> — עברית · אנגלית · ערבית · רוסית.</li>
+    <li><strong>מצב תצוגה</strong> — בהיר · כהה · לפי המערכת.</li>
+    <li><strong>הרצת דוגמה</strong> — הצליל ומסך ההגעה, מתי שרוצים.</li>
+    <li><strong>דוחות קריסה</strong> — מתג, דלוק כברירת מחדל.</li>
+    <li><strong>למה ההתראה לא עבדה?</strong> — עמוד הסבר, כולל הקיצור להגדרות הסוללה באנדרואיד.</li>
+  </ul>
+
+  <!-- ═══ 8 ═══ -->
+  <h2><i>08</i> פתיחה ראשונה</h2>
+  <p>
+    שלושה שלבי הרשאה, אחד בכל פעם, כל אחד עם הסיבה <em>לפני</em> הדיאלוג של המערכת.
+    אחריהם <strong>דוגמה קצרה</strong>: לוחצים ״לשמוע איך זה נשמע״, מקבלים את הצליל
+    ואת מסך ההגעה האמיתי לשלוש שניות.
+  </p>
+  <p>
+    הדוגמה היא לא קישוט. היא הדבר היחיד שהופך ״נעלתי את הטלפון וסמכתי על אפליקציה
+    שמעולם לא השמיעה לי קול״ לבחירה מודעת.
+  </p>
+
+  <!-- ═══ 9 ═══ -->
+  <h2><i>09</i> נתונים ופרטיות</h2>
+  <dl class="rows">
+    <div class="row"><dt>מיקום</dt><dd>נשאר על המכשיר. לא נשלח לשום שרת, אף פעם.</dd></div>
+    <div class="row"><dt>היוצא מן הכלל</dt><dd>
+      שתי קואורדינטות נשלחות ל־OpenStreetMap דרך Overpass כדי לקבל את התחנות בדרך.
+      פעם אחת, כשבוחרים יעד. בלי מזהה, בלי חשבון, בלי מפתח.
+      <small>מרגע ההפעלה האפליקציה לא נוגעת ברשת בכלל.</small></dd></div>
+    <div class="row"><dt>דוחות קריסה</dt><dd>
+      Sentry עם <code>sendDefaultPii: false</code>, מסנן שמוחק קואורדינטות, בלי מזהה משתמש.
+      בתוויות החנויות: Diagnostics · Not Linked to You.</dd></div>
+    <div class="row"><dt>מעקב שימוש</dt><dd>אין. אפס.</dd></div>
+    <div class="row"><dt>חשבונות</dt><dd>אין. אין הרשמה, אין התחברות, אין סנכרון.</dd></div>
+  </dl>
+
+  <!-- ═══ 10 ═══ -->
+  <h2><i>10</i> מה בפירוש לא נכנס</h2>
+  <div class="excl">
+    <span>הרשמה</span><span>חשבונות</span><span>מנויים</span><span>תשלומים</span>
+    <span>פרסומות</span><span>צ׳אט</span><span>פיצ׳רי AI</span><span>שיתוף חברתי</span>
+    <span>ניווט מסלול</span><span>לוחות זמנים בזמן אמת</span><span>Apple Watch</span>
+    <span>ווידג׳טים במסך הבית</span>
+  </div>
+  <p style="margin-top:14px">
+    מודל עסקי: חינם עכשיו, נחליט אחר כך. שום דבר בארכיטקטורה לא ייחסם בפני תשלום עתידי,
+    ושום דבר לא ייבנה לקראתו.
+  </p>
+
+  <!-- ═══ 11 ═══ -->
+  <h2><i>11</i> מה עדיין חסר</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>פריט</th><th>מצב</th><th>חוסם מה</th></tr></thead>
+      <tbody>
+        <tr><td>אופן הכיבוי</td><td><span class="tag tag--open">פתוח</span> ההמלצה: חובה לפתוח את האפליקציה</td><td>לא חוסם. שינוי של חצי שעה בכל שלב.</td></tr>
+        <tr><td>מדיניות פרטיות</td><td>נטפל לפני העלאה</td><td><strong>חוסם פרסום.</strong> שתי החנויות דורשות כתובת פומבית.</td></tr>
+        <tr><td>חשבונות מפתחים</td><td>לא נפתחו</td><td><strong>חוסם פרסום.</strong> Apple 99$ לשנה, Google 25$ חד־פעמי.</td></tr>
+        <tr><td>מפתח Google Maps</td><td>נדרש לאנדרואיד בלבד</td><td>חוסם בילד אנדרואיד. iOS משתמש ב־Apple Maps בלי מפתח.</td></tr>
+        <tr><td>איקון האפליקציה</td><td>אני אעצב</td><td>חוסם פרסום, לא פיתוח.</td></tr>
+        <tr><td>תרגום לערבית ורוסית</td><td>צריך מתרגם אנושי</td><td>אפשר לשחרר עם עברית ואנגלית ולהוסיף אחר כך.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══ 12 ═══ -->
+  <h2><i>12</i> איך נדע שזה עובד</h2>
+  <p>
+    אין לי מכשיר, סימולטור או שירות בנייה מהסביבה הזו. גם קריאת Overpass חסומה כאן.
+    מה שכן אפשר לאמת: טסטים על הלוגיקה, בדיקת טיפוסים, ובניית ה־bundle לשתי הפלטפורמות.
+    <strong>כל השאר חייב לרוץ אצלך.</strong>
+  </p>
+  <p>אז אני אספק שני דברים:</p>
+  <ul>
+    <li><strong>מסמך בדיקה על מכשיר</strong> — מה לבדוק, באיזה סדר, ומה צפוי להישבר בכל שלב.</li>
+    <li><strong>מסך דיבאג בבילדי פיתוח</strong> — מצב ה־geofence, גיל ה־fix האחרון, מדרגת הדגימה הפעילה, ואילוץ ידני של כל שכבת זיהוי בנפרד.</li>
+  </ul>
+  <div class="note">
+    <span class="note__t">למה מסך הדיבאג חשוב</span>
+    <p class="tight">
+      בלעדיו הדיווח היחיד שאפשר יהיה לתת הוא ״זה לא צלצל״, וזה לא מספיק כדי לתקן.
+      איתו אפשר להגיד ״ה־geofence דיווח אבל אחרי 4 דקות״ או ״התהליך נהרג ב־08:14״ —
+      ואלה שני באגים שונים לגמרי עם שני תיקונים שונים לגמרי.
+    </p>
+  </div>
+
+  <h2><i>13</i> סדר הבנייה המוצע</h2>
+  <div class="flow">
+    <div class="step"><span class="step__n"><b>1</b></span><span class="step__b">
+      <b>מסך הגדרות והצלילים</b><span>שלושת הצלילים, ההעדפות, והרצת הדוגמה. הכי מנותק, ומשחרר את כל השאר.</span></span></div>
+    <div class="step"><span class="step__n"><b>2</b></span><span class="step__b">
+      <b>התנהגות ההתראה המלאה</b><span>משך, תקרה, כיבוי, ״תעירו שוב״, התרעה מוקדמת.</span></span></div>
+    <div class="step"><span class="step__n"><b>3</b></span><span class="step__b">
+      <b>מצבי הכשל</b><span>אין קליטה, פספוס, זיהוי הריגת תהליך. כולל טסטים.</span></span></div>
+    <div class="step"><span class="step__n"><b>4</b></span><span class="step__b">
+      <b>החלפות ומסלולים קבועים</b><span>נקודה שנייה על הפס, כוכב על יעד שמור.</span></span></div>
+    <div class="step"><span class="step__n"><b>5</b></span><span class="step__b">
+      <b>מסך דיבאג ומסמך הבדיקה</b><span>לפני ה־Live Activity, כדי שיהיה במה לבדוק אותו.</span></span></div>
+    <div class="step"><span class="step__n"><b>6</b></span><span class="step__b">
+      <b>Live Activity</b><span>אחרון בכוונה. החלק היחיד שיוצא מה־JS, והיחיד שאני לא יכול לאמת בכלל.</span></span></div>
+    <div class="step"><span class="step__n"><b>7</b></span><span class="step__b">
+      <b>ערבית ורוסית, איקון, נכסי חנות</b><span>אחרי שהמכשיר אמר שזה עובד.</span></span></div>
+  </div>
+
+</div>

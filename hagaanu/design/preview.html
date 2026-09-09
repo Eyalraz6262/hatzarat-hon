@@ -1,0 +1,872 @@
+<title>הגענו? · המסכים</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@500;700;800&family=Assistant:wght@500;700&display=swap">
+
+<style>
+/* ══════════════════════════════════════════════════════════════════════
+   A rendering of the built screens, not a design exploration.
+
+   Every colour, size, radius and string below is copied from the app's own
+   source — src/theme/colors.ts, src/theme/index.ts and
+   src/i18n/translations/he.ts — so what is on these phones is what the code
+   produces. The stage around them is deliberately quiet: seven screens are
+   the content, and a page with an opinion of its own would fight them.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── the app's own tokens ────────────────────────────────────── */
+:root {
+  --bg:        #F6F6F3;
+  --surface:   #FFFFFF;
+  --sunk:      #EDEDE8;
+  --ink:       #14171A;
+  --ink-muted: #5C6368;
+  --ink-faint: #B4B8B4;
+  --line:      #E3E4DF;
+  --line-2:    #CFD1CA;
+  --accent:    #0EA36F;
+  --on-accent: #06251A;
+  --accent-tx: #0B7A54;
+  --accent-sf: #EAF5F0;
+  --danger:    #C4342A;
+
+  --ui:   'Heebo', system-ui, sans-serif;
+  --body: 'Assistant', system-ui, sans-serif;
+
+  /* the stage */
+  --page:   #E9E9E4;
+  --deck:   #DEDED8;
+  --pink:   #1B1E20;
+  --pmuted: #6B7276;
+  --prule:  #CFCFC8;
+  --shadow: 0 24px 54px -30px rgba(16,20,18,.55), 0 2px 10px -4px rgba(16,20,18,.14);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1315; --surface: #171C1F; --sunk: #0A0D0F;
+    --ink: #ECEFEE; --ink-muted: #98A1A4; --ink-faint: #4A5356;
+    --line: #242B2F; --line-2: #333C40;
+    --accent: #22C88A; --on-accent: #06251A; --accent-tx: #3FD69B;
+    --accent-sf: rgba(34,200,138,.12); --danger: #FF7A6E;
+    --page: #0A0C0D; --deck: #14181A; --pink: #E7EBEA; --pmuted: #8A9396;
+    --prule: #232A2D;
+    --shadow: 0 24px 58px -30px rgba(0,0,0,.9), 0 2px 10px -4px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1315; --surface: #171C1F; --sunk: #0A0D0F;
+  --ink: #ECEFEE; --ink-muted: #98A1A4; --ink-faint: #4A5356;
+  --line: #242B2F; --line-2: #333C40;
+  --accent: #22C88A; --on-accent: #06251A; --accent-tx: #3FD69B;
+  --accent-sf: rgba(34,200,138,.12); --danger: #FF7A6E;
+  --page: #0A0C0D; --deck: #14181A; --pink: #E7EBEA; --pmuted: #8A9396;
+  --prule: #232A2D;
+  --shadow: 0 24px 58px -30px rgba(0,0,0,.9), 0 2px 10px -4px rgba(0,0,0,.6);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; direction: rtl;
+  background: var(--page); color: var(--pink);
+  font-family: var(--body); font-size: 16px; line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 44px 22px 90px; }
+
+/* ── masthead ─────────────────────────────────────────────────── */
+.eyebrow { font-family: var(--ui); font-size: 12px; font-weight: 500;
+           letter-spacing: .16em; color: var(--pmuted); }
+h1 { margin: 12px 0 0; font-family: var(--ui); font-weight: 800;
+     font-size: clamp(30px,4.6vw,44px); line-height: 1.06; letter-spacing: -.03em; }
+.lede { margin: 15px 0 0; font-size: 18px; line-height: 1.6;
+        color: var(--pmuted); max-width: 58ch; }
+
+.brandrow { margin-top: 30px; display: flex; align-items: center; gap: 18px;
+            flex-wrap: wrap; }
+.appicon { width: 84px; height: 84px; border-radius: 19px; flex: none;
+           box-shadow: var(--shadow); }
+.brandrow p { margin: 0; font-size: 14.5px; color: var(--pmuted); max-width: 46ch; }
+
+.note { margin-top: 28px; padding: 15px 17px; border-radius: 8px;
+        background: var(--deck); border-inline-start: 3px solid var(--pmuted); }
+.note b { font-family: var(--ui); font-size: 14px; display: block; margin-bottom: 3px;
+          color: var(--pink); }
+.note span { font-size: 14.5px; color: var(--pmuted); }
+
+/* ── the gallery ──────────────────────────────────────────────── */
+.shelf { margin-top: 54px; }
+.shelf > h2 {
+  margin: 0 0 4px; padding-top: 20px; border-top: 2px solid var(--pink);
+  font-family: var(--ui); font-weight: 800; font-size: 22px; letter-spacing: -.02em;
+}
+.shelf > p { margin: 0 0 26px; font-size: 15px; color: var(--pmuted); max-width: 62ch; }
+
+.rack { display: flex; gap: 34px; flex-wrap: wrap; }
+.slot { width: 300px; }
+.slot > h3 { margin: 0 0 3px; font-family: var(--ui); font-weight: 700; font-size: 15.5px; }
+.slot > p  { margin: 0 0 14px; font-size: 13.5px; line-height: 1.5; color: var(--pmuted); }
+
+/* ── the phone ────────────────────────────────────────────────── */
+.phone {
+  width: 300px; height: 640px; border-radius: 40px; padding: 9px;
+  background: linear-gradient(160deg,#3a3f42,#1a1d1f 42%,#2c3134);
+  box-shadow: var(--shadow); position: relative; flex: none;
+}
+.screen {
+  position: relative; width: 100%; height: 100%; border-radius: 32px;
+  overflow: hidden; background: var(--bg); color: var(--ink);
+  display: flex; flex-direction: column;
+}
+.island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+          width: 84px; height: 23px; border-radius: 999px; background: #0b0d0e;
+          z-index: 40; }
+.statusbar { height: 40px; flex: none; display: flex; align-items: center;
+             justify-content: space-between; padding: 0 20px 0 18px;
+             font-family: var(--ui); font-size: 11.5px; font-weight: 700;
+             color: var(--ink); letter-spacing: .01em; }
+.statusbar i { font-style: normal; opacity: .82; letter-spacing: .06em; }
+.body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── app primitives, mirrored from src/components/ui ──────────── */
+.pad   { padding: 0 20px; }
+.card  { background: var(--surface); border-radius: 18px; padding: 16px;
+         border: 1px solid var(--line); }
+.card.flush { padding: 0; }
+.stack { display: flex; flex-direction: column; }
+
+.t-display { font-family: var(--ui); font-weight: 800; font-size: 27px;
+             line-height: 32px; letter-spacing: -.03em; }
+.t-counter { font-family: var(--ui); font-weight: 800; font-size: 46px;
+             line-height: 48px; letter-spacing: -.05em;
+             font-variant-numeric: tabular-nums; }
+.t-title   { font-family: var(--ui); font-weight: 800; font-size: 21px;
+             line-height: 27px; letter-spacing: -.02em; }
+.t-heading { font-family: var(--ui); font-weight: 700; font-size: 16.5px;
+             line-height: 23px; letter-spacing: -.01em; }
+.t-body    { font-family: var(--body); font-weight: 500; font-size: 14px; line-height: 21px; }
+.t-label   { font-family: var(--body); font-weight: 500; font-size: 13.5px; line-height: 19px; }
+.t-labelS  { font-family: var(--body); font-weight: 700; font-size: 13.5px; line-height: 19px; }
+.t-cap     { font-family: var(--body); font-weight: 500; font-size: 12px; line-height: 17px; }
+.t-capS    { font-family: var(--body); font-weight: 700; font-size: 12px; line-height: 17px; }
+.muted  { color: var(--ink-muted); }
+.faint  { color: var(--ink-faint); }
+.acc    { color: var(--accent-tx); }
+.dang   { color: var(--danger); }
+.nums   { font-variant-numeric: tabular-nums; }
+
+.btn { height: 50px; border-radius: 12px; background: var(--accent);
+       color: var(--on-accent); font-family: var(--ui); font-weight: 700;
+       font-size: 16px; display: flex; align-items: center;
+       justify-content: center; gap: 8px; }
+.btn.ghost { background: transparent; border: 1px solid var(--line-2);
+             color: var(--ink); font-size: 14.5px; height: 44px; }
+.btn.danger { background: transparent; border: 1px solid var(--line-2);
+              color: var(--danger); font-size: 14.5px; height: 44px; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+        padding: 5px 11px 5px 9px; border-radius: 999px; background: var(--accent-sf);
+        color: var(--accent-tx); font-family: var(--body); font-weight: 700;
+        font-size: 11.5px; }
+.dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); flex: none; }
+
+/* ── the approach gauge ──────────────────────────────────────── */
+.gauge { display: flex; gap: 16px; padding: 4px 0; }
+.gauge .scale { width: 22px; flex: none; position: relative; height: 176px; }
+.gauge .scale i { position: absolute; left: 50%; margin-left: -1.5px; width: 3px;
+                  border-radius: 3px; background: var(--line); top: 0; bottom: 0; }
+.gauge .scale i.done { background: var(--accent); bottom: auto; }
+.gauge .band { position: absolute; left: 0; right: 0; bottom: 0;
+               background: var(--accent-sf); border-top: 2px solid var(--accent);
+               border-radius: 10px; }
+.gauge .you { position: absolute; left: 0; right: 0; display: flex;
+              justify-content: center; margin-top: -7px; }
+.gauge .you b { width: 14px; height: 14px; border-radius: 999px;
+                background: var(--accent); border: 3px solid var(--bg);
+                box-sizing: content-box; display: block; }
+.gauge .labels { flex: 1; min-width: 0; position: relative; height: 176px; }
+.gauge .labels .bandlabel { position: absolute; left: 0; right: 0; margin-top: 3px; }
+.gauge .labels .foot { position: absolute; bottom: 0; left: 0; right: 0; }
+
+/* the little transit glyphs, drawn rather than iconed */
+.gly { width: 14px; height: 14px; flex: none; opacity: .85; }
+
+/* ── map band ─────────────────────────────────────────────────── */
+.map { position: relative; background: #EDEDE7; overflow: hidden; flex: none; }
+:root[data-theme="dark"] .map, 
+:root:not([data-theme="light"]) .map { background: #12181A; }
+@media (prefers-color-scheme: light) { .map { background: #EDEDE7; } }
+.map .street { position: absolute; background: #FFFFFFAA; }
+.map .blk    { position: absolute; background: #E4E4DC; border-radius: 2px; }
+.map .water  { position: absolute; background: #DCE4E4; }
+.map .ring   { position: absolute; border-radius: 999px;
+               border: 2px solid var(--accent); background: rgba(14,163,111,.12); }
+.map .pin    { position: absolute; width: 14px; height: 14px; border-radius: 999px;
+               background: var(--accent); border: 3px solid #fff;
+               box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.map .leg    { position: absolute; height: 0; border-top: 3px dashed var(--accent);
+               opacity: .9; transform-origin: 0 0; }
+
+/* ── rows (settings / detail) ─────────────────────────────────── */
+.row { display: flex; align-items: center; gap: 14px; padding: 13px 16px;
+       border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .rt { flex: 1; min-width: 0; }
+.radio { width: 19px; height: 19px; border-radius: 999px; flex: none;
+         border: 2px solid var(--line-2); display: flex;
+         align-items: center; justify-content: center; }
+.radio.on { border-color: var(--accent); background: var(--accent); }
+.radio.on i { width: 7px; height: 7px; border-radius: 999px;
+              background: var(--on-accent); display: block; }
+.sw { width: 40px; height: 24px; border-radius: 999px; background: var(--line-2);
+      flex: none; padding: 2px; display: flex; }
+.sw.on { background: var(--accent); justify-content: flex-start; }
+.sw i { width: 20px; height: 20px; border-radius: 999px; background: #fff;
+        display: block; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+.sw:not(.on) { justify-content: flex-end; }
+
+.seg { display: flex; gap: 6px; padding: 0 16px 14px; }
+.seg span { flex: 1; text-align: center; padding: 9px 0; border-radius: 10px;
+            background: var(--sunk); color: var(--ink-muted);
+            font-family: var(--body); font-weight: 700; font-size: 12px;
+            font-variant-numeric: tabular-nums; }
+.seg span.on { background: var(--accent); color: var(--on-accent); }
+
+.grouplabel { font-family: var(--body); font-weight: 700; font-size: 13.5px;
+              padding: 14px 16px 8px; }
+.sectitle { font-family: var(--body); font-weight: 700; font-size: 12px;
+            color: var(--ink-muted); padding: 0 4px 8px; }
+
+/* ── the alarm screen ─────────────────────────────────────────── */
+.alarm { background: #0EA36F; color: #06251A; height: 100%;
+         display: flex; flex-direction: column; padding: 26px 22px 24px; }
+.beacon { width: 96px; height: 96px; margin: 0 auto; position: relative;
+          display: flex; align-items: center; justify-content: center; }
+.beacon .halo { position: absolute; inset: 0; border-radius: 999px;
+                border: 2px solid #06251A; opacity: .3; }
+.beacon .core { width: 34px; height: 34px; border-radius: 999px; background: #06251A; }
+.alarm .dim { color: rgba(6,37,26,.66); }
+.alarm .again { border: 1px solid rgba(6,37,26,.22); border-radius: 999px;
+                padding: 10px 0; text-align: center;
+                font-family: var(--body); font-weight: 700; font-size: 12.5px; }
+.alarm .dismiss { background: #06251A; color: #0EA36F; border-radius: 14px;
+                  height: 58px; display: flex; align-items: center;
+                  justify-content: center; font-family: var(--ui);
+                  font-weight: 800; font-size: 19px; }
+
+/* ── debug screen ─────────────────────────────────────────────── */
+.dbg { font-family: var(--body); }
+.dbg .kv { display: flex; gap: 12px; padding: 9px 14px;
+           border-top: 1px solid var(--line); font-size: 11.5px; }
+.dbg .kv:first-child { border-top: 0; }
+.dbg .kv b { font-weight: 500; color: var(--ink-muted); flex: 1; }
+.dbg .kv span { font-weight: 700; font-variant-numeric: tabular-nums; text-align: left; }
+.dbg .jr { display: flex; gap: 10px; padding: 8px 14px;
+           border-top: 1px solid var(--line); font-size: 11px; }
+.dbg .jr time { color: var(--ink-muted); font-variant-numeric: tabular-nums;
+                width: 46px; flex: none; }
+.dbg .jr div { flex: 1; min-width: 0; }
+.dbg .jr em { font-style: normal; font-weight: 700; color: var(--accent-tx);
+              display: block; }
+.dbg .jr small { color: var(--ink-muted); font-size: 11px; }
+
+/* ── notification (lock screen) ───────────────────────────────── */
+.lock { background: linear-gradient(180deg,#1d2426,#0d1112); height: 100%;
+        padding: 44px 14px 0; display: flex; flex-direction: column; gap: 10px; }
+.lock .clock { text-align: center; color: #EAF0EE; font-family: var(--ui);
+               font-weight: 500; font-size: 13px; margin-bottom: 2px; }
+.lock .big { text-align: center; color: #fff; font-family: var(--ui);
+             font-weight: 500; font-size: 62px; line-height: 1; letter-spacing: -.03em;
+             font-variant-numeric: tabular-nums; margin-bottom: 20px; }
+.la { background: rgba(255,255,255,.13); backdrop-filter: blur(8px);
+      border-radius: 18px; padding: 13px 14px; display: flex;
+      align-items: center; gap: 12px; color: #fff; }
+.la .mk { width: 38px; height: 38px; border-radius: 999px; background: #22C88A;
+          flex: none; display: flex; align-items: center; justify-content: center; }
+.la .txt { flex: 1; min-width: 0; }
+.la .txt b { display: block; font-family: var(--ui); font-weight: 700; font-size: 13.5px; }
+.la .txt small { color: rgba(255,255,255,.7); font-size: 11.5px; }
+.la .d { font-family: var(--ui); font-weight: 800; font-size: 20px;
+         font-variant-numeric: tabular-nums; }
+.notif { background: rgba(255,255,255,.13); backdrop-filter: blur(8px);
+         border-radius: 16px; padding: 11px 13px; color: #fff; }
+.notif b { display: block; font-family: var(--ui); font-weight: 700; font-size: 12.5px; }
+.notif small { color: rgba(255,255,255,.66); font-size: 11px; }
+
+.caption { margin-top: 12px; font-size: 12.5px; color: var(--pmuted); line-height: 1.5; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow">הגענו? · המסכים שנבנו</span>
+    <h1>ככה זה נראה</h1>
+    <p class="lede">
+      אי אפשר להריץ כאן אפליקציית מובייל — אין סימולטור בסביבה הזאת. אז זה לא
+      צילום מסך אלא <strong>רינדור מהקוד</strong>: כל צבע, גודל, רדיוס ומחרוזת
+      בעמוד הזה מועתקים מ‑<code>src/theme/</code> ומ‑<code>src/i18n/</code>.
+      מה שרואים כאן הוא מה שהקוד מייצר.
+    </p>
+
+    <div class="brandrow">
+      <img class="appicon" src="data:image/png;base64,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" alt="אייקון האפליקציה">
+      <p>
+        האייקון: קו תחבורה עם שלוש תחנות, אחת מהן באקסנט. מיוצר ב‑
+        <code>scripts/make-icons.py</code> מפונקציה אחת, בכל הגדלים והפורמטים.
+      </p>
+    </div>
+
+    <div class="note">
+      <b>העמוד הזה מכבד את מצב התצוגה של המכשיר שלך</b>
+      <span>אם הטלפון או המחשב שלך במצב כהה — המסכים כאן יופיעו בסכמה הכהה של
+      האפליקציה, בדיוק כמו שהיא תיראה אצלך.</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="shelf">
+    <h2>המסלול הראשי</h2>
+    <p>
+      בוחרים יעד, בוחרים טווח, מפעילים, נועלים. שני המסכים האחרונים הם אותו
+      מסך בשני מרחקים, וזאת הטענה של כל העיצוב: <strong>המסך מתעורר לפני
+      שאתה מתעורר</strong>. רוב הנסיעה הוא כמעט ריק, כי רחוק מהיעד באמת אין מה
+      להחליט — ומסך שממלא את הקטע הזה בדברים לקרוא הוא מסך שנסגר לפני החלק
+      שחשוב.
+    </p>
+
+    <div class="rack">
+
+      <!-- ── 1. בית, ריק ─────────────────────────────────── -->
+      <div class="slot">
+        <h3>בית — עוד לא נבחר יעד</h3>
+        <p>המפה במלוא המסך, חיפוש צף מעליה, והיעדים השמורים בתחתית.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>9:41</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body" style="position:relative">
+            <div class="map" style="position:absolute;inset:0">
+              <div class="blk" style="left:6%;top:12%;width:26%;height:16%"></div>
+              <div class="blk" style="left:38%;top:8%;width:30%;height:22%"></div>
+              <div class="blk" style="left:8%;top:36%;width:34%;height:20%"></div>
+              <div class="blk" style="left:52%;top:40%;width:28%;height:26%"></div>
+              <div class="blk" style="left:14%;top:64%;width:24%;height:18%"></div>
+              <div class="water" style="left:74%;top:0;width:26%;height:38%"></div>
+              <div class="street" style="left:0;top:31%;width:100%;height:7px"></div>
+              <div class="street" style="left:0;top:59%;width:100%;height:5px"></div>
+              <div class="street" style="left:45%;top:0;width:6px;height:100%"></div>
+              <div class="pin" style="left:47%;top:52%;background:#3B82F6"></div>
+            </div>
+
+            <div style="position:relative;z-index:2;padding:12px 20px;display:flex;gap:10px">
+              <div style="flex:1;height:46px;border-radius:12px;background:var(--surface);
+                          border:1px solid var(--line);display:flex;align-items:center;
+                          gap:9px;padding:0 14px;box-shadow:0 2px 10px -4px rgba(0,0,0,.18)">
+                <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" style="color:var(--ink-muted)">
+                  <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                <span class="t-label muted">לאן נוסעים?</span>
+              </div>
+              <div style="width:46px;height:46px;border-radius:12px;background:var(--surface);
+                          border:1px solid var(--line);display:flex;align-items:center;
+                          justify-content:center;box-shadow:0 2px 10px -4px rgba(0,0,0,.18)">
+                <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" style="color:var(--ink-muted);width:19px;height:19px">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 008 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6h.09A1.65 1.65 0 0010 3.09V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9v.09a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+              </div>
+            </div>
+
+            <div style="flex:1"></div>
+
+            <div style="position:relative;z-index:2;padding:0 20px 16px;
+                        display:flex;gap:10px;overflow:hidden">
+              <div class="card" style="width:132px;padding:12px 13px;display:flex;
+                          align-items:center;gap:9px;flex:none;
+                          box-shadow:0 6px 18px -10px rgba(0,0,0,.3)">
+                <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" style="color:var(--accent-tx)">
+                  <path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+                <div style="min-width:0">
+                  <div class="t-labelS grow">הבית</div>
+                  <div class="t-cap muted nums">500 מ׳</div>
+                </div>
+              </div>
+              <div class="card" style="width:132px;padding:12px 13px;display:flex;
+                          align-items:center;gap:9px;flex:none;
+                          box-shadow:0 6px 18px -10px rgba(0,0,0,.3)">
+                <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" style="color:var(--accent-tx)">
+                  <rect x="3" y="7" width="18" height="13" rx="2"/>
+                  <path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/></svg>
+                <div style="min-width:0">
+                  <div class="t-labelS grow">העבודה</div>
+                  <div class="t-cap muted nums">1 ק״מ</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">התפריט מופיע רק כאן. ברגע שיש יעד למסך יש עבודה אחת,
+          וכפתור הגדרות ליד כפתור ההפעלה הוא הזמנה לתעות באמצע.</p>
+      </div>
+
+      <!-- ── 2. בית, נבחר יעד ────────────────────────────── -->
+      <div class="slot">
+        <h3>בית — נבחר יעד, עם החלפה</h3>
+        <p>המפה מתכווצת לרצועה. הקו ממוין לפי מרחק שנותר ליעד, ובו נקודת החלפה.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>9:41</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body">
+            <div class="map" style="height:120px">
+              <div class="blk" style="left:8%;top:14%;width:24%;height:34%"></div>
+              <div class="blk" style="left:56%;top:8%;width:26%;height:30%"></div>
+              <div class="blk" style="left:20%;top:62%;width:30%;height:30%"></div>
+              <div class="street" style="left:0;top:52%;width:100%;height:6px"></div>
+              <div class="leg" style="left:22%;top:64%;width:120px;transform:rotate(-24deg)"></div>
+              <div class="ring" style="left:60%;top:18%;width:56px;height:56px"></div>
+              <div class="pin" style="left:69.5%;top:31%"></div>
+              <div class="pin" style="left:20%;top:62%;background:#3B82F6;width:11px;height:11px"></div>
+            </div>
+
+            <div style="padding:14px 20px 0;display:flex;align-items:center;gap:10px">
+              <div class="t-heading grow">תחנה מרכזית חיפה</div>
+              <span class="t-cap acc">שינוי יעד</span>
+            </div>
+
+            <div class="pad" style="padding-top:12px;overflow:hidden;flex:1">
+              <div class="card">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span class="t-label muted grow">מרחק ליעד</span>
+                  <span class="t-labelS nums">54 ק״מ</span>
+                </div>
+                <div class="t-body muted" style="margin-top:5px">
+                  נעיר אתכם 500 מ׳ לפני היעד.</div>
+                <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:16px">
+                  <div class="t-cap muted">אם מחליפים כלי באמצע, אפשר להוסיף את
+                    נקודת ההחלפה. נעיר גם שם.</div>
+                  <div style="margin-top:10px;height:42px;border-radius:12px;
+                              background:var(--sunk);display:flex;align-items:center;
+                              gap:9px;padding:0 13px">
+                    <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2.2" style="color:var(--ink-muted)">
+                      <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                    <span class="t-label muted">הוספת עצירה בדרך</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top:12px;padding:14px 16px">
+                <div class="t-labelS" style="margin-bottom:10px">מתי להעיר?</div>
+                <div class="seg" style="padding:0">
+                  <span>300 מ׳</span><span class="on">500 מ׳</span><span>1 ק״מ</span><span>2 ק״מ</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding:12px 20px 18px;border-top:1px solid var(--line);
+                        background:var(--bg)">
+              <div class="btn">תעירו אותי</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">שתי עובדות ושדה אחד. כאן הייתה רשימת תחנות שנשלפה
+          מ‑OpenStreetMap לפי הקו הישר ליעד — האפליקציה לא יודעת באיזה קו אתם,
+          אז היא לא יכלה לדעת שהכלי עוצר באף אחת מהן. היא נמחקה.</p>
+      </div>
+
+      <!-- ── 3. פעיל, רחוק ───────────────────────────────── -->
+      <div class="slot">
+        <h3>פעיל — רחוק</h3>
+        <p>רוב הנסיעה נראית ככה. כמעט ריק, בכוונה.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>9:52</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body">
+            <div class="pad" style="padding-top:16px;flex:1;overflow:hidden">
+              <span class="chip"><span class="dot"></span>ההתראה פעילה</span>
+
+              <div style="display:flex;align-items:flex-end;gap:12px;margin:18px 0 12px">
+                <span class="t-counter acc">54</span>
+                <span class="t-label muted" style="padding-bottom:6px">ק״מ<br>ליעד</span>
+              </div>
+              <div class="t-body muted">
+                אפשר לישון · אפשר לנעול את הטלפון. ההתראה תפעל גם אם האפליקציה סגורה.</div>
+
+              <div class="card flush" style="margin-top:18px">
+                <div class="row"><span class="t-label muted rt">היעד</span>
+                  <span class="t-labelS">תחנה מרכזית חיפה</span></div>
+                <div class="row"><span class="t-label muted rt">מרחק ליעד</span>
+                  <span class="t-labelS nums">54 ק״מ</span></div>
+                <div class="row"><span class="t-label muted rt">טווח ההתראה</span>
+                  <span class="t-labelS acc nums">500 מ׳</span></div>
+              </div>
+            </div>
+
+            <div style="padding:12px 20px 18px;border-top:1px solid var(--line)">
+              <div class="btn danger">ביטול ההתראה</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">אין מד, כי בטווח הזה הוא לא יכול להיות נכון: טווח של
+          500 מ׳ מתוך 54 ק״מ הוא 0.9% מהגובה. מד שהסימן החשוב בו בלתי נראה גרוע
+          ממד שלא קיים.</p>
+      </div>
+
+      <!-- ── 4. פעיל, מתקרבים ────────────────────────────── -->
+      <div class="slot">
+        <h3>פעיל — מתקרבים</h3>
+        <p>המד מופיע ברגע שהוא יכול להיות מצויר בקנה מידה אמיתי.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>10:31</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body">
+            <div class="pad" style="padding-top:16px;flex:1;overflow:hidden">
+              <span class="chip"><span class="dot"></span>מתקרבים</span>
+
+              <div style="display:flex;align-items:flex-end;gap:12px;margin:18px 0 12px">
+                <span class="t-counter acc">2.1</span>
+                <span class="t-label muted" style="padding-bottom:6px">ק״מ<br>ליעד</span>
+              </div>
+              <div class="t-body muted">
+                אפשר לישון · אפשר לנעול את הטלפון.</div>
+
+              <div class="card" style="margin-top:16px">
+                <div class="gauge">
+                  <div class="scale">
+                    <i></i>
+                    <i class="done" style="height:58%"></i>
+                    <div class="band" style="top:90%"></div>
+                    <div class="you" style="top:58%"><b></b></div>
+                  </div>
+                  <div class="labels">
+                    <div class="t-cap muted nums">התצוגה: 5 ק״מ האחרונים</div>
+                    <div class="bandlabel t-capS acc nums" style="top:90%">
+                      כאן נעיר אתכם · 500 מ׳</div>
+                    <div class="foot t-capS">תחנה מרכזית חיפה</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card flush" style="margin-top:12px">
+                <div class="row"><span class="t-label muted rt">מרחק ליעד</span>
+                  <span class="t-labelS nums">2.1 ק״מ</span></div>
+                <div class="row"><span class="t-label muted rt">טווח ההתראה</span>
+                  <span class="t-labelS acc nums">500 מ׳</span></div>
+              </div>
+            </div>
+
+            <div style="padding:12px 20px 18px;border-top:1px solid var(--line)">
+              <div class="btn danger">ביטול ההתראה</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">הפס הירוק הוא הטווח שביקשתם, בפרופורציה האמיתית שלו
+          מתוך החלון שכתוב מעליו. הנקודה היא הקיבוע האחרון. שום דבר כאן לא נגזר
+          ממסלול, מלוח זמנים או מסוג הכלי — כי האפליקציה לא יודעת אף אחד מהם.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="shelf">
+    <h2>הרגע שהכול קיים בשבילו</h2>
+    <p>
+      המסך היחיד באפליקציה שהאקסנט לוקח בו את כל השטח, וזה עובד רק כי בכל שאר
+      המסכים הוא מנה קטנה. הטקסט על הירוק הוא דיו כהה ולא לבן — לבן על הירוק
+      הזה נותן 3.24:1 ונופל ב‑AA.
+    </p>
+
+    <div class="rack">
+
+      <!-- ── 4. הגעה ─────────────────────────────────────── -->
+      <div class="slot">
+        <h3>הגעה</h3>
+        <p>נוסח אחד מתוך שלושה — הגעה, פספוס, או אובדן קליטה.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="alarm">
+            <div style="height:26px"></div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;
+                        align-items:center;text-align:center;gap:26px">
+              <div class="beacon">
+                <div class="halo"></div>
+                <div class="halo" style="inset:14px;opacity:.5"></div>
+                <div class="core"></div>
+              </div>
+              <div>
+                <div class="t-display" style="font-size:32px;line-height:38px">הגעתם.</div>
+                <div class="t-body dim" style="margin-top:8px">
+                  תחנה מרכזית חיפה ממש כאן.</div>
+              </div>
+            </div>
+            <div class="again" style="margin-bottom:12px">תעירו שוב ביעד עצמו</div>
+            <div class="dismiss">אני ער</div>
+          </div>
+        </div></div>
+        <p class="caption">״תעירו שוב״ מוצע רק בהגעה. אחרי פספוס אין למה להעיר,
+          ואחרי אובדן קליטה אנחנו לא יודעים מספיק כדי להבטיח ניסיון שני.</p>
+      </div>
+
+      <!-- ── 5. מסך נעילה ───────────────────────────────── -->
+      <div class="slot">
+        <h3>מסך הנעילה</h3>
+        <p>מה שהמשתמש באמת רואה ברוב הנסיעה — בלי לפתוח כלום.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="lock">
+            <div class="clock">יום שלישי, 8 בספטמבר</div>
+            <div class="big">9:52</div>
+
+            <div class="la">
+              <div class="mk">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#06251A" stroke-width="2.4"
+                     style="width:17px;height:17px">
+                  <rect x="4" y="3" width="16" height="14" rx="2"/>
+                  <path d="M4 11h16M7 21l2-3M17 21l-2-3"/></svg>
+              </div>
+              <div class="txt">
+                <b>תחנה מרכזית חיפה</b>
+                <small>נעיר אתכם 500 מ׳ לפני היעד.</small>
+              </div>
+              <span class="d">4.2 ק״מ</span>
+            </div>
+
+            <div class="notif">
+              <b>4.2 ק״מ לתחנה מרכזית חיפה</b>
+              <small>אפשר לנעול את הטלפון.</small>
+            </div>
+
+            <div style="flex:1"></div>
+          </div>
+        </div></div>
+        <p class="caption">למעלה כרטיס ה‑Live Activity ב‑iOS, מתחתיו ההתראה
+          המתמשכת שרצה בשתי הפלטפורמות. שניהם מפסיקים להראות מרחק כשהקליטה
+          נעלמת — מספר ישן שמוצג כחי הוא שקר.</p>
+      </div>
+
+      <!-- ── 6. אובדן קליטה ─────────────────────────────── -->
+      <div class="slot">
+        <h3>פעיל — בלי קליטה</h3>
+        <p>הצורה הכי חשובה במוצר: מה קורה כשאנחנו לא יודעים.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>9:56</span><i>▮▯▯ ᯤ ▰</i></div>
+          <div class="body">
+            <div class="pad" style="padding-top:16px;flex:1;overflow:hidden">
+              <span class="chip" style="background:var(--sunk);color:var(--ink-muted)">אין קליטה</span>
+              <div class="t-display" style="margin-top:12px">אנחנו שומרים עליכם.</div>
+              <div class="t-body muted" style="margin-top:6px">
+                אפשר לנעול את הטלפון. ההתראה תפעל גם אם האפליקציה סגורה.</div>
+
+              <div class="t-body muted" style="margin:20px 0 18px">
+                המרחק האחרון שידענו: 4.2 ק״מ. נמשיך לנסות.</div>
+
+              <div class="card flush">
+                <div class="row"><span class="t-label muted rt">היעד</span>
+                  <span class="t-labelS">תחנה מרכזית חיפה</span></div>
+                <div class="row"><span class="t-label muted rt">מרחק ליעד</span>
+                  <span class="t-labelS muted nums">4.2 ק״מ</span></div>
+                <div class="row"><span class="t-label muted rt">טווח ההתראה</span>
+                  <span class="t-labelS acc nums">500 מ׳</span></div>
+              </div>
+
+              <div class="card" style="margin-top:12px;border-color:var(--danger)">
+                <div class="t-labelS dang">ההתראה הופסקה על ידי המערכת</div>
+                <div class="t-cap muted" style="margin-top:5px">
+                  אנדרואיד סגר את האפליקציה ברקע באמצע הנסיעה הקודמת. אפשר למנוע
+                  את זה בהגדרות הסוללה.</div>
+                <div style="display:flex;gap:18px;margin-top:11px">
+                  <span class="t-capS acc">איך מתקנים</span>
+                  <span class="t-capS muted">סגירה</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:12px 20px 18px;border-top:1px solid var(--line)">
+              <div class="btn danger">ביטול ההתראה</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">המספר הגדול נעלם. המרחק האחרון עדיין מוצג — הוא שימושי
+          — אבל מעומעם ועם משפט שאומר שהוא לא חי. וההצעה להגדרות הסוללה מגיעה רק
+          <em>אחרי</em> כשל אמיתי, אף פעם לא בהתקנה.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section class="shelf">
+    <h2>סביב</h2>
+    <p>הרשאות, הגדרות, ומסך הדיבאג שקיים רק ב‑builds פיתוח.</p>
+
+    <div class="rack">
+
+      <!-- ── 7. הרשאות ──────────────────────────────────── -->
+      <div class="slot">
+        <h3>הרשאות</h3>
+        <p>מסבירים למה — <em>לפני</em> שהדיאלוג של המערכת קופץ.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>9:41</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body">
+            <div class="pad" style="padding-top:22px;flex:1">
+              <div class="t-cap muted nums">שלב 2 מתוך 3</div>
+              <div class="t-title" style="margin-top:10px">כדי להעיר אתכם, צריך שני דברים</div>
+              <div class="t-body muted" style="margin-top:8px">
+                בלי אף אחד מהם אי אפשר לדעת מתי הגעתם.</div>
+
+              <div class="card" style="margin-top:22px;display:flex;gap:13px;
+                          align-items:flex-start;border-color:var(--line-2)">
+                <div style="width:34px;height:34px;border-radius:999px;background:var(--accent-sf);
+                            display:flex;align-items:center;justify-content:center;flex:none">
+                  <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" style="color:var(--accent-tx);width:17px;height:17px">
+                    <path d="M12 21s7-6.4 7-11a7 7 0 10-14 0c0 4.6 7 11 7 11z"/>
+                    <circle cx="12" cy="10" r="2.5"/></svg>
+                </div>
+                <div style="min-width:0">
+                  <div class="t-labelS">מיקום גם ברקע</div>
+                  <div class="t-cap muted" style="margin-top:4px">
+                    זה מה שמאפשר להעיר אתכם כשהמסך כבוי והטלפון בכיס. בלי זה נעיר
+                    רק אם האפליקציה פתוחה.</div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top:10px;display:flex;gap:13px;
+                          align-items:center;opacity:.62">
+                <div style="width:34px;height:34px;border-radius:999px;background:var(--accent-sf);
+                            display:flex;align-items:center;justify-content:center;flex:none">
+                  <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="var(--accent-tx)"
+                       stroke-width="2.6" style="width:16px;height:16px"><path d="M4 12.5l5 5L20 6.5"/></svg>
+                </div>
+                <div class="t-labelS grow">מיקום</div>
+                <div class="t-cap acc">אושר</div>
+              </div>
+
+              <div class="t-cap acc" style="margin-top:16px;text-align:center">למה זה נחוץ</div>
+            </div>
+
+            <div style="padding:12px 20px 18px;display:flex;flex-direction:column;gap:9px">
+              <div class="btn">מרשים גם ברקע</div>
+              <div style="text-align:center" class="t-labelS muted">לא עכשיו</div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">״לא עכשיו״ קיים ועובד. האפליקציה עוברת למצב חזית בלבד
+          ואומרת את זה — ולא מתחזה לפעילה ברקע.</p>
+      </div>
+
+      <!-- ── 8. הגדרות ──────────────────────────────────── -->
+      <div class="slot">
+        <h3>הגדרות</h3>
+        <p>שורות מקובצות, לא ערימת כרטיסים. ושום דבר כאן אינו סליידר.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>9:41</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body">
+            <div style="padding:8px 20px 14px;display:flex;align-items:center;gap:14px">
+              <div class="t-title grow">הגדרות</div>
+              <div style="width:32px;height:32px;border-radius:999px;background:var(--sunk);
+                          display:flex;align-items:center;justify-content:center">
+                <svg class="gly" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.2" style="color:var(--ink-muted)"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </div>
+            </div>
+
+            <div class="pad" style="flex:1;overflow:hidden">
+              <div class="sectitle">ההתראה</div>
+              <div class="card flush">
+                <div class="grouplabel">צליל</div>
+                <div class="row"><span class="radio"></span>
+                  <div class="rt"><div class="t-label">עדין</div>
+                    <div class="t-cap muted">מספיק כדי להתעורר, לא כדי להיבהל.</div></div>
+                  <span style="width:26px;height:26px;border-radius:999px;background:var(--sunk);
+                        display:flex;align-items:center;justify-content:center">
+                    <svg viewBox="0 0 24 24" fill="var(--ink-muted)" style="width:10px;height:10px"><path d="M6 4l14 8-14 8z"/></svg></span></div>
+                <div class="row"><span class="radio on"><i></i></span>
+                  <div class="rt"><div class="t-label">רגיל</div>
+                    <div class="t-cap muted">ברירת המחדל.</div></div>
+                  <span style="width:26px;height:26px;border-radius:999px;background:var(--sunk);
+                        display:flex;align-items:center;justify-content:center">
+                    <svg viewBox="0 0 24 24" fill="var(--ink-muted)" style="width:10px;height:10px"><path d="M6 4l14 8-14 8z"/></svg></span></div>
+                <div class="row"><span class="radio"></span>
+                  <div class="rt"><div class="t-label">חד</div>
+                    <div class="t-cap muted">לישנים עמוקים.</div></div>
+                  <span style="width:26px;height:26px;border-radius:999px;background:var(--sunk);
+                        display:flex;align-items:center;justify-content:center">
+                    <svg viewBox="0 0 24 24" fill="var(--ink-muted)" style="width:10px;height:10px"><path d="M6 4l14 8-14 8z"/></svg></span></div>
+              </div>
+
+              <div class="card flush" style="margin-top:10px">
+                <div class="row"><div class="rt"><div class="t-label">רטט</div>
+                  <div class="t-cap muted">יחד עם הצליל.</div></div>
+                  <span class="sw on"><i></i></span></div>
+              </div>
+
+              <div class="card flush" style="margin-top:10px">
+                <div class="grouplabel">עוצמה</div>
+                <div class="seg"><span>40%</span><span>60%</span><span class="on">80%</span><span>100%</span></div>
+              </div>
+
+              <div class="sectitle" style="padding-top:16px">האפליקציה</div>
+              <div class="card flush">
+                <div class="grouplabel">מראה</div>
+                <div class="seg"><span class="on">מערכת</span><span>בהיר</span><span>כהה</span></div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">אין סליידרים. האפליקציה מופעלת ביד אחת על רכב נוסע,
+          וסליידר מבקש דיוק שהמצב לא נותן — גם במסך ההגדרות.</p>
+      </div>
+
+      <!-- ── 9. דיבאג ───────────────────────────────────── -->
+      <div class="slot">
+        <h3>דיבאג — builds פיתוח בלבד</h3>
+        <p>נמחק לגמרי מ‑bundle ריליס. המסך היחיד בלי תרגומים, בכוונה.</p>
+        <div class="phone"><div class="screen"><div class="island"></div>
+          <div class="statusbar"><span>9:52</span><i>▮▮▮ ᯤ ▰</i></div>
+          <div class="body dbg">
+            <div style="padding:8px 20px 12px" class="t-title">Debug</div>
+            <div class="pad" style="flex:1;overflow:hidden">
+              <div class="sectitle">MONITORS</div>
+              <div class="card flush">
+                <div class="kv"><b>OS geofence</b><span>registered</span></div>
+                <div class="kv"><b>Background stream</b><span>running</span></div>
+                <div class="kv"><b>Mode</b><span>background</span></div>
+                <div class="kv"><b>Session status</b><span>armed</span></div>
+              </div>
+
+              <div class="sectitle" style="padding-top:14px">LAST FIX</div>
+              <div class="card flush">
+                <div class="kv"><b>Age</b><span>38s</span></div>
+                <div class="kv"><b>Distance</b><span>4212 m</span></div>
+                <div class="kv"><b>Closest so far</b><span>4212 m</span></div>
+                <div class="kv"><b>Polling tier</b><span>mid</span></div>
+                <div class="kv"><b>Stale (UI)</b><span>no</span></div>
+              </div>
+
+              <div class="sectitle" style="padding-top:14px">JOURNAL (7)</div>
+              <div class="card flush">
+                <div class="jr"><time>09:52:14</time><div>
+                  <em>fix</em><small>4212m ±12m · none · 12.1m/s</small></div></div>
+                <div class="jr"><time>09:50:31</time><div>
+                  <em>fix</em><small>5140m ±18m · none · 13.0m/s</small></div></div>
+                <div class="jr"><time>09:48:02</time><div>
+                  <em>repair</em><small>monitors were down (geofence=DOWN, stream=up)</small></div></div>
+                <div class="jr"><time>09:41:07</time><div>
+                  <em>armed</em><small>תחנה מרכזית חיפה r=500m tier=far</small></div></div>
+              </div>
+            </div>
+          </div>
+        </div></div>
+        <p class="caption">כפתור נפרד לכל שכבת זיהוי, ויומן שנכתב לדיסק מכל
+          JS context — כולל זה שמערכת ההפעלה מרימה כשהתהליך שלנו כבר מת.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="note" style="margin-top:52px">
+    <b>מה שהעמוד הזה לא יכול להראות</b>
+    <span>
+      את הצליל, את הרטט, ואת הדבר היחיד שבאמת חשוב — שההתראה מצלצלת כשהמסך כבוי
+      והטלפון בכיס. את זה בודקים רק במכשיר אמיתי בנסיעה אמיתית, לפי
+      <code>docs/DEVICE-TESTS.html</code>.
+    </span>
+  </div>
+
+</div>

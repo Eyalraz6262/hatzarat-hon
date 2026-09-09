@@ -1,0 +1,984 @@
+<title>שלושה כיוונים להגענו?</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;700;800&family=Assistant:wght@300;400;500;600;700&family=Frank+Ruhl+Libre:wght@300;400;500&display=swap">
+
+<style>
+/* ══════════════════════════════════════════════════════════════
+   THE STAGE
+   Deliberately achromatic. Three directions with three different
+   accents are being compared here; any page accent would put a
+   thumb on the scale. The neutral is warm - plaster, not concrete -
+   so a gold, a green and a mint can all sit on it without one of
+   them looking borrowed.
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  --bg:        #E9E7E4;
+  --bg-sunk:   #DFDCD8;
+  --card:      #F4F3F1;
+  --ink:       #1A1917;
+  --ink-2:     #4A463F;
+  --muted:     #6E6A63;
+  --rule:      #D3CFC9;
+  --rule-soft: #E0DDD8;
+  --stage:     #DAD6D1;
+  --shadow:    0 18px 40px -24px rgba(40,34,26,.45), 0 2px 6px -2px rgba(40,34,26,.18);
+
+  --ui:   'Rubik', 'Assistant', system-ui, sans-serif;
+  --body: 'Assistant', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #131211;
+    --bg-sunk:   #0D0C0B;
+    --card:      #1C1A18;
+    --ink:       #EDEBE8;
+    --ink-2:     #C4BEB5;
+    --muted:     #948D83;
+    --rule:      #2E2B27;
+    --rule-soft: #262320;
+    --stage:     #201E1B;
+    --shadow:    0 18px 44px -24px rgba(0,0,0,.8), 0 2px 6px -2px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #131211;
+  --bg-sunk:   #0D0C0B;
+  --card:      #1C1A18;
+  --ink:       #EDEBE8;
+  --ink-2:     #C4BEB5;
+  --muted:     #948D83;
+  --rule:      #2E2B27;
+  --rule-soft: #262320;
+  --stage:     #201E1B;
+  --shadow:    0 18px 44px -24px rgba(0,0,0,.8), 0 2px 6px -2px rgba(0,0,0,.5);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 40px 24px 72px; }
+
+/* ── masthead ─────────────────────────────────────────────── */
+.mast { display: flex; flex-direction: column; gap: 18px; padding-bottom: 28px; }
+.eyebrow {
+  font-family: var(--ui); font-size: 12px; font-weight: 500;
+  letter-spacing: .16em; color: var(--muted);
+}
+h1 {
+  margin: 0; font-family: var(--ui); font-weight: 600;
+  font-size: clamp(30px, 4.4vw, 46px); line-height: 1.1;
+  letter-spacing: -.02em; text-wrap: balance;
+}
+.lede { margin: 0; max-width: 62ch; font-size: 18px; color: var(--ink-2); }
+
+/* ── the shared read ──────────────────────────────────────── */
+.read {
+  margin-top: 12px;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  border-radius: 4px;
+  padding: 20px 22px;
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.read__item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.read__k {
+  font-family: var(--ui); font-size: 11px; font-weight: 500;
+  letter-spacing: .14em; color: var(--muted);
+}
+.read__v { font-size: 15px; line-height: 1.45; color: var(--ink); }
+.read__note {
+  grid-column: 1 / -1; padding-top: 12px; border-top: 1px solid var(--rule-soft);
+  font-size: 15px; color: var(--ink-2); max-width: 78ch;
+}
+
+/* ── the three ────────────────────────────────────────────── */
+.grid {
+  margin-top: 44px;
+  display: grid; gap: 28px;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start;
+}
+@media (max-width: 1080px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 720px)  { .grid { grid-template-columns: 1fr; } }
+
+.dir { display: flex; flex-direction: column; gap: 0; }
+
+.dir__head { display: flex; align-items: baseline; gap: 10px; padding-bottom: 14px; }
+.dir__n {
+  font-family: var(--ui); font-size: 12px; font-weight: 600;
+  letter-spacing: .1em; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.dir__name { font-family: var(--ui); font-size: 24px; font-weight: 600; letter-spacing: -.01em; }
+.dir__en {
+  margin-inline-start: auto; font-family: var(--ui); font-size: 11px;
+  font-weight: 400; letter-spacing: .16em; color: var(--muted); direction: ltr;
+}
+
+/* the stage each phone stands on */
+.deck {
+  background: var(--stage);
+  border-radius: 6px;
+  padding: 26px 0 30px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+
+.hint {
+  font-family: var(--ui); font-size: 12px; letter-spacing: .04em;
+  color: var(--muted);
+}
+
+/* ── the notes under each phone ───────────────────────────── */
+.notes { display: flex; flex-direction: column; gap: 0; padding-top: 6px; }
+.note { padding: 14px 2px; border-bottom: 1px solid var(--rule-soft); }
+.note:last-child { border-bottom: 0; }
+.note__k {
+  font-family: var(--ui); font-size: 11px; font-weight: 500;
+  letter-spacing: .14em; color: var(--muted); display: block; margin-bottom: 4px;
+}
+.note__v { font-size: 15px; line-height: 1.55; color: var(--ink); }
+.note--cost .note__v { color: var(--ink-2); }
+
+.dials { display: flex; gap: 18px; font-family: var(--ui); }
+.dial { display: flex; flex-direction: column; gap: 1px; }
+.dial b { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.dial span { font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+
+.swatches { display: flex; gap: 6px; align-items: center; }
+.sw { width: 26px; height: 26px; border-radius: 3px; border: 1px solid rgba(0,0,0,.12); }
+.sw--accent { width: 42px; }
+
+/* ── closing ──────────────────────────────────────────────── */
+.close {
+  margin-top: 52px; padding-top: 26px; border-top: 1px solid var(--rule);
+  display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.close h2 {
+  grid-column: 1 / -1; margin: 0;
+  font-family: var(--ui); font-size: 20px; font-weight: 600; letter-spacing: -.01em;
+}
+.close p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.close strong { color: var(--ink); font-weight: 600; }
+
+/* ══════════════════════════════════════════════════════════════
+   THE PHONE
+   One shell, three worlds. Every colour inside comes from a var
+   the direction sets on .phone - nothing below hard-codes a hue.
+   ══════════════════════════════════════════════════════════════ */
+.phone {
+  position: relative;
+  width: 292px; height: 596px;
+  border-radius: 42px;
+  padding: 7px;
+  background: #0A0A0C;
+  box-shadow: var(--shadow), inset 0 0 0 1px rgba(255,255,255,.1);
+  flex: none;
+}
+.screen {
+  position: relative; width: 100%; height: 100%;
+  border-radius: 35px; overflow: hidden;
+  background: var(--p-bg); color: var(--p-ink);
+  font-family: var(--p-font);
+  display: flex; flex-direction: column;
+}
+.notch {
+  position: absolute; top: 9px; left: 50%; transform: translateX(-50%);
+  width: 78px; height: 22px; border-radius: 12px; background: #0A0A0C; z-index: 60;
+}
+.statusbar {
+  position: absolute; top: 0; inset-inline: 0; height: 40px; z-index: 55;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 22px; pointer-events: none;
+  font-family: var(--p-font); font-size: 12px; font-weight: 600;
+  color: var(--p-ink); direction: ltr;
+}
+.statusbar .r { display: flex; gap: 4px; align-items: center; }
+.bars { display: flex; gap: 1.5px; align-items: flex-end; height: 9px; }
+.bars i { width: 2.5px; background: currentColor; border-radius: .5px; display: block; }
+.bat { width: 20px; height: 10px; border: 1.3px solid currentColor; border-radius: 3px; padding: 1.3px; }
+.bat i { display: block; height: 100%; width: 72%; background: currentColor; border-radius: 1px; }
+
+.view { position: absolute; inset: 0; display: none; flex-direction: column; }
+.view.on { display: flex; }
+
+/* the map plate, shared geometry, per-direction paint */
+.mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* press feedback everywhere, one rule, motion-safe */
+.tap { cursor: pointer; border: 0; font: inherit; color: inherit; background: none;
+       transition: transform 170ms cubic-bezier(.32,.72,0,1), opacity 140ms linear, background-color 140ms linear; }
+.tap:active { transform: scale(.975); transition-duration: 90ms; }
+.tap:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .tap, .tap:active { transition: none; transform: none; }
+  .breathe, .pulse, .glide { animation: none !important; }
+}
+
+/* ══ A · אופק ══════════════════════════════════════════════ */
+.p-a {
+  --p-bg: #16181B;
+  --p-ink: #F5F1EA;
+  --p-dim: #A49C8F;
+  --p-surface: #23262B;
+  --p-line: #33373D;
+  --p-accent: #E9B04C;
+  --p-accent-ink: #221B0B;
+  --p-font: 'Rubik', system-ui, sans-serif;
+  --m-ground: #16181B; --m-block: #1D2024; --m-road: #262A2F;
+  --m-arterial: #33373D; --m-rail: #4A5058; --m-water: #10161B;
+}
+.a-sheet {
+  margin-top: auto; position: relative; z-index: 20;
+  background: var(--p-surface);
+  border-radius: 26px 26px 0 0;
+  padding: 20px 20px 26px;
+  display: flex; flex-direction: column; gap: 18px;
+  box-shadow: 0 -20px 44px -20px rgba(0,0,0,.7);
+}
+.a-grab { width: 34px; height: 4px; border-radius: 2px; background: var(--p-line); align-self: center; margin-top: -6px; }
+.a-dest { display: flex; align-items: center; gap: 12px; }
+.a-pin { width: 38px; height: 38px; border-radius: 12px; background: rgba(233,176,76,.14);
+         display: grid; place-items: center; flex: none; }
+.a-dest__t { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.a-dest__n { font-size: 17px; font-weight: 500; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.a-dest__m { font-size: 13px; color: var(--p-dim); font-variant-numeric: tabular-nums; }
+.a-x { margin-inline-start: auto; width: 30px; height: 30px; border-radius: 50%;
+       background: var(--p-line); display: grid; place-items: center; flex: none; }
+
+.a-lab { font-size: 13px; color: var(--p-dim); }
+.a-chips { display: flex; gap: 7px; }
+.a-chip {
+  flex: 1; height: 46px; border-radius: 14px; background: var(--p-line);
+  display: grid; place-items: center; font-size: 15px; font-weight: 500;
+  font-variant-numeric: tabular-nums; color: var(--p-ink);
+}
+.a-chip[aria-checked="true"] { background: var(--p-accent); color: var(--p-accent-ink); font-weight: 600; }
+.a-cta {
+  height: 56px; border-radius: 18px; background: var(--p-accent); color: var(--p-accent-ink);
+  font-size: 18px; font-weight: 600; letter-spacing: -.01em;
+  display: grid; place-items: center; width: 100%;
+}
+.a-chrome { position: absolute; top: 52px; inset-inline: 16px; z-index: 30; display: flex; gap: 10px; }
+.a-search {
+  flex: 1; height: 46px; border-radius: 15px; background: rgba(35,38,43,.92);
+  backdrop-filter: blur(12px); display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; font-size: 15px; color: var(--p-dim);
+  box-shadow: 0 6px 20px -8px rgba(0,0,0,.6);
+}
+.a-loc { width: 46px; height: 46px; border-radius: 15px; background: rgba(35,38,43,.92);
+         backdrop-filter: blur(12px); display: grid; place-items: center; flex: none;
+         box-shadow: 0 6px 20px -8px rgba(0,0,0,.6); }
+.a-marker { position: absolute; left: 50%; top: 47%; transform: translate(-50%,-50%); z-index: 15; }
+.a-halo { position: absolute; left: 50%; top: 50%; width: 116px; height: 116px; margin: -58px 0 0 -58px;
+          border-radius: 50%; background: rgba(233,176,76,.08); border: 1px solid rgba(233,176,76,.38); }
+.a-dot { position: relative; width: 20px; height: 20px; border-radius: 50%; background: var(--p-accent);
+         box-shadow: 0 0 0 4px rgba(233,176,76,.22), 0 2px 8px rgba(0,0,0,.5); }
+.breathe { animation: breathe 4.2s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { transform: scale(1); opacity: .85 } 50% { transform: scale(1.09); opacity: 1 } }
+
+/* A · armed */
+.a-armed { padding: 74px 26px 30px; gap: 0; justify-content: space-between; background: var(--p-bg); }
+.a-armed__top { display: flex; flex-direction: column; gap: 12px; }
+.a-badge { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start;
+           padding: 6px 12px 6px 10px; border-radius: 999px; background: rgba(233,176,76,.14);
+           color: var(--p-accent); font-size: 12px; font-weight: 500; letter-spacing: .02em; }
+.a-badge i { width: 6px; height: 6px; border-radius: 50%; background: var(--p-accent); display: block; }
+.a-armed h2 { margin: 0; font-size: 38px; font-weight: 500; line-height: 1.12; letter-spacing: -.03em; }
+.a-armed p { margin: 0; font-size: 16px; color: var(--p-dim); line-height: 1.5; }
+.a-ring { align-self: center; position: relative; width: 176px; height: 176px; }
+.a-ringv { font-family: var(--p-font); font-size: 42px; font-weight: 300; letter-spacing: -.03em;
+           font-variant-numeric: tabular-nums; }
+.a-rows { display: flex; flex-direction: column; }
+.a-row { display: flex; align-items: center; justify-content: space-between;
+         padding: 13px 0; border-top: 1px solid var(--p-line); font-size: 15px; }
+.a-row span { color: var(--p-dim); }
+.a-row b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.a-cancel { height: 52px; border-radius: 16px; border: 1px solid var(--p-line);
+            display: grid; place-items: center; font-size: 16px; color: var(--p-dim); width: 100%; }
+
+/* ══ B · קו ════════════════════════════════════════════════ */
+.p-b {
+  --p-bg: #F6F6F3;
+  --p-ink: #14171A;
+  --p-dim: #6D7378;
+  --p-surface: #FFFFFF;
+  --p-line: #E3E4DF;
+  --p-accent: #0EA36F;
+  --p-accent-ink: #FFFFFF;
+  --p-font: 'Heebo', system-ui, sans-serif;
+  --m-ground: #EDEDE7; --m-block: #E4E4DC; --m-road: #F6F6F3;
+  --m-arterial: #DCDCD2; --m-rail: #A9AFA6; --m-water: #DCE4E4;
+}
+.b-top { position: relative; height: 176px; flex: none; overflow: hidden; }
+.b-top::after { content: ''; position: absolute; inset-inline: 0; bottom: 0; height: 38px;
+                background: linear-gradient(to top, var(--p-bg), rgba(246,246,243,0)); }
+.b-head { position: absolute; top: 46px; inset-inline: 18px; z-index: 30; display: flex; align-items: center; gap: 8px; }
+.b-brand { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+.b-live { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 5px;
+          padding: 4px 9px; border-radius: 999px; background: var(--p-surface);
+          font-size: 11px; font-weight: 500; color: var(--p-dim);
+          box-shadow: 0 2px 8px -3px rgba(20,23,26,.24); }
+.b-live i { width: 5px; height: 5px; border-radius: 50%; background: var(--p-accent); display: block; }
+.b-body { flex: 1; padding: 2px 20px 20px; display: flex; flex-direction: column; gap: 0; overflow: hidden; }
+.b-title { font-size: 13px; font-weight: 500; color: var(--p-dim); padding-bottom: 9px; }
+
+/* the rail - the signature */
+.b-rail { display: flex; flex-direction: column; }
+.b-stop { display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 12px; }
+.b-track { position: relative; display: flex; justify-content: center; align-self: stretch; }
+.b-track::before { content: ''; position: absolute; top: 0; bottom: 0; width: 2px; background: var(--p-line); }
+.b-stop:first-child .b-track::before { top: 50%; }
+.b-stop:last-child  .b-track::before { bottom: 50%; }
+.b-node { position: relative; width: 9px; height: 9px; border-radius: 50%;
+          background: var(--p-line); box-shadow: 0 0 0 4px var(--p-bg); }
+.b-stop--past .b-track::before, .b-stop--now .b-track::before { background: var(--p-accent); }
+.b-stop--past .b-node { background: var(--p-accent); }
+.b-stop--now .b-node { width: 15px; height: 15px; background: var(--p-accent);
+                       box-shadow: 0 0 0 4px var(--p-bg), 0 0 0 7px rgba(14,163,111,.2); }
+.b-stop--goal .b-node { width: 15px; height: 15px; background: var(--p-surface);
+                        border: 3px solid var(--p-accent); box-shadow: 0 0 0 4px var(--p-bg); }
+.b-name { padding: 8px 0; font-size: 15.5px; font-weight: 400; color: var(--p-dim); }
+.b-stop--now .b-name  { font-weight: 500; color: var(--p-ink); }
+.b-stop--goal .b-name { font-weight: 700; color: var(--p-ink); font-size: 17px; letter-spacing: -.01em; }
+.b-far { font-size: 12.5px; color: var(--p-dim); font-variant-numeric: tabular-nums; }
+.b-wake {
+  grid-column: 2 / -1; margin: 3px 0 5px; padding: 9px 12px;
+  border-radius: 13px; background: rgba(14,163,111,.09);
+  border: 1px dashed rgba(14,163,111,.42);
+  display: flex; align-items: center; gap: 9px;
+  font-size: 13.5px; color: #0B7A54; font-weight: 500;
+}
+.b-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.b-cta { height: 56px; border-radius: 999px; background: var(--p-accent); color: var(--p-accent-ink);
+         font-size: 17px; font-weight: 700; letter-spacing: -.01em; display: grid; place-items: center; width: 100%;
+         box-shadow: 0 8px 20px -8px rgba(14,163,111,.6); }
+.b-alt { display: flex; justify-content: center; gap: 6px; font-size: 13.5px; color: var(--p-dim); }
+.b-alt b { color: var(--p-accent); font-weight: 600; }
+
+/* B · armed */
+.b-armed { background: var(--p-bg); padding: 62px 20px 24px; gap: 16px; }
+.b-card {
+  background: var(--p-surface); border-radius: 22px; padding: 22px 20px;
+  box-shadow: 0 12px 30px -18px rgba(20,23,26,.35);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.b-armed h2 { margin: 0; font-size: 27px; font-weight: 800; letter-spacing: -.03em; line-height: 1.2; }
+.b-armed p  { margin: 0; font-size: 15px; color: var(--p-dim); line-height: 1.5; }
+.b-count { display: flex; align-items: baseline; gap: 8px; }
+.b-count b { font-size: 54px; font-weight: 800; letter-spacing: -.04em; line-height: 1;
+             color: var(--p-accent); font-variant-numeric: tabular-nums; }
+.b-count span { font-size: 15px; color: var(--p-dim); }
+.b-meter { height: 7px; border-radius: 4px; background: var(--p-line); overflow: hidden; }
+.b-meter i { display: block; height: 100%; width: 62%; border-radius: 4px; background: var(--p-accent); }
+.b-ghost { height: 50px; border-radius: 999px; border: 1.5px solid var(--p-line);
+           display: grid; place-items: center; font-size: 15.5px; font-weight: 500; color: var(--p-dim); width: 100%; }
+
+/* ══ C · שקט ═══════════════════════════════════════════════ */
+.p-c {
+  --p-bg: #0B1014;
+  --p-ink: #EAF2F1;
+  --p-dim: #7B8C8E;
+  --p-surface: #121A1F;
+  --p-line: #1E282D;
+  --p-accent: #79D8C4;
+  --p-accent-ink: #06201B;
+  --p-font: 'Assistant', system-ui, sans-serif;
+  --p-display: 'Frank Ruhl Libre', Georgia, serif;
+  --m-ground: #0B1014; --m-block: #101820; --m-road: #141E25;
+  --m-arterial: #1A262E; --m-rail: #2C3D44; --m-water: #08111A;
+}
+/* the one gradient in the whole pitch, and it is the night sky over
+   the horizon line - the thing the screen is actually depicting */
+.c-sky { position: absolute; inset: 0; z-index: 5;
+         background: linear-gradient(180deg, rgba(11,16,20,.30) 0%, rgba(11,16,20,.86) 46%, #0B1014 74%); }
+.c-body { position: relative; z-index: 20; flex: 1; padding: 66px 26px 28px;
+          display: flex; flex-direction: column; }
+.c-kicker { font-size: 12px; letter-spacing: .18em; color: var(--p-dim); font-weight: 500; }
+.c-dest { margin-top: 10px; font-family: var(--p-display); font-size: 34px; font-weight: 400;
+          line-height: 1.2; letter-spacing: -.01em; }
+.c-sub { margin-top: 7px; font-size: 14.5px; color: var(--p-dim); font-variant-numeric: tabular-nums; }
+
+.c-dialwrap { margin: auto 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.c-dial { position: relative; width: 208px; height: 208px; }
+.c-dialv { position: absolute; inset: 0; display: flex; flex-direction: column;
+           align-items: center; justify-content: center; gap: 1px; }
+.c-dialv b { font-family: var(--p-display); font-size: 52px; font-weight: 300; line-height: 1;
+             letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.c-dialv span { font-size: 12.5px; letter-spacing: .12em; color: var(--p-dim); }
+.c-hint { font-size: 13px; color: var(--p-dim); }
+.c-cta { margin-top: 26px; height: 62px; border-radius: 999px; width: 100%;
+         background: var(--p-accent); color: var(--p-accent-ink);
+         font-size: 18px; font-weight: 700; letter-spacing: -.01em; display: grid; place-items: center;
+         box-shadow: 0 10px 34px -14px rgba(121,216,196,.6); }
+.c-alt { margin-top: 14px; text-align: center; font-size: 13.5px; color: var(--p-dim); }
+
+/* C · armed */
+.c-armed { background: var(--p-bg); padding: 0; }
+.c-glow { position: absolute; inset: 0; z-index: 5;
+          background: radial-gradient(120% 62% at 50% 26%, rgba(121,216,196,.16) 0%, rgba(11,16,20,0) 62%); }
+.c-armedb { position: relative; z-index: 10; flex: 1; padding: 76px 30px 30px;
+            display: flex; flex-direction: column; align-items: center; text-align: center; }
+.c-moon { width: 92px; height: 92px; margin-bottom: 26px; }
+.c-armedb h2 { margin: 0; font-family: var(--p-display); font-size: 40px; font-weight: 300;
+               line-height: 1.16; letter-spacing: -.02em; }
+.c-armedb p { margin: 12px 0 0; font-size: 15.5px; color: var(--p-dim); line-height: 1.55; max-width: 22ch; }
+.c-facts { margin-top: auto; width: 100%; display: flex; flex-direction: column; }
+.c-fact { display: flex; align-items: baseline; justify-content: space-between;
+          padding: 15px 2px; border-top: 1px solid var(--p-line); font-size: 14.5px; }
+.c-fact span { color: var(--p-dim); }
+.c-fact b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.c-fact b.acc { color: var(--p-accent); }
+.c-off { margin-top: 20px; width: 100%; height: 54px; border-radius: 999px;
+         border: 1px solid var(--p-line); display: grid; place-items: center;
+         font-size: 15.5px; color: var(--p-dim); }
+.pulse { animation: pulse 3.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: .5; transform: scale(1) } 50% { opacity: 1; transform: scale(1.05) } }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <span class="eyebrow">הגענו? · כיווני עיצוב</span>
+    <h1>שלוש דרכים לבנות את אותה אפליקציה</h1>
+    <p class="lede">
+      אותה משימה בשלושתם: להעיר נוסע לפני התחנה שלו. מה שמשתנה הוא סביב מה המסך מאורגן.
+      כל טלפון כאן חי — לחיצה על הכפתור הראשי מפעילה את ההתראה ומראה את המצב השני.
+    </p>
+
+    <div class="read">
+      <div class="read__item">
+        <span class="read__k">סוג</span>
+        <span class="read__v">כלי בעל מטרה אחת, בלי הרשמה ובלי חשבון</span>
+      </div>
+      <div class="read__item">
+        <span class="read__k">הקשר השימוש</span>
+        <span class="read__v">יד אחת, חצי ישן, ברכב בתנועה, בדרך כלל בחושך</span>
+      </div>
+      <div class="read__item">
+        <span class="read__k">פלטפורמות</span>
+        <span class="read__v">iOS ואנדרואיד שווים · ווב לא</span>
+      </div>
+      <div class="read__item">
+        <span class="read__k">תנוחה</span>
+        <span class="read__v">מותג אחיד, שלד ניווט מקורי מתחתיו</span>
+      </div>
+      <p class="read__note">
+        הקשר השימוש הוא מה שמכתיב את שלושת הכיוונים, לא הטעם שלי. מי שמפעיל את זה
+        מחזיק את הטלפון ביד אחת בקו 480, עייף, בתאורה חלשה. לכן בשלושתם: מטרות מגע גדולות,
+        החלטה אחת למסך, וכפתור ראשי שיושב באזור האגודל. אף אחד מהם לא מבקש דיוק מהאצבע.
+      </p>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ══════════════ A ══════════════ -->
+    <section class="dir">
+      <div class="dir__head">
+        <span class="dir__n">01</span>
+        <span class="dir__name">אופק</span>
+        <span class="dir__en">MAP FIRST</span>
+      </div>
+
+      <div class="deck">
+        <div class="phone p-a">
+          <div class="screen" id="pa">
+            <div class="statusbar"><span>23:41</span><span class="r">
+              <span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:9px"></i></span>
+              <span class="bat"><i></i></span></span></div>
+
+            <!-- home -->
+            <div class="view on" data-view="home">
+              <svg class="mapsvg" viewBox="0 0 292 596" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <rect width="292" height="596" fill="var(--m-ground)"/>
+                <path d="M0 0 L44 0 Q30 150 40 300 Q52 460 34 596 L0 596 Z" fill="var(--m-water)"/>
+                <g fill="var(--m-block)">
+                  <rect x="58" y="34" width="58" height="46" rx="3"/><rect x="128" y="34" width="72" height="46" rx="3"/>
+                  <rect x="212" y="34" width="66" height="46" rx="3"/><rect x="58" y="94" width="58" height="62" rx="3"/>
+                  <rect x="128" y="94" width="72" height="62" rx="3"/><rect x="212" y="94" width="66" height="62" rx="3"/>
+                  <rect x="58" y="170" width="58" height="54" rx="3"/><rect x="212" y="170" width="66" height="54" rx="3"/>
+                  <rect x="58" y="238" width="58" height="70" rx="3"/><rect x="128" y="238" width="72" height="70" rx="3"/>
+                  <rect x="212" y="238" width="66" height="70" rx="3"/><rect x="58" y="322" width="58" height="58" rx="3"/>
+                  <rect x="128" y="322" width="72" height="58" rx="3"/><rect x="212" y="322" width="66" height="58" rx="3"/>
+                  <rect x="58" y="394" width="58" height="66" rx="3"/><rect x="128" y="394" width="72" height="66" rx="3"/>
+                  <rect x="212" y="394" width="66" height="66" rx="3"/><rect x="58" y="474" width="58" height="60" rx="3"/>
+                  <rect x="128" y="474" width="72" height="60" rx="3"/><rect x="212" y="474" width="66" height="60" rx="3"/>
+                </g>
+                <g stroke="var(--m-road)" stroke-width="7" fill="none">
+                  <path d="M46 86 H292"/><path d="M46 162 H292"/><path d="M46 230 H292"/>
+                  <path d="M46 314 H292"/><path d="M46 386 H292"/><path d="M46 466 H292"/>
+                  <path d="M122 0 V596"/><path d="M206 0 V596"/>
+                </g>
+                <path d="M46 268 H292" stroke="var(--m-arterial)" stroke-width="11" fill="none"/>
+                <path d="M60 596 C104 470 128 372 152 268 C176 164 214 96 236 0"
+                      stroke="var(--m-rail)" stroke-width="4" fill="none" stroke-linecap="round"/>
+              </svg>
+
+              <div class="a-marker">
+                <div class="a-halo breathe"></div>
+                <div class="a-dot"></div>
+              </div>
+
+              <div class="a-chrome">
+                <div class="a-search">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6.6" stroke="currentColor" stroke-width="1.8"/>
+                    <path d="M16 16l4.4 4.4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                  <span>לאן נוסעים?</span>
+                </div>
+                <div class="a-loc">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3.6" stroke="var(--p-ink)" stroke-width="1.8"/>
+                    <path d="M12 2.5v3.2M12 18.3v3.2M2.5 12h3.2M18.3 12h3.2" stroke="var(--p-ink)" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="a-sheet">
+                <div class="a-grab"></div>
+                <div class="a-dest">
+                  <span class="a-pin">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 21.5s7-6.1 7-11.1a7 7 0 1 0-14 0c0 5 7 11.1 7 11.1z" stroke="var(--p-accent)" stroke-width="1.8" stroke-linejoin="round"/>
+                      <circle cx="12" cy="10.2" r="2.5" fill="var(--p-accent)"/>
+                    </svg>
+                  </span>
+                  <span class="a-dest__t">
+                    <span class="a-dest__n">חיפה חוף הכרמל</span>
+                    <span class="a-dest__m">4.3 ק״מ ממך</span>
+                  </span>
+                  <span class="a-x">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M6 6l12 12M18 6L6 18" stroke="var(--p-dim)" stroke-width="2.4" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <span class="a-lab">כמה לפני היעד להעיר?</span>
+                  <div class="a-chips" role="radiogroup" aria-label="מרחק התראה">
+                    <button class="a-chip tap" role="radio" aria-checked="false">2 ק״מ</button>
+                    <button class="a-chip tap" role="radio" aria-checked="false">1 ק״מ</button>
+                    <button class="a-chip tap" role="radio" aria-checked="true">500 מ׳</button>
+                    <button class="a-chip tap" role="radio" aria-checked="false">300 מ׳</button>
+                  </div>
+                </div>
+
+                <button class="a-cta tap" data-go="armed">תעירו אותי כאן</button>
+              </div>
+            </div>
+
+            <!-- armed -->
+            <div class="view a-armed" data-view="armed">
+              <div class="a-armed__top">
+                <span class="a-badge"><i></i>ההתראה פעילה</span>
+                <h2>אפשר לישון.</h2>
+                <p>נעיר אתכם 500 מטר לפני חיפה חוף הכרמל, גם אם המסך כבוי.</p>
+              </div>
+
+              <div class="a-ring">
+                <svg viewBox="0 0 176 176" width="176" height="176" aria-hidden="true">
+                  <circle cx="88" cy="88" r="78" fill="none" stroke="var(--p-line)" stroke-width="6"/>
+                  <circle cx="88" cy="88" r="78" fill="none" stroke="var(--p-accent)" stroke-width="6"
+                          stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="186"
+                          transform="rotate(-90 88 88)"/>
+                  <text x="88" y="82" text-anchor="middle" class="a-ringv" fill="var(--p-ink)">4.3</text>
+                  <text x="88" y="106" text-anchor="middle" font-size="13" fill="var(--p-dim)"
+                        font-family="Rubik, sans-serif" letter-spacing="1">ק״מ נותרו</text>
+                </svg>
+              </div>
+
+              <div>
+                <div class="a-rows">
+                  <div class="a-row"><span>מגיעים בערך</span><b>23:58</b></div>
+                  <div class="a-row"><span>טווח ההתראה</span><b>500 מ׳</b></div>
+                </div>
+                <button class="a-cancel tap" data-go="home" style="margin-top:14px">ביטול ההתראה</button>
+              </div>
+            </div>
+          </div>
+          <div class="notch"></div>
+        </div>
+        <span class="hint">לחצו על הכפתור הכתום</span>
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <span class="note__k">מאורגן סביב</span>
+          <span class="note__v">המפה. היא כל המסך, והכל שאר צף מעליה בגיליון אחד רך שנפתח מלמטה.</span>
+        </div>
+        <div class="note">
+          <span class="note__k">החוגות</span>
+          <span class="note__v"><span class="dials">
+            <span class="dial"><b>6</b><span>ביטוי</span></span>
+            <span class="dial"><b>3</b><span>תנועה</span></span>
+            <span class="dial"><b>3</b><span>צפיפות</span></span>
+          </span></span>
+        </div>
+        <div class="note">
+          <span class="note__k">צבע וטיפוגרפיה</span>
+          <span class="note__v">
+            <span class="swatches" style="margin-bottom:8px">
+              <span class="sw" style="background:#16181B"></span>
+              <span class="sw" style="background:#23262B"></span>
+              <span class="sw" style="background:#F5F1EA"></span>
+              <span class="sw sw--accent" style="background:#E9B04C"></span>
+            </span>
+            גרפיט חמים עם זהב אחד. Rubik — גיאומטרי, ידידותי, ספרות מצוינות.
+          </span>
+        </div>
+        <div class="note">
+          <span class="note__k">המהלך החתימתי</span>
+          <span class="note__v">היעד נושם. טבעת רכה שמתרחבת ומתכווצת לאט — הדבר היחיד שזז במסך.</span>
+        </div>
+        <div class="note note--cost">
+          <span class="note__k">מה זה עולה</span>
+          <span class="note__v">הכי מוכר מהשלושה. זה בדיוק מה שהופך אותו לקל — ומה שמסכן אותו להיראות כמו עוד אפליקציית ניווט.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ B ══════════════ -->
+    <section class="dir">
+      <div class="dir__head">
+        <span class="dir__n">02</span>
+        <span class="dir__name">קו</span>
+        <span class="dir__en">THE ROUTE</span>
+      </div>
+
+      <div class="deck">
+        <div class="phone p-b">
+          <div class="screen" id="pb">
+            <div class="statusbar"><span>08:12</span><span class="r">
+              <span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:9px"></i></span>
+              <span class="bat"><i></i></span></span></div>
+
+            <!-- home -->
+            <div class="view on" data-view="home">
+              <div class="b-top">
+                <svg class="mapsvg" viewBox="0 0 292 176" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <rect width="292" height="176" fill="var(--m-ground)"/>
+                  <path d="M0 0 L40 0 Q28 76 36 176 L0 176 Z" fill="var(--m-water)"/>
+                  <g fill="var(--m-block)">
+                    <rect x="52" y="14" width="62" height="44" rx="3"/><rect x="126" y="14" width="70" height="44" rx="3"/>
+                    <rect x="208" y="14" width="70" height="44" rx="3"/><rect x="52" y="70" width="62" height="52" rx="3"/>
+                    <rect x="126" y="70" width="70" height="52" rx="3"/><rect x="208" y="70" width="70" height="52" rx="3"/>
+                    <rect x="52" y="134" width="62" height="42" rx="3"/><rect x="126" y="134" width="70" height="42" rx="3"/>
+                    <rect x="208" y="134" width="70" height="42" rx="3"/>
+                  </g>
+                  <g stroke="var(--m-road)" stroke-width="7" fill="none">
+                    <path d="M40 60 H292"/><path d="M40 124 H292"/><path d="M120 0 V176"/><path d="M202 0 V176"/>
+                  </g>
+                  <path d="M40 94 H292" stroke="var(--m-arterial)" stroke-width="10" fill="none"/>
+                  <path d="M54 176 C88 138 116 108 142 72 C166 40 202 18 220 0"
+                        stroke="var(--m-rail)" stroke-width="4" fill="none" stroke-linecap="round"/>
+                  <circle cx="142" cy="72" r="7" fill="var(--p-accent)" stroke="var(--p-bg)" stroke-width="3.5"/>
+                </svg>
+
+                <div class="b-head">
+                  <span class="b-brand">הגענו?</span>
+                  <span class="b-live"><i></i>עוקב</span>
+                </div>
+              </div>
+
+              <div class="b-body">
+                <span class="b-title">קו 947 · לכיוון חיפה</span>
+
+                <div class="b-rail">
+                  <div class="b-stop b-stop--past">
+                    <span class="b-track"><span class="b-node"></span></span>
+                    <span class="b-name">כפר סבא</span>
+                    <span class="b-far"></span>
+                  </div>
+                  <div class="b-stop b-stop--now">
+                    <span class="b-track"><span class="b-node"></span></span>
+                    <span class="b-name">נתניה מרכז</span>
+                    <span class="b-far">אתם כאן</span>
+                  </div>
+                  <div class="b-stop">
+                    <span class="b-track"><span class="b-node"></span></span>
+                    <span class="b-name">חדרה מערב</span>
+                    <span class="b-far">11 דק׳</span>
+                  </div>
+                  <div class="b-stop">
+                    <span class="b-track"><span class="b-node"></span></span>
+                    <span class="b-name">בנימינה</span>
+                    <span class="b-far">19 דק׳</span>
+                  </div>
+                  <div class="b-wake">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 7v5l3.2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    כאן נעיר אתכם, 500 מ׳ לפני
+                  </div>
+                  <div class="b-stop b-stop--goal">
+                    <span class="b-track"><span class="b-node"></span></span>
+                    <span class="b-name">חיפה חוף הכרמל</span>
+                    <span class="b-far">27 דק׳</span>
+                  </div>
+                </div>
+
+                <div class="b-foot">
+                  <button class="b-cta tap" data-go="armed">תעירו אותי</button>
+                  <span class="b-alt">להעיר מוקדם יותר? <b>שנו את הטווח</b></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- armed -->
+            <div class="view b-armed" data-view="armed">
+              <div class="b-card">
+                <h2>אנחנו שומרים עליכם.</h2>
+                <p>ההתראה תפעל גם אם תנעלו את הטלפון או תסגרו את האפליקציה.</p>
+              </div>
+
+              <div class="b-card">
+                <div class="b-count"><b>3</b><span>תחנות עד שנעיר אתכם</span></div>
+                <div class="b-meter"><i></i></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--p-dim)">
+                  <span>נתניה מרכז</span><span>חיפה חוף הכרמל</span>
+                </div>
+              </div>
+
+              <div class="b-card" style="gap:10px">
+                <div style="display:flex;justify-content:space-between;font-size:14.5px">
+                  <span style="color:var(--p-dim)">מגיעים בערך</span><b style="font-weight:700">08:39</b>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:14.5px">
+                  <span style="color:var(--p-dim)">טווח ההתראה</span><b style="font-weight:700">500 מ׳</b>
+                </div>
+              </div>
+
+              <button class="b-ghost tap" data-go="home" style="margin-top:auto">ביטול ההתראה</button>
+            </div>
+          </div>
+          <div class="notch"></div>
+        </div>
+        <span class="hint">לחצו על הכפתור הירוק</span>
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <span class="note__k">מאורגן סביב</span>
+          <span class="note__v">הנסיעה. פס אנכי של תחנות שאתם נעים עליו — המפה מצטמצמת לכותרת.</span>
+        </div>
+        <div class="note">
+          <span class="note__k">החוגות</span>
+          <span class="note__v"><span class="dials">
+            <span class="dial"><b>7</b><span>ביטוי</span></span>
+            <span class="dial"><b>4</b><span>תנועה</span></span>
+            <span class="dial"><b>4</b><span>צפיפות</span></span>
+          </span></span>
+        </div>
+        <div class="note">
+          <span class="note__k">צבע וטיפוגרפיה</span>
+          <span class="note__v">
+            <span class="swatches" style="margin-bottom:8px">
+              <span class="sw" style="background:#F6F6F3"></span>
+              <span class="sw" style="background:#FFFFFF"></span>
+              <span class="sw" style="background:#14171A"></span>
+              <span class="sw sw--accent" style="background:#0EA36F"></span>
+            </span>
+            בהיר כברירת מחדל, עם מצב לילה מלא. Heebo — קריא מאוד בגדלים קטנים.
+          </span>
+        </div>
+        <div class="note">
+          <span class="note__k">המהלך החתימתי</span>
+          <span class="note__v">״3 תחנות עד שנעיר אתכם״. מספר במקום מרחק — זה מה שנוסע באמת סופר.</span>
+        </div>
+        <div class="note note--cost">
+          <span class="note__k">מה זה עולה</span>
+          <span class="note__v">התחנות דורשות נתוני קווים אמיתיים. בלעדיהם הפס יציג מרחק בלבד, וזה מחליש את כל הרעיון.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ C ══════════════ -->
+    <section class="dir">
+      <div class="dir__head">
+        <span class="dir__n">03</span>
+        <span class="dir__name">שקט</span>
+        <span class="dir__en">THE MOMENT</span>
+      </div>
+
+      <div class="deck">
+        <div class="phone p-c">
+          <div class="screen" id="pc">
+            <div class="statusbar"><span>02:07</span><span class="r">
+              <span class="bars"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:9px"></i></span>
+              <span class="bat"><i></i></span></span></div>
+
+            <!-- home -->
+            <div class="view on" data-view="home">
+              <svg class="mapsvg" viewBox="0 0 292 596" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <rect width="292" height="596" fill="var(--m-ground)"/>
+                <path d="M0 0 L48 0 Q34 170 44 340 Q54 480 30 596 L0 596 Z" fill="var(--m-water)"/>
+                <g fill="var(--m-block)">
+                  <rect x="62" y="24" width="66" height="52" rx="4"/><rect x="140" y="24" width="76" height="52" rx="4"/>
+                  <rect x="228" y="24" width="60" height="52" rx="4"/><rect x="62" y="90" width="66" height="60" rx="4"/>
+                  <rect x="140" y="90" width="76" height="60" rx="4"/><rect x="228" y="90" width="60" height="60" rx="4"/>
+                  <rect x="62" y="164" width="66" height="70" rx="4"/><rect x="140" y="164" width="76" height="70" rx="4"/>
+                  <rect x="228" y="164" width="60" height="70" rx="4"/>
+                </g>
+                <g stroke="var(--m-road)" stroke-width="8" fill="none">
+                  <path d="M48 82 H292"/><path d="M48 156 H292"/><path d="M48 242 H292"/>
+                  <path d="M134 0 V300"/><path d="M222 0 V300"/>
+                </g>
+                <path d="M48 206 H292" stroke="var(--m-arterial)" stroke-width="12" fill="none"/>
+                <path d="M64 340 C102 250 132 180 158 118 C180 66 214 32 234 0"
+                      stroke="var(--m-rail)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+              </svg>
+              <div class="c-sky"></div>
+
+              <div class="c-body">
+                <span class="c-kicker">היעד שלכם</span>
+                <span class="c-dest">חיפה חוף הכרמל</span>
+                <span class="c-sub">4.3 ק״מ · בערך 22 דקות</span>
+
+                <div class="c-dialwrap">
+                  <div class="c-dial">
+                    <svg viewBox="0 0 208 208" width="208" height="208" aria-hidden="true">
+                      <circle cx="104" cy="104" r="92" fill="none" stroke="var(--p-line)" stroke-width="1.5"/>
+                      <circle cx="104" cy="104" r="80" fill="none" stroke="var(--p-line)" stroke-width="10"/>
+                      <circle cx="104" cy="104" r="80" fill="none" stroke="var(--p-accent)" stroke-width="10"
+                              stroke-linecap="round" stroke-dasharray="503" stroke-dashoffset="322"
+                              transform="rotate(-90 104 104)"/>
+                      <circle cx="104" cy="24" r="9" fill="var(--p-accent)"
+                              transform="rotate(130 104 104)"/>
+                    </svg>
+                    <span class="c-dialv"><b>500</b><span>מטר לפני</span></span>
+                  </div>
+                  <span class="c-hint">גררו את הטבעת כדי לשנות</span>
+                </div>
+
+                <button class="c-cta tap" data-go="armed">תעירו אותי</button>
+                <span class="c-alt">אפשר לנעול את הטלפון מיד אחרי</span>
+              </div>
+            </div>
+
+            <!-- armed -->
+            <div class="view c-armed" data-view="armed">
+              <div class="c-glow"></div>
+              <div class="c-armedb">
+                <svg class="c-moon pulse" viewBox="0 0 92 92" fill="none" aria-hidden="true">
+                  <path d="M62 8a38 38 0 1 0 22 46A30 30 0 0 1 62 8z" fill="var(--p-accent)" opacity=".9"/>
+                  <circle cx="20" cy="18" r="2" fill="var(--p-accent)"/>
+                  <circle cx="34" cy="9" r="1.4" fill="var(--p-accent)" opacity=".7"/>
+                  <circle cx="9" cy="34" r="1.6" fill="var(--p-accent)" opacity=".55"/>
+                </svg>
+
+                <h2>לילה טוב.<br>אנחנו ערים.</h2>
+                <p>נעיר אתכם 500 מטר לפני חיפה חוף הכרמל, גם עם מסך נעול.</p>
+
+                <div class="c-facts">
+                  <div class="c-fact"><span>מרחק נוכחי</span><b>4.3 ק״מ</b></div>
+                  <div class="c-fact"><span>מגיעים בערך</span><b>02:29</b></div>
+                  <div class="c-fact"><span>טווח ההתראה</span><b class="acc">500 מ׳</b></div>
+                </div>
+
+                <button class="c-off tap" data-go="home">כבו את ההתראה</button>
+              </div>
+            </div>
+          </div>
+          <div class="notch"></div>
+        </div>
+        <span class="hint">לחצו על הכפתור הירקרק</span>
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <span class="note__k">מאורגן סביב</span>
+          <span class="note__v">הרגע. אובייקט אחד גדול במרכז, והמפה יורדת להיות מרקם מאחוריו.</span>
+        </div>
+        <div class="note">
+          <span class="note__k">החוגות</span>
+          <span class="note__v"><span class="dials">
+            <span class="dial"><b>8</b><span>ביטוי</span></span>
+            <span class="dial"><b>5</b><span>תנועה</span></span>
+            <span class="dial"><b>2</b><span>צפיפות</span></span>
+          </span></span>
+        </div>
+        <div class="note">
+          <span class="note__k">צבע וטיפוגרפיה</span>
+          <span class="note__v">
+            <span class="swatches" style="margin-bottom:8px">
+              <span class="sw" style="background:#0B1014"></span>
+              <span class="sw" style="background:#121A1F"></span>
+              <span class="sw" style="background:#EAF2F1"></span>
+              <span class="sw sw--accent" style="background:#79D8C4"></span>
+            </span>
+            כחול־ליל עמוק ומנטה רכה. Frank Ruhl Libre — סריף עברי, בגדלים גדולים ובמשקל דק.
+          </span>
+        </div>
+        <div class="note">
+          <span class="note__k">המהלך החתימתי</span>
+          <span class="note__v">הטבעת. גוררים אותה כדי לקבוע מרחק — אין שדות, אין צ׳יפים, אין הקלדה.</span>
+        </div>
+        <div class="note note--cost">
+          <span class="note__k">מה זה עולה</span>
+          <span class="note__v">הכי מסוכן מהשלושה. סריף עברי באפליקציה זו החלטה שמרגישים מיד — או שהיא יפה, או שהיא מוזרה.</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <section class="close">
+    <h2>איך לבחור</h2>
+    <p>
+      <strong>אופק</strong> אם הכי חשוב שכל אחד יבין את המסך בשנייה. זו הבחירה
+      הבטוחה, והיא תעבוד — היא פשוט לא תגרום לאף אחד לספר עליה לחבר.
+    </p>
+    <p>
+      <strong>קו</strong> אם ״עוד שלוש תחנות״ שווה יותר מ״עוד 4.3 קילומטר״. זה
+      הכיוון היחיד שנותן לנוסע מידע שאין לו כרגע, ולכן גם הכי שימושי.
+    </p>
+    <p>
+      <strong>שקט</strong> אם האפליקציה אמורה להרגיש כמו משהו שמחזיקים ב־2 בלילה.
+      הכי יפה, הכי פחות מוכר, ודורש הכי הרבה דיוק בביצוע.
+    </p>
+    <p style="grid-column:1/-1;padding-top:6px;border-top:1px solid var(--rule-soft)">
+      אחרי הבחירה אני בונה את הכיוון בקוד אמיתי: מערכת טוקנים, מצב יום ולילה,
+      כל המסכים והמצבים, ומסמך עיצוב שנשמר בריפו. אפשר גם לערבב — למשל הפס של
+      ״קו״ בתוך הפלטה של ״שקט״.
+    </p>
+  </section>
+
+</div>
+
+<script>
+// One handler for all three phones. A direction is a set of tokens, not a
+// set of behaviours, so the interaction code is shared on purpose.
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-go]');
+  if (!btn) return;
+  const screen = btn.closest('.screen');
+  screen.querySelectorAll('.view').forEach((v) => {
+    v.classList.toggle('on', v.dataset.view === btn.dataset.go);
+  });
+});
+
+// The radius chips in direction A are live, so the choice feels like a choice.
+document.querySelectorAll('.a-chips').forEach((group) => {
+  group.addEventListener('click', (e) => {
+    const chip = e.target.closest('.a-chip');
+    if (!chip) return;
+    group.querySelectorAll('.a-chip').forEach((c) => c.setAttribute('aria-checked', String(c === chip)));
+  });
+});
+</script>

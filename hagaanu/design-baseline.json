@@ -1,0 +1,139 @@
+{
+  "tool": "mobile-redesign-app",
+  "version": 2,
+  "date": "2026-09-07",
+  "run": "ground-up rebuild — the previous visual system was rejected and replaced",
+  "pass": "static-only",
+  "designDoc": "MOBILE-DESIGN.md + src/theme/{colors,index}.ts",
+  "direction": "קו (The Route) — chosen by the user from three presented directions",
+  "designScore": "A",
+  "slopScore": "A",
+  "designScoreNote": "4.00 mean. No open findings. This is a STATIC score: see unverified.",
+  "categories": {
+    "navigation": "A",
+    "screenAnatomy": "A",
+    "typography": "A",
+    "colorTheming": "A",
+    "surfacesGrouping": "A",
+    "states": "A",
+    "interactionMotion": "A",
+    "formsInput": "A",
+    "performance": "A",
+    "copyContent": "A"
+  },
+  "kept": [
+    "Everything under src/services (geofencing, notifications, alarm, location, permissions, storage) plus hooks, state, utils, constants and types. None of it carried a visual opinion, and it is the part that took real work to get right.",
+    "src/utils/logger.ts, hardened this run to load outside Metro (__DEV__ is not defined in a bare Node context, which broke the new unit tests)."
+  ],
+  "rebuilt": [
+    "src/theme — deleted and rewritten as colors.ts + index.ts",
+    "src/components — every file replaced; icons are now Lucide rather than hand-drawn SVG",
+    "src/screens — HomeScreen, ActiveScreen (was PassScreen), AlarmScreen, PermissionsScreen",
+    "src/i18n — all strings rewritten for the new voice",
+    "NEW src/services/transit/StopsService.ts and src/components/route/{rail.ts,RouteRail.tsx}"
+  ],
+  "findings": [
+    {
+      "id": "FINDING-020",
+      "impact": "high",
+      "category": "colorTheming",
+      "summary": "White on the direction's green measured 3.24:1 and failed AA on the primary CTA; solved by putting dark ink on the fill rather than darkening the green, which would have cost the colour its character",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-021",
+      "impact": "high",
+      "category": "states",
+      "summary": "The rail vanished on a cold start while armed, which is exactly when it matters; the stop list is now frozen into the persisted AlarmSession and restored by hydrate, never refetched",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-022",
+      "impact": "medium",
+      "category": "states",
+      "summary": "The store wrote the raw translation key 'errors.geofenceFailed' into `error`, which the screen renders verbatim; the user would have seen the literal key. Now resolved through t() at the point of failure",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-023",
+      "impact": "medium",
+      "category": "states",
+      "summary": "Arm failure was reported through Alert.alert, against the rule that modal alerts are for destructive confirmations only; moved inline next to the button that failed",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-024",
+      "impact": "medium",
+      "category": "performance",
+      "summary": "Fonts reduced from three families to two and from six faces to five, still by weight subpath; IBM Plex Mono dropped entirely with the signage direction",
+      "status": "fixed"
+    },
+    {
+      "id": "FINDING-025",
+      "impact": "polish",
+      "category": "interactionMotion",
+      "summary": "LiveDot started its animation loop inside useMemo rather than useEffect, so it was never cleaned up on unmount",
+      "status": "fixed"
+    }
+  ],
+  "dismissed": [
+    {
+      "tell": 33,
+      "where": "src/i18n/translations/he.ts:2",
+      "reason": "the only em-dash is in a file-header code comment, not a visible string"
+    },
+    {
+      "tell": 13,
+      "where": "src/components/route/SavedList.tsx",
+      "reason": "ScrollView over saved cards bounded at MAX = 12 in SavedStorage; a horizontal strip of 12 does not warrant FlashList"
+    },
+    {
+      "tell": 13,
+      "where": "src/components/map/SearchField.tsx",
+      "reason": "results are capped at 5 by GeocodingService and rendered in a plain View, not a ScrollView"
+    },
+    {
+      "tell": 32,
+      "where": "SavedList.tsx and ActiveScreen.tsx",
+      "reason": "both Alert.alert calls guard a destructive action (delete a saved destination, cancel the alarm) — the sanctioned use"
+    },
+    {
+      "tell": 1,
+      "reason": "0 emoji anywhere; every mark is a Lucide icon"
+    },
+    {
+      "tell": 2,
+      "reason": "0 indigo-family hex, 0 LinearGradient"
+    },
+    {
+      "tell": 5,
+      "reason": "0 orphan shadowColor; elevation() always pairs the iOS shadow with an Android elevation"
+    },
+    {
+      "tell": 6,
+      "reason": "0 inline hex in src/screens or src/components"
+    },
+    {
+      "tell": 14,
+      "reason": "0 magic paddingTop; safe-area insets throughout"
+    },
+    {
+      "tell": 36,
+      "reason": "0 useNativeDriver:false, 0 useState fed by onScroll"
+    },
+    {
+      "where": "no skeleton on the alarm or permission screens",
+      "reason": "neither loads data; the only async content in the app is the stop list, which has a skeleton mirroring the rail's own layout"
+    },
+    {
+      "where": "offline state",
+      "reason": "declared N/A in the App Read. The one network call degrades in place and is never on the alarm path"
+    }
+  ],
+  "unverified": [
+    "No simulator, emulator or device was reachable: dl.google.com and api.expo.dev are blocked by the environment's network policy, so no Android SDK and no cloud build.",
+    "NOT verified on a device: keyboard avoidance, splash-to-first-frame, scroll performance, font scale at 1.3x, edge-to-edge insets, haptics, alarm audibility, geofence delivery latency.",
+    "The Overpass request itself is unverified: overpass-api.de is blocked from this environment (proxy 403), so the query was written against the documented API and its degradation path rather than a live response.",
+    "First-impression narration and the Trunk Test were not run: they are live-pass instruments and a static review cannot fake them."
+  ]
+}
